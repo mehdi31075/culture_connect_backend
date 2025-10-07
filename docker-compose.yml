@@ -8,6 +8,8 @@ services:
         container_name: cultureconnect_app
         restart: unless-stopped
         working_dir: /var/www
+        ports:
+            - "9000:9000" # Expose PHP-FPM port for host Nginx
         volumes:
             - ./:/var/www
             - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
@@ -15,20 +17,6 @@ services:
             - cultureconnect
         depends_on:
             - db
-
-    nginx:
-        image: nginx:alpine
-        container_name: cultureconnect_nginx
-        restart: unless-stopped
-        ports:
-            - "8000:80"
-        volumes:
-            - ./:/var/www
-            - ./nginx/cultureconnect.conf:/etc/nginx/conf.d/default.conf
-        depends_on:
-            - app
-        networks:
-            - cultureconnect
 
     db:
         image: postgres:15
