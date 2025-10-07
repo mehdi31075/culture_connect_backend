@@ -51,7 +51,6 @@ return [
                  */
                 'annotations' => [
                     base_path('app/Http/Controllers/Api'),
-                    base_path('routes/api.php'),
                 ],
 
                 /*

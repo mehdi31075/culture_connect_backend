@@ -4,14 +4,6 @@ use App\Http\Controllers\Api\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-/**
- * @OA\Info(
- *     title="CultureConnect API",
- *     version="1.0.0",
- *     description="API documentation for CultureConnect application"
- * )
- */
-
 /*
 |--------------------------------------------------------------------------
 | API Routes

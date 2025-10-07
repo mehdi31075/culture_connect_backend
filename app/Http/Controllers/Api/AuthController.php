@@ -15,6 +15,12 @@ use App\Http\Requests\OtpRequest;
 use App\Http\Requests\VerifyOtpRequest;
 
 /**
+ * @OA\Info(
+ *     title="CultureConnect API",
+ *     version="1.0.0",
+ *     description="API documentation for CultureConnect application"
+ * )
+ *
  * @OA\Tag(
  *     name="Authentication",
  *     description="Authentication endpoints for OTP and Google login"
