@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  app:
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_DATABASE=cultureconnect
+      - DB_USERNAME=cultureconnect
+      - DB_PASSWORD=cultureconnect123
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_SECRET=BunDaeRQncO6zgTfxrWDV8EsiqRbj0AUgwHRL5GbUTR1P0bJfeNTnngGY9liasgW
+      - JWT_TTL=60
+      - JWT_REFRESH_TTL=20160

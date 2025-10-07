@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: cultureconnect_app
+        restart: unless-stopped
+        working_dir: /var/www
+        ports:
+            - "8000:8000"
+        volumes:
+            - ./:/var/www
+            - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+        networks:
+            - cultureconnect
+        depends_on:
+            - db
+
+    db:
+        image: postgres:15
+        container_name: cultureconnect_db
+        restart: unless-stopped
+        environment:
+            POSTGRES_DB: cultureconnect
+            POSTGRES_USER: cultureconnect
+            POSTGRES_PASSWORD: cultureconnect123
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        ports:
+            - "5432:5432"
+        networks:
+            - cultureconnect
+
+volumes:
+    postgres_data:
+        driver: local
+
+networks:
+    cultureconnect:
+        driver: bridge
