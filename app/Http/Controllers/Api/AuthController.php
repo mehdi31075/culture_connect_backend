@@ -20,7 +20,7 @@ use App\Http\Requests\VerifyOtpRequest;
  *     version="1.0.0",
  *     description="API documentation for CultureConnect application"
  * )
- * 
+ *
  * @OA\SecurityScheme(
  *     securityScheme="bearerAuth",
  *     type="http",
@@ -28,7 +28,7 @@ use App\Http\Requests\VerifyOtpRequest;
  *     bearerFormat="JWT",
  *     description="Enter JWT token"
  * )
- * 
+ *
  * @OA\Tag(
  *     name="Authentication",
  *     description="Authentication endpoints for OTP and Google login"
