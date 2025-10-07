@@ -31,5 +31,5 @@ chmod -R 775 /var/www/bootstrap/cache
 
 echo "Application is ready!"
 
-# Start PHP built-in development server
-exec php artisan serve --host=0.0.0.0 --port=8000
+# Start PHP-FPM
+exec php-fpm

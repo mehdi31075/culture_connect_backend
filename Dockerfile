@@ -21,17 +21,17 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www
 
+# Copy composer files first for better caching
+COPY composer.json composer.lock /var/www/
+
+# Install PHP dependencies
+RUN composer install --no-dev --optimize-autoloader --no-scripts
+
 # Copy existing application directory contents
 COPY . /var/www
 
 # Copy existing application directory permissions
 COPY --chown=www-data:www-data . /var/www
-
-# Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader
-
-# Generate application key
-RUN php artisan key:generate
 
 # Set proper permissions
 RUN chown -R www-data:www-data /var/www \
@@ -42,6 +42,8 @@ RUN chown -R www-data:www-data /var/www \
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# Expose port 9000 and start php-fpm server
+# Expose port 9000 for PHP-FPM
 EXPOSE 9000
+
+# Start PHP-FPM
 ENTRYPOINT ["docker-entrypoint.sh"]
