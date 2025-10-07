@@ -33,11 +33,8 @@ COPY . /var/www
 # Copy existing application directory permissions
 COPY --chown=www-data:www-data . /var/www
 
-# Configure PHP-FPM to listen on TCP
-RUN sed -i 's/listen = \/var\/run\/php-fpm.sock/listen = 0.0.0.0:9000/' /usr/local/etc/php-fpm.d/www.conf \
-    && sed -i 's/listen = 127.0.0.1:9000/listen = 0.0.0.0:9000/' /usr/local/etc/php-fpm.d/www.conf \
-    && sed -i 's/listen.owner = www-data/listen.owner = www-data/' /usr/local/etc/php-fpm.d/www.conf \
-    && sed -i 's/listen.group = www-data/listen.group = www-data/' /usr/local/etc/php-fpm.d/www.conf
+# Copy optimized PHP-FPM configuration
+COPY docker/php/php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
 
 # Set proper permissions
 RUN chown -R www-data:www-data /var/www \
