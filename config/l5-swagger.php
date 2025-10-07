@@ -51,6 +51,15 @@ return [
                  */
                 'annotations' => [
                     base_path('app/Http/Controllers/Api'),
+                    base_path('routes/api.php'),
+                ],
+
+                /*
+                 * Absolute paths to directory containing the swagger annotations are stored.
+                 */
+                'exclude' => [
+                    base_path('app/Http/Controllers/Admin'),
+                    base_path('routes/admin.php'),
                 ],
             ],
         ],
