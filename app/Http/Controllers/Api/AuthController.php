@@ -483,4 +483,121 @@ class AuthController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * @OA\Put(
+     *     path="/api/auth/profile",
+     *     summary="Update user profile",
+     *     tags={"Authentication"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"first_name", "last_name", "nationality", "birthday", "sex"},
+     *             @OA\Property(property="first_name", type="string", example="John"),
+     *             @OA\Property(property="last_name", type="string", example="Doe"),
+     *             @OA\Property(property="nationality", type="string", example="US"),
+     *             @OA\Property(property="birthday", type="string", format="date", example="1990-01-01"),
+     *             @OA\Property(property="sex", type="string", enum={"male", "female"}, example="male")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Profile updated successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Profile updated successfully"),
+     *             @OA\Property(
+     *                 property="profile",
+     *                 type="object",
+     *                 @OA\Property(property="first_name", type="string", example="John"),
+     *                 @OA\Property(property="last_name", type="string", example="Doe"),
+     *                 @OA\Property(property="sex", type="string", enum={"male", "female"}, example="male"),
+     *                 @OA\Property(property="birthday", type="string", format="date", example="1990-01-01"),
+     *                 @OA\Property(property="nationality", type="string", example="US")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Validation failed"),
+     *             @OA\Property(
+     *                 property="errors",
+     *                 type="object",
+     *                 @OA\Property(property="first_name", type="array", @OA\Items(type="string")),
+     *                 @OA\Property(property="last_name", type="array", @OA\Items(type="string")),
+     *                 @OA\Property(property="nationality", type="array", @OA\Items(type="string")),
+     *                 @OA\Property(property="birthday", type="array", @OA\Items(type="string")),
+     *                 @OA\Property(property="sex", type="array", @OA\Items(type="string"))
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function updateProfile(Request $request)
+    {
+        try {
+            $user = auth()->user();
+
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not authenticated',
+                ], 401);
+            }
+
+            // Validate the request
+            $validator = Validator::make($request->all(), [
+                'first_name' => 'required|string|max:255',
+                'last_name' => 'required|string|max:255',
+                'nationality' => 'required|string|max:255',
+                'birthday' => 'required|date',
+                'sex' => 'required|in:male,female',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
+            // Update user profile
+            $user->update([
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'nationality' => $request->nationality,
+                'birthday' => $request->birthday,
+                'sex' => $request->sex,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Profile updated successfully',
+                'profile' => [
+                    'first_name' => $user->first_name,
+                    'last_name' => $user->last_name,
+                    'sex' => $user->sex,
+                    'birthday' => $user->birthday,
+                    'nationality' => $user->nationality,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update profile',
+            ], 500);
+        }
+    }
 }

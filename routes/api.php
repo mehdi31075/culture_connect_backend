@@ -59,6 +59,7 @@ Route::prefix('auth')->group(function () {
     Route::post('refresh', [AuthController::class, 'refresh']);
     Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:api');
     Route::get('profile', [AuthController::class, 'getProfile'])->middleware('auth:api');
+    Route::put('profile', [AuthController::class, 'updateProfile'])->middleware('auth:api');
 });
 
 // Protected routes
