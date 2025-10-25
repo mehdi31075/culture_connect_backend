@@ -150,7 +150,7 @@ class AdminPavilionController extends Controller
                 'lat' => $request->lat,
                 'lng' => $request->lng,
                 'open_hours' => $request->open_hours,
-                'icon' => $iconPath ? Storage::url($iconPath) : null,
+                'icon' => $iconPath ? url('storage/' . $iconPath) : null,
             ]);
 
             // Add shops count
