@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\PavilionController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -104,3 +105,7 @@ Route::middleware('auth:api')->group(function () {
         ]);
     });
 });
+
+// Pavilion routes
+Route::get('pavilions', [PavilionController::class, 'index']);
+Route::get('pavilions/{id}', [PavilionController::class, 'show']);

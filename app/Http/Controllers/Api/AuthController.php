@@ -434,13 +434,19 @@ class AuthController extends Controller
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Profile retrieved successfully"),
      *             @OA\Property(
-     *                 property="profile",
+     *                 property="user",
      *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="email", type="string", nullable=true, example="user@example.com"),
+     *                 @OA\Property(property="phone", type="string", nullable=true, example="+1234567890"),
      *                 @OA\Property(property="first_name", type="string", example="John"),
      *                 @OA\Property(property="last_name", type="string", example="Doe"),
      *                 @OA\Property(property="sex", type="string", enum={"male", "female"}, example="male"),
      *                 @OA\Property(property="birthday", type="string", format="date", example="1990-01-01"),
-     *                 @OA\Property(property="nationality", type="string", example="US")
+     *                 @OA\Property(property="nationality", type="string", example="US"),
+     *                 @OA\Property(property="locale", type="string", example="en"),
+     *                 @OA\Property(property="is_active", type="boolean", example=true),
+     *                 @OA\Property(property="created_at", type="string", format="date-time", example="2025-09-23T23:01:56.000000Z")
      *             )
      *         )
      *     ),
@@ -468,12 +474,18 @@ class AuthController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Profile retrieved successfully',
-                'profile' => [
+                'user' => [
+                    'id' => $user->id,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
                     'first_name' => $user->first_name,
                     'last_name' => $user->last_name,
                     'sex' => $user->sex,
                     'birthday' => $user->birthday,
                     'nationality' => $user->nationality,
+                    'locale' => $user->locale,
+                    'is_active' => $user->is_active,
+                    'created_at' => $user->created_at,
                 ]
             ]);
         } catch (\Exception $e) {
