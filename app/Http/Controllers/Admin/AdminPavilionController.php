@@ -32,10 +32,10 @@ class AdminPavilionController extends Controller
      *             @OA\Schema(
      *                 @OA\Property(property="name", type="string", example="Main Pavilion"),
      *                 @OA\Property(property="description", type="string", example="The main cultural pavilion"),
-     *                 @OA\Property(property="country", type="string", example="UAE"),
-     *                 @OA\Property(property="lat", type="number", format="float", example=25.2048),
-     *                 @OA\Property(property="lng", type="number", format="float", example=55.2708),
-     *                 @OA\Property(property="open_hours", type="string", example="9:00 AM - 10:00 PM"),
+     *                 @OA\Property(property="country", type="string", nullable=true, example="UAE"),
+     *                 @OA\Property(property="lat", type="number", format="float", nullable=true, example=25.2048),
+     *                 @OA\Property(property="lng", type="number", format="float", nullable=true, example=55.2708),
+     *                 @OA\Property(property="open_hours", type="string", nullable=true, example="9:00 AM - 10:00 PM"),
      *                 @OA\Property(
      *                     property="icon",
      *                     type="string",
@@ -58,10 +58,10 @@ class AdminPavilionController extends Controller
      *                 @OA\Property(property="name", type="string", example="Main Pavilion"),
      *                 @OA\Property(property="description", type="string", example="The main cultural pavilion"),
      *                 @OA\Property(property="icon", type="string", example="https://example.com/storage/pavilions/icon_123.png"),
-     *                 @OA\Property(property="country", type="string", example="UAE"),
-     *                 @OA\Property(property="lat", type="number", format="float", example=25.2048),
-     *                 @OA\Property(property="lng", type="number", format="float", example=55.2708),
-     *                 @OA\Property(property="open_hours", type="string", example="9:00 AM - 10:00 PM"),
+     *                 @OA\Property(property="country", type="string", nullable=true, example="UAE"),
+     *                 @OA\Property(property="lat", type="number", format="float", nullable=true, example=25.2048),
+     *                 @OA\Property(property="lng", type="number", format="float", nullable=true, example=55.2708),
+     *                 @OA\Property(property="open_hours", type="string", nullable=true, example="9:00 AM - 10:00 PM"),
      *                 @OA\Property(property="shops_count", type="integer", example=0),
      *                 @OA\Property(property="created_at", type="string", format="date-time"),
      *                 @OA\Property(property="updated_at", type="string", format="date-time")
@@ -110,9 +110,9 @@ class AdminPavilionController extends Controller
             $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
                 'description' => 'required|string|max:1000',
-                'country' => 'required|string|max:255',
-                'lat' => 'required|numeric|between:-90,90',
-                'lng' => 'required|numeric|between:-180,180',
+                'country' => 'nullable|string|max:255',
+                'lat' => 'nullable|numeric|between:-90,90',
+                'lng' => 'nullable|numeric|between:-180,180',
                 'open_hours' => 'nullable|string|max:255',
                 'icon' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // 2MB max
             ]);
@@ -184,10 +184,10 @@ class AdminPavilionController extends Controller
      *             @OA\Schema(
      *                 @OA\Property(property="name", type="string", example="Updated Pavilion"),
      *                 @OA\Property(property="description", type="string", example="Updated description"),
-     *                 @OA\Property(property="country", type="string", example="UAE"),
-     *                 @OA\Property(property="lat", type="number", format="float", example=25.2048),
-     *                 @OA\Property(property="lng", type="number", format="float", example=55.2708),
-     *                 @OA\Property(property="open_hours", type="string", example="9:00 AM - 10:00 PM"),
+     *                 @OA\Property(property="country", type="string", nullable=true, example="UAE"),
+     *                 @OA\Property(property="lat", type="number", format="float", nullable=true, example=25.2048),
+     *                 @OA\Property(property="lng", type="number", format="float", nullable=true, example=55.2708),
+     *                 @OA\Property(property="open_hours", type="string", nullable=true, example="9:00 AM - 10:00 PM"),
      *                 @OA\Property(
      *                     property="icon",
      *                     type="string",
@@ -210,10 +210,10 @@ class AdminPavilionController extends Controller
      *                 @OA\Property(property="name", type="string", example="Updated Pavilion"),
      *                 @OA\Property(property="description", type="string", example="Updated description"),
      *                 @OA\Property(property="icon", type="string", example="https://example.com/storage/pavilions/icon_123.png"),
-     *                 @OA\Property(property="country", type="string", example="UAE"),
-     *                 @OA\Property(property="lat", type="number", format="float", example=25.2048),
-     *                 @OA\Property(property="lng", type="number", format="float", example=55.2708),
-     *                 @OA\Property(property="open_hours", type="string", example="9:00 AM - 10:00 PM"),
+     *                 @OA\Property(property="country", type="string", nullable=true, example="UAE"),
+     *                 @OA\Property(property="lat", type="number", format="float", nullable=true, example=25.2048),
+     *                 @OA\Property(property="lng", type="number", format="float", nullable=true, example=55.2708),
+     *                 @OA\Property(property="open_hours", type="string", nullable=true, example="9:00 AM - 10:00 PM"),
      *                 @OA\Property(property="shops_count", type="integer", example=5),
      *                 @OA\Property(property="created_at", type="string", format="date-time"),
      *                 @OA\Property(property="updated_at", type="string", format="date-time")
@@ -279,9 +279,9 @@ class AdminPavilionController extends Controller
             $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
                 'description' => 'required|string|max:1000',
-                'country' => 'required|string|max:255',
-                'lat' => 'required|numeric|between:-90,90',
-                'lng' => 'required|numeric|between:-180,180',
+                'country' => 'nullable|string|max:255',
+                'lat' => 'nullable|numeric|between:-90,90',
+                'lng' => 'nullable|numeric|between:-180,180',
                 'open_hours' => 'nullable|string|max:255',
                 'icon' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // 2MB max
             ]);

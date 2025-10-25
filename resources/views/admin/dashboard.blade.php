@@ -265,20 +265,20 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Country</label>
-                            <input type="text" name="country" required class="w-full border rounded px-3 py-2">
+                            <input type="text" name="country" class="w-full border rounded px-3 py-2">
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Latitude</label>
-                                <input type="number" name="lat" step="any" required class="w-full border rounded px-3 py-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Latitude (Optional)</label>
+                                <input type="number" name="lat" step="any" class="w-full border rounded px-3 py-2">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Longitude</label>
-                                <input type="number" name="lng" step="any" required class="w-full border rounded px-3 py-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Longitude (Optional)</label>
+                                <input type="number" name="lng" step="any" class="w-full border rounded px-3 py-2">
                             </div>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Open Hours</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Open Hours (Optional)</label>
                             <input type="text" name="open_hours" placeholder="9:00 AM - 10:00 PM" class="w-full border rounded px-3 py-2">
                         </div>
                         <div>

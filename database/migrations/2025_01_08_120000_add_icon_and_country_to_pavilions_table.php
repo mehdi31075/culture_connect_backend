@@ -15,6 +15,13 @@ return new class extends Migration
             $table->string('icon')->nullable()->after('description');
             $table->string('country')->nullable()->after('icon');
         });
+
+        // Make existing fields nullable
+        Schema::table('pavilions', function (Blueprint $table) {
+            $table->decimal('lat', 10, 6)->nullable()->change();
+            $table->decimal('lng', 10, 6)->nullable()->change();
+            $table->string('open_hours')->nullable()->change();
+        });
     }
 
     /**
