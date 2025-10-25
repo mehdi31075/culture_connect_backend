@@ -40,7 +40,7 @@ class AdminPavilionController extends Controller
      *                     property="icon",
      *                     type="string",
      *                     format="binary",
-     *                     description="Pavilion icon image file"
+     *                     description="Pavilion icon image file (JPEG, PNG, JPG, GIF, SVG)"
      *                 )
      *             )
      *         )
@@ -114,7 +114,7 @@ class AdminPavilionController extends Controller
                 'lat' => 'nullable|numeric|between:-90,90',
                 'lng' => 'nullable|numeric|between:-180,180',
                 'open_hours' => 'nullable|string|max:255',
-                'icon' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // 2MB max
+                'icon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // 2MB max
             ]);
 
             if ($validator->fails()) {
@@ -122,6 +122,15 @@ class AdminPavilionController extends Controller
                     'success' => false,
                     'message' => 'Validation failed',
                     'errors' => $validator->errors(),
+                    'debug' => [
+                        'request_data' => $request->all(),
+                        'has_file' => $request->hasFile('icon'),
+                        'file_info' => $request->hasFile('icon') ? [
+                            'name' => $request->file('icon')->getClientOriginalName(),
+                            'size' => $request->file('icon')->getSize(),
+                            'mime' => $request->file('icon')->getMimeType()
+                        ] : null
+                    ]
                 ], 422);
             }
 
@@ -283,7 +292,7 @@ class AdminPavilionController extends Controller
                 'lat' => 'nullable|numeric|between:-90,90',
                 'lng' => 'nullable|numeric|between:-180,180',
                 'open_hours' => 'nullable|string|max:255',
-                'icon' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // 2MB max
+                'icon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // 2MB max
             ]);
 
             if ($validator->fails()) {

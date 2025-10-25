@@ -283,7 +283,7 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Icon</label>
-                            <input type="file" name="icon" accept="image/*" class="w-full border rounded px-3 py-2">
+                            <input type="file" name="icon" accept="image/*,.svg" class="w-full border rounded px-3 py-2">
                         </div>
                     </div>
                     <div class="flex justify-end space-x-3 mt-6">
@@ -566,7 +566,17 @@
                     loadPavilions();
                     alert('Pavilion added successfully!');
                 } else {
-                    alert(data.message || 'Failed to add pavilion');
+                    console.error('Validation errors:', data.errors);
+                    console.error('Debug info:', data.debug);
+
+                    let errorMessage = data.message || 'Failed to add pavilion';
+                    if (data.errors) {
+                        errorMessage += '\n\nValidation errors:\n';
+                        for (const field in data.errors) {
+                            errorMessage += `${field}: ${data.errors[field].join(', ')}\n`;
+                        }
+                    }
+                    alert(errorMessage);
                 }
             } catch (error) {
                 console.error('Error adding pavilion:', error);

@@ -228,9 +228,15 @@ class AdminController extends Controller
 
         $pavilions = $query->paginate($perPage);
 
+        // Add shops count to each pavilion
+        $pavilions->getCollection()->transform(function ($pavilion) {
+            $pavilion->shops_count = $pavilion->shops()->count();
+            return $pavilion;
+        });
+
         return response()->json([
             'success' => true,
-            'data' => $pavilions
+            'data' => $pavilions->items() // Return just the items, not pagination
         ]);
     }
 
