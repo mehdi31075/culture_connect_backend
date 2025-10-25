@@ -40,7 +40,7 @@
             <div class="flex items-center justify-between">
                 <div class="text-sm">
                     <span class="text-gray-600">
-                        Default: admin@cultureconnect.com / admin123
+                        Contact your system administrator for access
                     </span>
                 </div>
             </div>

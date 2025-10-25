@@ -44,6 +44,12 @@
                         </a>
                     </li>
                     <li>
+                        <a href="#pavilions" onclick="showSection('pavilions')" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
+                            <i class="fas fa-building mr-3"></i>
+                            Pavilions
+                        </a>
+                    </li>
+                    <li>
                         <a href="#events" onclick="showSection('events')" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
                             <i class="fas fa-calendar mr-3"></i>
                             Events
@@ -174,6 +180,38 @@
                 </div>
             </div>
 
+            <!-- Pavilions Section -->
+            <div id="pavilions-section" class="section hidden">
+                <h2 class="text-2xl font-bold mb-6">Pavilion Management</h2>
+                <div class="bg-white rounded-lg shadow">
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <input type="text" id="pavilion-search" placeholder="Search pavilions..." class="border rounded px-3 py-2 w-64">
+                            <button onclick="showAddPavilionModal()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                                <i class="fas fa-plus"></i> Add Pavilion
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full table-auto">
+                                <thead>
+                                    <tr class="bg-gray-50">
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Country</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Shops</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Icon</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pavilions-table">
+                                    <!-- Pavilions will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Other sections will be similar -->
             <div id="events-section" class="section hidden">
                 <h2 class="text-2xl font-bold mb-6">Event Management</h2>
@@ -201,6 +239,62 @@
                 <div class="bg-white p-6 rounded-lg shadow">
                     <p class="text-gray-600">Notification management interface coming soon...</p>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Pavilion Modal -->
+    <div id="add-pavilion-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+                <div class="flex justify-between items-center p-6 border-b">
+                    <h3 class="text-lg font-semibold">Add New Pavilion</h3>
+                    <button onclick="closeAddPavilionModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="add-pavilion-form" onsubmit="addPavilion(event)" class="p-6">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                            <input type="text" name="name" required class="w-full border rounded px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                            <textarea name="description" required rows="3" class="w-full border rounded px-3 py-2"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                            <input type="text" name="country" required class="w-full border rounded px-3 py-2">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Latitude</label>
+                                <input type="number" name="lat" step="any" required class="w-full border rounded px-3 py-2">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Longitude</label>
+                                <input type="number" name="lng" step="any" required class="w-full border rounded px-3 py-2">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Open Hours</label>
+                            <input type="text" name="open_hours" placeholder="9:00 AM - 10:00 PM" class="w-full border rounded px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Icon</label>
+                            <input type="file" name="icon" accept="image/*" class="w-full border rounded px-3 py-2">
+                        </div>
+                    </div>
+                    <div class="flex justify-end space-x-3 mt-6">
+                        <button type="button" onclick="closeAddPavilionModal()" class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50">
+                            Cancel
+                        </button>
+                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                            Add Pavilion
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -373,6 +467,8 @@
             // Load section data
             if (sectionName === 'users') {
                 loadUsers();
+            } else if (sectionName === 'pavilions') {
+                loadPavilions();
             }
         }
 
@@ -400,6 +496,99 @@
                 } catch (error) {
                     console.error('Error deleting user:', error);
                     alert('Error deleting user');
+                }
+            }
+        }
+
+        // Pavilion Management Functions
+        async function loadPavilions() {
+            try {
+                const data = await apiCall('/admin/pavilions');
+                if (data && data.success) {
+                    displayPavilions(data.data);
+                }
+            } catch (error) {
+                console.error('Error loading pavilions:', error);
+            }
+        }
+
+        function displayPavilions(pavilions) {
+            const tbody = document.getElementById('pavilions-table');
+            tbody.innerHTML = pavilions.map(pavilion => `
+                <tr class="border-b">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${pavilion.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${pavilion.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${pavilion.country || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${pavilion.shops_count || 0}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${pavilion.icon ? `<img src="${pavilion.icon}" alt="Icon" class="w-8 h-8 rounded">` : 'No Icon'}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <button onclick="editPavilion(${pavilion.id})" class="text-blue-600 hover:text-blue-900 mr-2">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deletePavilion(${pavilion.id})" class="text-red-600 hover:text-red-900">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function showAddPavilionModal() {
+            document.getElementById('add-pavilion-modal').classList.remove('hidden');
+        }
+
+        function closeAddPavilionModal() {
+            document.getElementById('add-pavilion-modal').classList.add('hidden');
+            document.getElementById('add-pavilion-form').reset();
+        }
+
+        async function addPavilion(event) {
+            event.preventDefault();
+
+            const formData = new FormData(event.target);
+
+            try {
+                const response = await fetch('/api/admin/pavilions', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    closeAddPavilionModal();
+                    loadPavilions();
+                    alert('Pavilion added successfully!');
+                } else {
+                    alert(data.message || 'Failed to add pavilion');
+                }
+            } catch (error) {
+                console.error('Error adding pavilion:', error);
+                alert('Error adding pavilion');
+            }
+        }
+
+        function editPavilion(pavilionId) {
+            alert(`Edit pavilion ${pavilionId} - Feature coming soon!`);
+        }
+
+        async function deletePavilion(pavilionId) {
+            if (confirm('Are you sure you want to delete this pavilion?')) {
+                try {
+                    const data = await apiCall(`/admin/pavilions/${pavilionId}`, { method: 'DELETE' });
+                    if (data && data.success) {
+                        loadPavilions();
+                        alert('Pavilion deleted successfully');
+                    }
+                } catch (error) {
+                    console.error('Error deleting pavilion:', error);
+                    alert('Error deleting pavilion');
                 }
             }
         }
