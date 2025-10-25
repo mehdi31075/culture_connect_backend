@@ -80,9 +80,12 @@ class PavilionController extends Controller
      *                         @OA\Property(property="id", type="integer", example=1),
      *                         @OA\Property(property="name", type="string", example="Main Pavilion"),
      *                         @OA\Property(property="description", type="string", example="The main cultural pavilion"),
+     *                         @OA\Property(property="icon", type="string", nullable=true, example="https://example.com/icon.png"),
+     *                         @OA\Property(property="country", type="string", example="UAE"),
      *                         @OA\Property(property="lat", type="number", format="float", example=25.2048),
      *                         @OA\Property(property="lng", type="number", format="float", example=55.2708),
      *                         @OA\Property(property="open_hours", type="string", example="9:00 AM - 10:00 PM"),
+     *                         @OA\Property(property="shops_count", type="integer", example=15),
      *                         @OA\Property(property="created_at", type="string", format="date-time"),
      *                         @OA\Property(property="updated_at", type="string", format="date-time")
      *                     )
@@ -185,6 +188,12 @@ class PavilionController extends Controller
             // Get paginated results
             $pavilions = $query->paginate($perPage, ['*'], 'page', $page);
 
+            // Load shops count for each pavilion
+            $pavilions->getCollection()->transform(function ($pavilion) {
+                $pavilion->shops_count = $pavilion->shops()->count();
+                return $pavilion;
+            });
+
             // Format response
             $response = [
                 'success' => true,
@@ -239,9 +248,12 @@ class PavilionController extends Controller
      *                 @OA\Property(property="id", type="integer", example=1),
      *                 @OA\Property(property="name", type="string", example="Main Pavilion"),
      *                 @OA\Property(property="description", type="string", example="The main cultural pavilion"),
+     *                 @OA\Property(property="icon", type="string", nullable=true, example="https://example.com/icon.png"),
+     *                 @OA\Property(property="country", type="string", example="UAE"),
      *                 @OA\Property(property="lat", type="number", format="float", example=25.2048),
      *                 @OA\Property(property="lng", type="number", format="float", example=55.2708),
      *                 @OA\Property(property="open_hours", type="string", example="9:00 AM - 10:00 PM"),
+     *                 @OA\Property(property="shops_count", type="integer", example=15),
      *                 @OA\Property(property="created_at", type="string", format="date-time"),
      *                 @OA\Property(property="updated_at", type="string", format="date-time")
      *             )
@@ -276,6 +288,9 @@ class PavilionController extends Controller
                     'message' => 'Pavilion not found',
                 ], 404);
             }
+
+            // Add shops count to the pavilion
+            $pavilion->shops_count = $pavilion->shops()->count();
 
             return response()->json([
                 'success' => true,

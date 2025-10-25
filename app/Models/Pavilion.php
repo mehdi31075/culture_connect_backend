@@ -12,6 +12,8 @@ class Pavilion extends Model
     protected $fillable = [
         'name',
         'description',
+        'icon',
+        'country',
         'lat',
         'lng',
         'open_hours',
@@ -35,5 +37,13 @@ class Pavilion extends Model
     public function pois()
     {
         return $this->hasMany(POI::class);
+    }
+
+    /**
+     * Get the shops count for this pavilion
+     */
+    public function getShopsCountAttribute()
+    {
+        return $this->shops()->count();
     }
 }

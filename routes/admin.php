@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\AdminAuthController;
+use App\Http\Controllers\Admin\AdminPavilionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -44,6 +45,9 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
 
     // Pavilion management
     Route::get('/pavilions', [AdminController::class, 'pavilions']);
+    Route::post('/pavilions', [AdminPavilionController::class, 'store']);
+    Route::put('/pavilions/{id}', [AdminPavilionController::class, 'update']);
+    Route::delete('/pavilions/{id}', [AdminPavilionController::class, 'destroy']);
 
     // Shop management
     Route::get('/shops', [AdminController::class, 'shops']);
