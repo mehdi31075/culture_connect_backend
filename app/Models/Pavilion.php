@@ -29,15 +29,15 @@ class Pavilion extends Model
         return $this->hasMany(Shop::class);
     }
 
-    public function events()
-    {
-        return $this->hasMany(Event::class);
-    }
+    // public function events()
+    // {
+    //     return $this->hasMany(Event::class);
+    // }
 
-    public function pois()
-    {
-        return $this->hasMany(POI::class);
-    }
+    // public function pois()
+    // {
+    //     return $this->hasMany(POI::class);
+    // }
 
     /**
      * Get the shops count for this pavilion

@@ -219,7 +219,7 @@ class AdminController extends Controller
         $perPage = $request->get('per_page', 15);
         $search = $request->get('search');
 
-        $query = Pavilion::with(['shops', 'events']);
+        $query = Pavilion::with(['shops']);
 
         if ($search) {
             $query->where('name', 'like', "%{$search}%")
