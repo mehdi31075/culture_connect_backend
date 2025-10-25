@@ -40,7 +40,7 @@ class AdminPavilionController extends Controller
      *                     property="icon",
      *                     type="string",
      *                     format="binary",
-     *                     description="Pavilion icon image file (JPEG, PNG, JPG, GIF, SVG)"
+     *                     description="Pavilion icon file (JPEG, PNG, JPG, GIF, SVG)"
      *                 )
      *             )
      *         )
@@ -114,7 +114,7 @@ class AdminPavilionController extends Controller
                 'lat' => 'nullable|numeric|between:-90,90',
                 'lng' => 'nullable|numeric|between:-180,180',
                 'open_hours' => 'nullable|string|max:255',
-                'icon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // 2MB max
+                'icon' => 'nullable|file|mimes:jpeg,png,jpg,gif,svg|max:2048', // 2MB max
             ]);
 
             if ($validator->fails()) {
@@ -292,7 +292,7 @@ class AdminPavilionController extends Controller
                 'lat' => 'nullable|numeric|between:-90,90',
                 'lng' => 'nullable|numeric|between:-180,180',
                 'open_hours' => 'nullable|string|max:255',
-                'icon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // 2MB max
+                'icon' => 'nullable|file|mimes:jpeg,png,jpg,gif,svg|max:2048', // 2MB max
             ]);
 
             if ($validator->fails()) {
