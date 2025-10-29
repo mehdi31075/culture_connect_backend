@@ -40,7 +40,8 @@ class AdminBannerController extends Controller
             'title' => 'nullable|string|max:255',
             'link' => 'nullable|url|max:2048',
             'order' => 'nullable|integer|min:0',
-            'is_active' => 'nullable|boolean',
+            // accept checkbox values (on/off) and booleans
+            'is_active' => 'nullable|in:0,1,true,false,on,off',
             'image' => 'required|file|mimes:jpeg,png,jpg,gif,svg|max:4096',
         ]);
 
@@ -85,7 +86,8 @@ class AdminBannerController extends Controller
             'title' => 'nullable|string|max:255',
             'link' => 'nullable|url|max:2048',
             'order' => 'nullable|integer|min:0',
-            'is_active' => 'nullable|boolean',
+            // accept checkbox values (on/off) and booleans
+            'is_active' => 'nullable|in:0,1,true,false,on,off',
             'image' => 'nullable|file|mimes:jpeg,png,jpg,gif,svg|max:4096',
         ]);
 
@@ -100,7 +102,7 @@ class AdminBannerController extends Controller
         $data = [];
         foreach (['title','link','order','is_active'] as $field) {
             if ($request->has($field) && $request->$field !== null) {
-                $data[$field] = $request->$field;
+                $data[$field] = $field === 'is_active' ? (bool) $request->$field : $request->$field;
             }
         }
 

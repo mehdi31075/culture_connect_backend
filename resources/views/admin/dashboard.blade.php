@@ -743,10 +743,9 @@
             event.preventDefault();
 
             const formData = new FormData(event.target);
-            // Checkbox handling
-            if (!formData.has('is_active')) {
-                formData.append('is_active', '0');
-            }
+            // Normalize checkbox value to 1/0 for backend boolean validation
+            const isActiveEl = document.querySelector('input[name="is_active"]');
+            formData.set('is_active', isActiveEl && isActiveEl.checked ? '1' : '0');
 
             try {
                 const response = await fetch('/api/admin/banners', {
