@@ -20,9 +20,20 @@ class Pavilion extends Model
     ];
 
     protected $casts = [
-        'lat' => 'decimal:6',
-        'lng' => 'decimal:6',
+        'lat' => 'float',
+        'lng' => 'float',
     ];
+
+    // Ensure numeric serialization regardless of DB type/driver
+    public function getLatAttribute($value)
+    {
+        return $value === null ? null : (float) $value;
+    }
+
+    public function getLngAttribute($value)
+    {
+        return $value === null ? null : (float) $value;
+    }
 
     public function shops()
     {
