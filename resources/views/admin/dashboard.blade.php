@@ -6,6 +6,8 @@
     <title>CultureConnect Admin Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body class="bg-gray-100">
@@ -313,6 +315,14 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Longitude (Optional)</label>
                                 <input type="number" name="lng" step="any" class="w-full border rounded px-3 py-2">
                             </div>
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="block text-sm font-medium text-gray-700">Pick on Map (Optional)</label>
+                                <button type="button" onclick="useMyLocation()" class="text-sm text-blue-600 hover:underline">Use my location</button>
+                            </div>
+                            <div id="pavilion-map" class="w-full h-64 rounded border"></div>
+                            <p class="text-xs text-gray-500 mt-1">Click on the map to set latitude and longitude.</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Open Hours (Optional)</label>
@@ -624,6 +634,7 @@
 
         function showAddPavilionModal() {
             document.getElementById('add-pavilion-modal').classList.remove('hidden');
+            initPavilionMap();
         }
 
         function closeAddPavilionModal() {
@@ -669,6 +680,74 @@
                 console.error('Error adding pavilion:', error);
                 alert('Error adding pavilion');
             }
+        }
+
+        // Leaflet map for Pavilion picker
+        let pavilionMap = null;
+        let pavilionMarker = null;
+
+        function initPavilionMap() {
+            const mapEl = document.getElementById('pavilion-map');
+            if (!mapEl) return;
+            // Avoid re-initializing
+            if (pavilionMap) {
+                setTimeout(() => { pavilionMap.invalidateSize(); }, 200);
+                return;
+            }
+
+            pavilionMap = L.map('pavilion-map').setView([25.2048, 55.2708], 11); // Default: Dubai
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(pavilionMap);
+
+            pavilionMap.on('click', function (e) {
+                setPavilionLatLng(e.latlng.lat, e.latlng.lng);
+            });
+
+            // If form has existing values, show marker
+            const latInput = document.querySelector('input[name="lat"]');
+            const lngInput = document.querySelector('input[name="lng"]');
+            const lat = parseFloat(latInput.value);
+            const lng = parseFloat(lngInput.value);
+            if (!isNaN(lat) && !isNaN(lng)) {
+                setPavilionLatLng(lat, lng, true);
+                pavilionMap.setView([lat, lng], 13);
+            }
+
+            setTimeout(() => { pavilionMap.invalidateSize(); }, 200);
+        }
+
+        function setPavilionLatLng(lat, lng, skipCenter) {
+            const latInput = document.querySelector('input[name="lat"]');
+            const lngInput = document.querySelector('input[name="lng"]');
+            latInput.value = lat.toFixed(6);
+            lngInput.value = lng.toFixed(6);
+            if (!pavilionMarker) {
+                pavilionMarker = L.marker([lat, lng], { draggable: true }).addTo(pavilionMap);
+                pavilionMarker.on('dragend', function(e) {
+                    const pos = e.target.getLatLng();
+                    latInput.value = pos.lat.toFixed(6);
+                    lngInput.value = pos.lng.toFixed(6);
+                });
+            } else {
+                pavilionMarker.setLatLng([lat, lng]);
+            }
+            if (!skipCenter) pavilionMap.setView([lat, lng], pavilionMap.getZoom());
+        }
+
+        function useMyLocation() {
+            if (!navigator.geolocation) {
+                alert('Geolocation is not supported by your browser');
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(function (pos) {
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+                initPavilionMap();
+                setPavilionLatLng(lat, lng);
+            }, function () {
+                alert('Unable to retrieve your location');
+            });
         }
 
         function editPavilion(pavilionId) {
