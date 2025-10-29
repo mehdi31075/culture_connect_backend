@@ -413,7 +413,7 @@
             try {
                 const data = await apiCall('/admin/users');
                 if (data && data.success) {
-                    displayUsers(data.data.data);
+                    displayUsers(data.data.items);
                 }
             } catch (error) {
                 console.error('Error loading users:', error);
@@ -505,7 +505,7 @@
             try {
                 const data = await apiCall('/admin/pavilions');
                 if (data && data.success) {
-                    displayPavilions(data.data);
+                    displayPavilions(data.data.items);
                 }
             } catch (error) {
                 console.error('Error loading pavilions:', error);

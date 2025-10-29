@@ -74,7 +74,7 @@ class PavilionController extends Controller
      *                 property="data",
      *                 type="object",
      *                 @OA\Property(
-     *                     property="pavilions",
+     *                     property="items",
      *                     type="array",
      *                     @OA\Items(
      *                         @OA\Property(property="id", type="integer", example=1),
@@ -199,7 +199,7 @@ class PavilionController extends Controller
                 'success' => true,
                 'message' => 'Pavilions retrieved successfully',
                 'data' => [
-                    'pavilions' => $pavilions->items(),
+                    'items' => $pavilions->items(),
                     'pagination' => [
                         'current_page' => $pavilions->currentPage(),
                         'per_page' => $pavilions->perPage(),

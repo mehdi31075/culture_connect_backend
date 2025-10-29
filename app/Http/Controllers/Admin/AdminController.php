@@ -110,7 +110,18 @@ class AdminController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $users
+            'data' => [
+                'items' => $users->items(),
+                'pagination' => [
+                    'current_page' => $users->currentPage(),
+                    'per_page' => $users->perPage(),
+                    'total' => $users->total(),
+                    'last_page' => $users->lastPage(),
+                    'from' => $users->firstItem(),
+                    'to' => $users->lastItem(),
+                    'has_more_pages' => $users->hasMorePages(),
+                ]
+            ]
         ]);
     }
 
@@ -207,7 +218,18 @@ class AdminController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $events
+            'data' => [
+                'items' => $events->items(),
+                'pagination' => [
+                    'current_page' => $events->currentPage(),
+                    'per_page' => $events->perPage(),
+                    'total' => $events->total(),
+                    'last_page' => $events->lastPage(),
+                    'from' => $events->firstItem(),
+                    'to' => $events->lastItem(),
+                    'has_more_pages' => $events->hasMorePages(),
+                ]
+            ]
         ]);
     }
 
@@ -236,7 +258,18 @@ class AdminController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $pavilions->items() // Return just the items, not pagination
+            'data' => [
+                'items' => $pavilions->items(),
+                'pagination' => [
+                    'current_page' => $pavilions->currentPage(),
+                    'per_page' => $pavilions->perPage(),
+                    'total' => $pavilions->total(),
+                    'last_page' => $pavilions->lastPage(),
+                    'from' => $pavilions->firstItem(),
+                    'to' => $pavilions->lastItem(),
+                    'has_more_pages' => $pavilions->hasMorePages(),
+                ]
+            ]
         ]);
     }
 
@@ -259,7 +292,18 @@ class AdminController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $shops
+            'data' => [
+                'items' => $shops->items(),
+                'pagination' => [
+                    'current_page' => $shops->currentPage(),
+                    'per_page' => $shops->perPage(),
+                    'total' => $shops->total(),
+                    'last_page' => $shops->lastPage(),
+                    'from' => $shops->firstItem(),
+                    'to' => $shops->lastItem(),
+                    'has_more_pages' => $shops->hasMorePages(),
+                ]
+            ]
         ]);
     }
 
@@ -281,7 +325,18 @@ class AdminController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $orders
+            'data' => [
+                'items' => $orders->items(),
+                'pagination' => [
+                    'current_page' => $orders->currentPage(),
+                    'per_page' => $orders->perPage(),
+                    'total' => $orders->total(),
+                    'last_page' => $orders->lastPage(),
+                    'from' => $orders->firstItem(),
+                    'to' => $orders->lastItem(),
+                    'has_more_pages' => $orders->hasMorePages(),
+                ]
+            ]
         ]);
     }
 
@@ -331,7 +386,18 @@ class AdminController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $reviews
+            'data' => [
+                'items' => $reviews->items(),
+                'pagination' => [
+                    'current_page' => $reviews->currentPage(),
+                    'per_page' => $reviews->perPage(),
+                    'total' => $reviews->total(),
+                    'last_page' => $reviews->lastPage(),
+                    'from' => $reviews->firstItem(),
+                    'to' => $reviews->lastItem(),
+                    'has_more_pages' => $reviews->hasMorePages(),
+                ]
+            ]
         ]);
     }
 
@@ -367,7 +433,18 @@ class AdminController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $notifications
+            'data' => [
+                'items' => $notifications->items(),
+                'pagination' => [
+                    'current_page' => $notifications->currentPage(),
+                    'per_page' => $notifications->perPage(),
+                    'total' => $notifications->total(),
+                    'last_page' => $notifications->lastPage(),
+                    'from' => $notifications->firstItem(),
+                    'to' => $notifications->lastItem(),
+                    'has_more_pages' => $notifications->hasMorePages(),
+                ]
+            ]
         ]);
     }
 
