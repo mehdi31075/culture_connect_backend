@@ -283,9 +283,9 @@
     </div>
 
     <!-- Add Pavilion Modal -->
-    <div id="add-pavilion-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+    <div id="add-pavilion-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 overflow-y-auto">
         <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[85vh] overflow-y-auto">
                 <div class="flex justify-between items-center p-6 border-b">
                     <h3 class="text-lg font-semibold">Add New Pavilion</h3>
                     <button onclick="closeAddPavilionModal()" class="text-gray-400 hover:text-gray-600">
@@ -347,9 +347,9 @@
     </div>
 
     <!-- Add Banner Modal -->
-    <div id="add-banner-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+    <div id="add-banner-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 overflow-y-auto">
         <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div class="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[85vh] overflow-y-auto">
                 <div class="flex justify-between items-center p-6 border-b">
                     <h3 class="text-lg font-semibold">Add New Banner</h3>
                     <button onclick="closeAddBannerModal()" class="text-gray-400 hover:text-gray-600">
