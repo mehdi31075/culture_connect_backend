@@ -188,9 +188,15 @@ class PavilionController extends Controller
             // Get paginated results
             $pavilions = $query->paginate($perPage, ['*'], 'page', $page);
 
-            // Load shops count for each pavilion
+            // Load shops count and ensure lat/lng are numeric (not strings)
             $pavilions->getCollection()->transform(function ($pavilion) {
                 $pavilion->shops_count = $pavilion->shops()->count();
+                if ($pavilion->lat !== null) {
+                    $pavilion->lat = (float) $pavilion->lat;
+                }
+                if ($pavilion->lng !== null) {
+                    $pavilion->lng = (float) $pavilion->lng;
+                }
                 return $pavilion;
             });
 
@@ -289,8 +295,14 @@ class PavilionController extends Controller
                 ], 404);
             }
 
-            // Add shops count to the pavilion
+            // Add shops count and ensure numeric lat/lng
             $pavilion->shops_count = $pavilion->shops()->count();
+            if ($pavilion->lat !== null) {
+                $pavilion->lat = (float) $pavilion->lat;
+            }
+            if ($pavilion->lng !== null) {
+                $pavilion->lng = (float) $pavilion->lng;
+            }
 
             return response()->json([
                 'success' => true,
