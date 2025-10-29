@@ -126,7 +126,34 @@ class AuthController extends Controller
      *             @OA\Property(property="code", type="string")
      *         )
      *     ),
-     *     @OA\Response(response=200, description="Success"),
+     *     @OA\Response(
+     *         response=200,
+     *         description="OTP verified successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Authentication successful"),
+     *             @OA\Property(property="access_token", type="string"),
+     *             @OA\Property(property="refresh_token", type="string"),
+     *             @OA\Property(property="access_remaining_ms", type="integer"),
+     *             @OA\Property(property="refresh_remaining_ms", type="integer"),
+     *             @OA\Property(
+     *                 property="user",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="email", type="string", nullable=true),
+     *                 @OA\Property(property="phone", type="string", nullable=true),
+     *                 @OA\Property(property="first_name", type="string", example="John"),
+     *                 @OA\Property(property="last_name", type="string", example="Doe"),
+     *                 @OA\Property(property="sex", type="string", enum={"male", "female"}, nullable=true),
+     *                 @OA\Property(property="birthday", type="string", format="date", nullable=true),
+     *                 @OA\Property(property="nationality", type="string", nullable=true, example="US"),
+     *                 @OA\Property(property="locale", type="string", example="en"),
+     *                 @OA\Property(property="is_active", type="boolean", example=true),
+     *                 @OA\Property(property="created_at", type="string", format="date-time")
+     *             ),
+     *             @OA\Property(property="is_registered", type="boolean", example=false)
+     *         )
+     *     ),
      *     @OA\Response(response=422, description="Validation error")
      * )
      */
@@ -229,6 +256,7 @@ class AuthController extends Controller
                 'last_name' => $user->last_name,
                 'sex' => $user->sex,
                 'birthday' => $user->birthday,
+                'nationality' => $user->nationality,
                 'locale' => $user->locale,
                 'is_active' => $user->is_active,
                 'created_at' => $user->created_at,
@@ -343,6 +371,7 @@ class AuthController extends Controller
                     'last_name' => $user->last_name,
                     'sex' => $user->sex,
                     'birthday' => $user->birthday,
+                    'nationality' => $user->nationality,
                     'locale' => $user->locale,
                     'is_active' => $user->is_active,
                     'created_at' => $user->created_at,
