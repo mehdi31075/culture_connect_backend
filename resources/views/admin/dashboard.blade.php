@@ -50,6 +50,12 @@
                         </a>
                     </li>
                     <li>
+                        <a href="#banners" onclick="showSection('banners')" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
+                            <i class="fas fa-images mr-3"></i>
+                            Banners
+                        </a>
+                    </li>
+                    <li>
                         <a href="#events" onclick="showSection('events')" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
                             <i class="fas fa-calendar mr-3"></i>
                             Events
@@ -212,6 +218,37 @@
                 </div>
             </div>
 
+            <!-- Banners Section -->
+            <div id="banners-section" class="section hidden">
+                <h2 class="text-2xl font-bold mb-6">Banner Management</h2>
+                <div class="bg-white rounded-lg shadow">
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-gray-600">Manage home banners (click opens link)</span>
+                            <button onclick="showAddBannerModal()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                                <i class="fas fa-plus"></i> Add Banner
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full table-auto">
+                                <thead>
+                                    <tr class="bg-gray-50">
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Active</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Image</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Link</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="banners-table"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Other sections will be similar -->
             <div id="events-section" class="section hidden">
                 <h2 class="text-2xl font-bold mb-6">Event Management</h2>
@@ -292,6 +329,54 @@
                         </button>
                         <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
                             Add Pavilion
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Banner Modal -->
+    <div id="add-banner-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+                <div class="flex justify-between items-center p-6 border-b">
+                    <h3 class="text-lg font-semibold">Add New Banner</h3>
+                    <button onclick="closeAddBannerModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="add-banner-form" onsubmit="addBanner(event)" class="p-6">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Title (Optional)</label>
+                            <input type="text" name="title" class="w-full border rounded px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Link (Optional)</label>
+                            <input type="url" name="link" placeholder="https://example.com" class="w-full border rounded px-3 py-2">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Order</label>
+                                <input type="number" name="order" min="0" value="0" class="w-full border rounded px-3 py-2">
+                            </div>
+                            <div class="flex items-center mt-6">
+                                <input type="checkbox" name="is_active" id="banner_is_active" class="mr-2" checked>
+                                <label for="banner_is_active" class="text-sm text-gray-700">Active</label>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Image</label>
+                            <input type="file" name="image" accept="image/*,.svg" required class="w-full border rounded px-3 py-2">
+                        </div>
+                    </div>
+                    <div class="flex justify-end space-x-3 mt-6">
+                        <button type="button" onclick="closeAddBannerModal()" class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50">
+                            Cancel
+                        </button>
+                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                            Add Banner
                         </button>
                     </div>
                 </form>
@@ -469,6 +554,8 @@
                 loadUsers();
             } else if (sectionName === 'pavilions') {
                 loadPavilions();
+            } else if (sectionName === 'banners') {
+                loadBanners();
             }
         }
 
@@ -600,6 +687,111 @@
                     console.error('Error deleting pavilion:', error);
                     alert('Error deleting pavilion');
                 }
+            }
+        }
+
+        // Banner Management Functions
+        async function loadBanners() {
+            try {
+                const data = await apiCall('/admin/banners');
+                if (data && data.success) {
+                    displayBanners(data.data.items);
+                }
+            } catch (error) {
+                console.error('Error loading banners:', error);
+            }
+        }
+
+        function displayBanners(banners) {
+            const tbody = document.getElementById('banners-table');
+            tbody.innerHTML = banners.map(banner => `
+                <tr class="border-b">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${banner.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${banner.title || '—'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${banner.order ?? 0}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs rounded-full ${banner.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                            ${banner.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${banner.image ? `<img src="${banner.image}" alt="Banner" class="w-16 h-10 object-cover rounded">` : 'No Image'}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-600">${banner.link ? `<a href="${banner.link}" target="_blank">${banner.link}</a>` : '—'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <button onclick="editBanner(${banner.id})" class="text-blue-600 hover:text-blue-900 mr-2">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteBanner(${banner.id})" class="text-red-600 hover:text-red-900">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function showAddBannerModal() {
+            document.getElementById('add-banner-modal').classList.remove('hidden');
+        }
+
+        function closeAddBannerModal() {
+            document.getElementById('add-banner-modal').classList.add('hidden');
+            document.getElementById('add-banner-form').reset();
+        }
+
+        async function addBanner(event) {
+            event.preventDefault();
+
+            const formData = new FormData(event.target);
+            // Checkbox handling
+            if (!formData.has('is_active')) {
+                formData.append('is_active', '0');
+            }
+
+            try {
+                const response = await fetch('/api/admin/banners', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    closeAddBannerModal();
+                    loadBanners();
+                    alert('Banner added successfully!');
+                } else {
+                    let msg = data.message || 'Failed to add banner';
+                    if (data.errors) {
+                        msg += '\n';
+                        for (const k in data.errors) msg += `${k}: ${data.errors[k].join(', ')}\n`;
+                    }
+                    alert(msg);
+                }
+            } catch (err) {
+                console.error('Error adding banner:', err);
+                alert('Error adding banner');
+            }
+        }
+
+        function editBanner(id) {
+            alert(`Edit banner ${id} - Feature coming soon!`);
+        }
+
+        async function deleteBanner(id) {
+            if (!confirm('Are you sure you want to delete this banner?')) return;
+            try {
+                const data = await apiCall(`/admin/banners/${id}`, { method: 'DELETE' });
+                if (data && data.success) {
+                    loadBanners();
+                    alert('Banner deleted successfully');
+                }
+            } catch (err) {
+                console.error('Error deleting banner:', err);
+                alert('Error deleting banner');
             }
         }
     </script>

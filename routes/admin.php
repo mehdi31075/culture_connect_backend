@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\AdminPavilionController;
+use App\Http\Controllers\Admin\AdminBannerController;
 
 /*
 |--------------------------------------------------------------------------
@@ -48,6 +49,12 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
     Route::post('/pavilions', [AdminPavilionController::class, 'store']);
     Route::put('/pavilions/{id}', [AdminPavilionController::class, 'update']);
     Route::delete('/pavilions/{id}', [AdminPavilionController::class, 'destroy']);
+
+    // Banner management
+    Route::get('/banners', [AdminBannerController::class, 'index']);
+    Route::post('/banners', [AdminBannerController::class, 'store']);
+    Route::put('/banners/{id}', [AdminBannerController::class, 'update']);
+    Route::delete('/banners/{id}', [AdminBannerController::class, 'destroy']);
 
     // Shop management
     Route::get('/shops', [AdminController::class, 'shops']);
