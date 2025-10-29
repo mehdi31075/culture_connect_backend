@@ -499,18 +499,19 @@ class AuthController extends Controller
     /**
      * @OA\Put(
      *     path="/api/auth/profile",
-     *     summary="Update user profile",
+     *     summary="Update user profile (partial update)",
+     *     description="Update user profile fields. Only send the fields you want to update. Null values will be ignored.",
      *     tags={"Authentication"},
      *     security={{"bearerAuth":{}}},
      *     @OA\RequestBody(
-     *         required=true,
+     *         required=false,
+     *         description="Send only the fields you want to update. Null values will be ignored.",
      *         @OA\JsonContent(
-     *             required={"first_name", "last_name", "nationality", "birthday", "sex"},
-     *             @OA\Property(property="first_name", type="string", example="John"),
-     *             @OA\Property(property="last_name", type="string", example="Doe"),
-     *             @OA\Property(property="nationality", type="string", example="US"),
-     *             @OA\Property(property="birthday", type="string", format="date", example="1990-01-01"),
-     *             @OA\Property(property="sex", type="string", enum={"male", "female"}, example="male")
+     *             @OA\Property(property="first_name", type="string", nullable=true, example="John"),
+     *             @OA\Property(property="last_name", type="string", nullable=true, example="Doe"),
+     *             @OA\Property(property="nationality", type="string", nullable=true, example="US"),
+     *             @OA\Property(property="birthday", type="string", format="date", nullable=true, example="1990-01-01"),
+     *             @OA\Property(property="sex", type="string", enum={"male", "female"}, nullable=true, example="male")
      *         )
      *     ),
      *     @OA\Response(
@@ -520,13 +521,19 @@ class AuthController extends Controller
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Profile updated successfully"),
      *             @OA\Property(
-     *                 property="profile",
+     *                 property="user",
      *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="email", type="string", nullable=true, example="user@example.com"),
+     *                 @OA\Property(property="phone", type="string", nullable=true, example="+1234567890"),
      *                 @OA\Property(property="first_name", type="string", example="John"),
      *                 @OA\Property(property="last_name", type="string", example="Doe"),
      *                 @OA\Property(property="sex", type="string", enum={"male", "female"}, example="male"),
      *                 @OA\Property(property="birthday", type="string", format="date", example="1990-01-01"),
-     *                 @OA\Property(property="nationality", type="string", example="US")
+     *                 @OA\Property(property="nationality", type="string", example="US"),
+     *                 @OA\Property(property="locale", type="string", example="en"),
+     *                 @OA\Property(property="is_active", type="boolean", example=true),
+     *                 @OA\Property(property="created_at", type="string", format="date-time", example="2025-09-23T23:01:56.000000Z")
      *             )
      *         )
      *     ),
@@ -568,13 +575,13 @@ class AuthController extends Controller
                 ], 401);
             }
 
-            // Validate the request
+            // Validate the request (all fields are optional for partial updates)
             $validator = Validator::make($request->all(), [
-                'first_name' => 'required|string|max:255',
-                'last_name' => 'required|string|max:255',
-                'nationality' => 'required|string|max:255',
-                'birthday' => 'required|date',
-                'sex' => 'required|in:male,female',
+                'first_name' => 'nullable|string|max:255',
+                'last_name' => 'nullable|string|max:255',
+                'nationality' => 'nullable|string|max:255',
+                'birthday' => 'nullable|date',
+                'sex' => 'nullable|in:male,female',
             ]);
 
             if ($validator->fails()) {
@@ -585,24 +592,52 @@ class AuthController extends Controller
                 ], 422);
             }
 
-            // Update user profile
-            $user->update([
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'nationality' => $request->nationality,
-                'birthday' => $request->birthday,
-                'sex' => $request->sex,
-            ]);
+            // Build update array with only non-null fields
+            $updateData = [];
+
+            if ($request->has('first_name') && $request->first_name !== null) {
+                $updateData['first_name'] = $request->first_name;
+            }
+
+            if ($request->has('last_name') && $request->last_name !== null) {
+                $updateData['last_name'] = $request->last_name;
+            }
+
+            if ($request->has('nationality') && $request->nationality !== null) {
+                $updateData['nationality'] = $request->nationality;
+            }
+
+            if ($request->has('birthday') && $request->birthday !== null) {
+                $updateData['birthday'] = $request->birthday;
+            }
+
+            if ($request->has('sex') && $request->sex !== null) {
+                $updateData['sex'] = $request->sex;
+            }
+
+            // Update user profile only if there are fields to update
+            if (!empty($updateData)) {
+                $user->update($updateData);
+            }
+
+            // Refresh user model to get latest data
+            $user->refresh();
 
             return response()->json([
                 'success' => true,
                 'message' => 'Profile updated successfully',
-                'profile' => [
+                'user' => [
+                    'id' => $user->id,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
                     'first_name' => $user->first_name,
                     'last_name' => $user->last_name,
                     'sex' => $user->sex,
                     'birthday' => $user->birthday,
                     'nationality' => $user->nationality,
+                    'locale' => $user->locale,
+                    'is_active' => $user->is_active,
+                    'created_at' => $user->created_at,
                 ]
             ]);
         } catch (\Exception $e) {
