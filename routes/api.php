@@ -110,6 +110,7 @@ Route::middleware('auth:api')->group(function () {
 // Pavilion routes
 Route::get('pavilions', [PavilionController::class, 'index']);
 Route::get('pavilions/{id}', [PavilionController::class, 'show']);
+Route::get('pavilions/{id}/shops', [PavilionController::class, 'getShops']);
 
 // Banner routes
 Route::get('banners', [BannerController::class, 'index']);

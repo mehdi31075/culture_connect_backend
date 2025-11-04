@@ -6,6 +6,9 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\AdminPavilionController;
 use App\Http\Controllers\Admin\AdminBannerController;
+use App\Http\Controllers\Admin\AdminShopController;
+use App\Http\Controllers\Admin\AdminProductController;
+use App\Http\Controllers\Admin\AdminReviewController;
 
 /*
 |--------------------------------------------------------------------------
@@ -58,6 +61,15 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
 
     // Shop management
     Route::get('/shops', [AdminController::class, 'shops']);
+    Route::post('/shops', [AdminShopController::class, 'store']);
+    Route::put('/shops/{id}', [AdminShopController::class, 'update']);
+    Route::delete('/shops/{id}', [AdminShopController::class, 'destroy']);
+
+    // Product management
+    Route::get('/products', [AdminProductController::class, 'index']);
+    Route::post('/products', [AdminProductController::class, 'store']);
+    Route::put('/products/{id}', [AdminProductController::class, 'update']);
+    Route::delete('/products/{id}', [AdminProductController::class, 'destroy']);
 
     // Order management
     Route::get('/orders', [AdminController::class, 'orders']);
@@ -65,7 +77,9 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
 
     // Review management
     Route::get('/reviews', [AdminController::class, 'reviews']);
-    Route::delete('/reviews/{id}', [AdminController::class, 'deleteReview']);
+    Route::post('/reviews', [AdminReviewController::class, 'store']);
+    Route::put('/reviews/{id}', [AdminReviewController::class, 'update']);
+    Route::delete('/reviews/{id}', [AdminReviewController::class, 'destroy']);
 
     // Notification management
     Route::get('/notifications', [AdminController::class, 'notifications']);
