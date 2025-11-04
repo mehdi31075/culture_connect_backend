@@ -1115,10 +1115,6 @@
             });
         }
 
-        function editPavilion(pavilionId) {
-            alert(`Edit pavilion ${pavilionId} - Feature coming soon!`);
-        }
-
         async function deletePavilion(pavilionId) {
             if (confirm('Are you sure you want to delete this pavilion?')) {
                 try {
