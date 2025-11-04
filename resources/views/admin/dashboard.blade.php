@@ -383,38 +383,39 @@
         </div>
     </div>
 
-    <!-- Add Pavilion Modal -->
+    <!-- Add/Edit Pavilion Modal -->
     <div id="add-pavilion-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 overflow-y-auto">
         <div class="flex items-center justify-center min-h-screen p-4">
             <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[85vh] overflow-y-auto">
                 <div class="flex justify-between items-center p-6 border-b">
-                    <h3 class="text-lg font-semibold">Add New Pavilion</h3>
+                    <h3 id="pavilion-modal-title" class="text-lg font-semibold">Add New Pavilion</h3>
                     <button onclick="closeAddPavilionModal()" class="text-gray-400 hover:text-gray-600">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
-                <form id="add-pavilion-form" onsubmit="addPavilion(event)" class="p-6">
+                <form id="add-pavilion-form" onsubmit="savePavilion(event)" class="p-6">
+                    <input type="hidden" name="pavilion_id" id="pavilion_id">
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                            <input type="text" name="name" required class="w-full border rounded px-3 py-2">
+                            <input type="text" name="name" id="pavilion_name" required class="w-full border rounded px-3 py-2">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                            <textarea name="description" required rows="3" class="w-full border rounded px-3 py-2"></textarea>
+                            <textarea name="description" id="pavilion_description" required rows="3" class="w-full border rounded px-3 py-2"></textarea>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Country</label>
-                            <input type="text" name="country" class="w-full border rounded px-3 py-2">
+                            <input type="text" name="country" id="pavilion_country" class="w-full border rounded px-3 py-2">
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Latitude (Optional)</label>
-                                <input type="number" name="lat" step="any" class="w-full border rounded px-3 py-2">
+                                <input type="number" name="lat" id="pavilion_lat" step="any" class="w-full border rounded px-3 py-2">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Longitude (Optional)</label>
-                                <input type="number" name="lng" step="any" class="w-full border rounded px-3 py-2">
+                                <input type="number" name="lng" id="pavilion_lng" step="any" class="w-full border rounded px-3 py-2">
                             </div>
                         </div>
                         <div>
@@ -427,18 +428,22 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Open Hours (Optional)</label>
-                            <input type="text" name="open_hours" placeholder="9:00 AM - 10:00 PM" class="w-full border rounded px-3 py-2">
+                            <input type="text" name="open_hours" id="pavilion_open_hours" placeholder="9:00 AM - 10:00 PM" class="w-full border rounded px-3 py-2">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Icon</label>
                             <input type="file" name="icon" accept="image/*,.svg" class="w-full border rounded px-3 py-2">
+                            <div id="pavilion-current-icon" class="mt-2 hidden">
+                                <p class="text-xs text-gray-500 mb-1">Current icon:</p>
+                                <img id="pavilion-icon-preview" src="" alt="Current icon" class="w-16 h-16 object-contain">
+                            </div>
                         </div>
                     </div>
                     <div class="flex justify-end space-x-3 mt-6">
                         <button type="button" onclick="closeAddPavilionModal()" class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50">
                             Cancel
                         </button>
-                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                        <button type="submit" id="pavilion-submit-btn" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
                             Add Pavilion
                         </button>
                     </div>
@@ -899,23 +904,117 @@
         }
 
         function showAddPavilionModal() {
+            // Reset form for add mode
+            document.getElementById('pavilion_id').value = '';
+            document.getElementById('pavilion-modal-title').textContent = 'Add New Pavilion';
+            document.getElementById('pavilion-submit-btn').textContent = 'Add Pavilion';
+            document.getElementById('pavilion-current-icon').classList.add('hidden');
+
             document.getElementById('add-pavilion-modal').classList.remove('hidden');
-            initPavilionMap();
+            document.getElementById('add-pavilion-form').reset();
+
+            // Reset map
+            if (pavilionMap) {
+                pavilionMap.remove();
+                pavilionMap = null;
+                pavilionMarker = null;
+            }
+
+            setTimeout(() => {
+                initPavilionMap();
+            }, 100);
         }
 
         function closeAddPavilionModal() {
             document.getElementById('add-pavilion-modal').classList.add('hidden');
             document.getElementById('add-pavilion-form').reset();
+            document.getElementById('pavilion_id').value = '';
+            document.getElementById('pavilion-current-icon').classList.add('hidden');
+
+            // Reset map
+            if (pavilionMap) {
+                pavilionMap.remove();
+                pavilionMap = null;
+                pavilionMarker = null;
+            }
         }
 
-        async function addPavilion(event) {
+        async function editPavilion(pavilionId) {
+            try {
+                // Fetch pavilion data
+                const data = await apiCall(`/api/pavilions/${pavilionId}`);
+                if (!data || !data.success) {
+                    alert('Failed to load pavilion data');
+                    return;
+                }
+
+                const pavilion = data.data;
+
+                // Populate form
+                document.getElementById('pavilion_id').value = pavilion.id;
+                document.getElementById('pavilion_name').value = pavilion.name || '';
+                document.getElementById('pavilion_description').value = pavilion.description || '';
+                document.getElementById('pavilion_country').value = pavilion.country || '';
+                document.getElementById('pavilion_lat').value = pavilion.lat || '';
+                document.getElementById('pavilion_lng').value = pavilion.lng || '';
+                document.getElementById('pavilion_open_hours').value = pavilion.open_hours || '';
+
+                // Update modal title and button
+                document.getElementById('pavilion-modal-title').textContent = 'Edit Pavilion';
+                document.getElementById('pavilion-submit-btn').textContent = 'Update Pavilion';
+
+                // Show current icon if exists
+                if (pavilion.icon) {
+                    document.getElementById('pavilion-icon-preview').src = pavilion.icon;
+                    document.getElementById('pavilion-current-icon').classList.remove('hidden');
+                } else {
+                    document.getElementById('pavilion-current-icon').classList.add('hidden');
+                }
+
+                // Show modal
+                document.getElementById('add-pavilion-modal').classList.remove('hidden');
+
+                // Reset map
+                if (pavilionMap) {
+                    pavilionMap.remove();
+                    pavilionMap = null;
+                    pavilionMarker = null;
+                }
+
+                // Initialize map with pavilion location
+                setTimeout(() => {
+                    initPavilionMap();
+                    if (pavilion.lat && pavilion.lng) {
+                        setPavilionLatLng(parseFloat(pavilion.lat), parseFloat(pavilion.lng), true);
+                        pavilionMap.setView([parseFloat(pavilion.lat), parseFloat(pavilion.lng)], 13);
+                    }
+                }, 100);
+            } catch (error) {
+                console.error('Error loading pavilion:', error);
+                alert('Error loading pavilion data');
+            }
+        }
+
+        async function savePavilion(event) {
             event.preventDefault();
 
-            const formData = new FormData(event.target);
+            const form = event.target;
+            const formData = new FormData(form);
+            const pavilionId = formData.get('pavilion_id');
+
+            const isEdit = pavilionId && pavilionId !== '';
+
+            // Remove pavilion_id from formData for PUT requests (it's in the URL)
+            if (isEdit) {
+                formData.delete('pavilion_id');
+            }
 
             try {
-                const response = await fetch('/api/admin/pavilions', {
-                    method: 'POST',
+                const url = isEdit ? `/api/admin/pavilions/${pavilionId}` : '/api/admin/pavilions';
+                const method = isEdit ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method: method,
                     headers: {
                         'Authorization': `Bearer ${authToken}`,
                         'Accept': 'application/json'
@@ -928,12 +1027,12 @@
                 if (data.success) {
                     closeAddPavilionModal();
                     loadPavilions();
-                    alert('Pavilion added successfully!');
+                    alert(isEdit ? 'Pavilion updated successfully!' : 'Pavilion added successfully!');
                 } else {
                     console.error('Validation errors:', data.errors);
                     console.error('Debug info:', data.debug);
 
-                    let errorMessage = data.message || 'Failed to add pavilion';
+                    let errorMessage = data.message || (isEdit ? 'Failed to update pavilion' : 'Failed to add pavilion');
                     if (data.errors) {
                         errorMessage += '\n\nValidation errors:\n';
                         for (const field in data.errors) {
@@ -943,8 +1042,8 @@
                     alert(errorMessage);
                 }
             } catch (error) {
-                console.error('Error adding pavilion:', error);
-                alert('Error adding pavilion');
+                console.error('Error saving pavilion:', error);
+                alert(isEdit ? 'Error updating pavilion' : 'Error adding pavilion');
             }
         }
 
