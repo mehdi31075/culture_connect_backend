@@ -376,7 +376,7 @@ class AdminController extends Controller
         $perPage = $request->get('per_page', 15);
         $rating = $request->get('rating');
 
-        $query = Review::with(['user', 'reviewable']);
+        $query = Review::with(['user', 'shop', 'product']);
 
         if ($rating) {
             $query->where('rating', $rating);
