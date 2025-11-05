@@ -307,16 +307,32 @@ class AdminPavilionController extends Controller
             if ($request->hasFile('icon')) {
                 // Delete old icon if exists
                 if ($pavilion->icon) {
-                    $oldIconPath = str_replace(Storage::url(''), '', $pavilion->icon);
-                    Storage::disk('public')->delete($oldIconPath);
+                    // Get raw icon value from database
+                    $oldIconRaw = $pavilion->getRawOriginal('icon');
+                    if ($oldIconRaw) {
+                        // Extract path from URL or use as-is if it's a path
+                        $oldIconPath = $oldIconRaw;
+                        // If it's a full URL, extract the path
+                        if (str_starts_with($oldIconPath, url('storage/'))) {
+                            $oldIconPath = str_replace(url('storage/'), '', $oldIconPath);
+                        } elseif (str_starts_with($oldIconPath, Storage::url(''))) {
+                            $oldIconPath = str_replace(Storage::url(''), '', $oldIconPath);
+                        } elseif (str_starts_with($oldIconPath, '/storage/')) {
+                            $oldIconPath = str_replace('/storage/', '', $oldIconPath);
+                        } elseif (str_starts_with($oldIconPath, 'storage/')) {
+                            $oldIconPath = str_replace('storage/', '', $oldIconPath);
+                        }
+                        Storage::disk('public')->delete($oldIconPath);
+                    }
                 }
 
                 $icon = $request->file('icon');
                 $iconName = 'pavilion_' . time() . '_' . uniqid() . '.' . $icon->getClientOriginalExtension();
                 $iconPath = $icon->storeAs('pavilions', $iconName, 'public');
-                $iconUrl = Storage::url($iconPath);
+                $iconUrl = url('storage/' . $iconPath); // Store as full URL
             } else {
-                $iconUrl = $pavilion->icon; // Keep existing icon
+                // Keep existing icon - use raw value to avoid double conversion
+                $iconUrl = $pavilion->getRawOriginal('icon') ?: $pavilion->icon;
             }
 
             // Update pavilion
@@ -411,8 +427,23 @@ class AdminPavilionController extends Controller
 
             // Delete icon file if exists
             if ($pavilion->icon) {
-                $iconPath = str_replace(Storage::url(''), '', $pavilion->icon);
-                Storage::disk('public')->delete($iconPath);
+                // Get raw icon value from database
+                $iconRaw = $pavilion->getRawOriginal('icon');
+                if ($iconRaw) {
+                    // Extract path from URL or use as-is if it's a path
+                    $iconPath = $iconRaw;
+                    // If it's a full URL, extract the path
+                    if (str_starts_with($iconPath, url('storage/'))) {
+                        $iconPath = str_replace(url('storage/'), '', $iconPath);
+                    } elseif (str_starts_with($iconPath, Storage::url(''))) {
+                        $iconPath = str_replace(Storage::url(''), '', $iconPath);
+                    } elseif (str_starts_with($iconPath, '/storage/')) {
+                        $iconPath = str_replace('/storage/', '', $iconPath);
+                    } elseif (str_starts_with($iconPath, 'storage/')) {
+                        $iconPath = str_replace('storage/', '', $iconPath);
+                    }
+                    Storage::disk('public')->delete($iconPath);
+                }
             }
 
             // Delete pavilion

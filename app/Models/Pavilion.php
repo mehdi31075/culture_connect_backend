@@ -57,4 +57,36 @@ class Pavilion extends Model
     {
         return $this->shops()->count();
     }
+
+    /**
+     * Get the icon URL as a complete URL
+     */
+    public function getIconAttribute($value)
+    {
+        if (!$value) {
+            return null;
+        }
+
+        // If it's already a complete URL, return it as is
+        if (filter_var($value, FILTER_VALIDATE_URL)) {
+            return $value;
+        }
+
+        // If it starts with /storage/, convert to full URL
+        if (str_starts_with($value, '/storage/')) {
+            return url($value);
+        }
+
+        // If it's a relative path, prepend storage URL
+        if (str_starts_with($value, 'storage/')) {
+            return url($value);
+        }
+
+        // If it's just a path without prefix, add storage prefix
+        if (!str_starts_with($value, 'http')) {
+            return url('storage/' . $value);
+        }
+
+        return $value;
+    }
 }
