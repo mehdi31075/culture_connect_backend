@@ -942,7 +942,7 @@
         async function editPavilion(pavilionId) {
             try {
                 // Fetch pavilion data
-                const data = await apiCall(`/api/pavilions/${pavilionId}`);
+                const data = await apiCall(`/pavilions/${pavilionId}`);
                 if (!data || !data.success) {
                     alert('Failed to load pavilion data');
                     return;
