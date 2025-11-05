@@ -950,14 +950,24 @@
 
                 const pavilion = data.data;
 
-                // Populate form
-                document.getElementById('pavilion_id').value = pavilion.id;
+                // Populate form fields
+                document.getElementById('pavilion_id').value = pavilion.id || '';
                 document.getElementById('pavilion_name').value = pavilion.name || '';
                 document.getElementById('pavilion_description').value = pavilion.description || '';
                 document.getElementById('pavilion_country').value = pavilion.country || '';
-                document.getElementById('pavilion_lat').value = pavilion.lat || '';
-                document.getElementById('pavilion_lng').value = pavilion.lng || '';
+                document.getElementById('pavilion_lat').value = pavilion.lat !== null && pavilion.lat !== undefined ? pavilion.lat : '';
+                document.getElementById('pavilion_lng').value = pavilion.lng !== null && pavilion.lng !== undefined ? pavilion.lng : '';
                 document.getElementById('pavilion_open_hours').value = pavilion.open_hours || '';
+
+                // Debug: Verify form values are set
+                console.log('Form values after populating:', {
+                    name: document.getElementById('pavilion_name').value,
+                    description: document.getElementById('pavilion_description').value,
+                    country: document.getElementById('pavilion_country').value,
+                    lat: document.getElementById('pavilion_lat').value,
+                    lng: document.getElementById('pavilion_lng').value,
+                    open_hours: document.getElementById('pavilion_open_hours').value
+                });
 
                 // Update modal title and button
                 document.getElementById('pavilion-modal-title').textContent = 'Edit Pavilion';
@@ -999,26 +1009,53 @@
             event.preventDefault();
 
             const form = event.target;
-            const formData = new FormData(form);
-            const pavilionId = formData.get('pavilion_id');
+
+            // Build FormData manually to ensure all values are captured
+            const formData = new FormData();
+            const pavilionId = document.getElementById('pavilion_id').value;
+
+            // Add all form fields explicitly - always add required fields
+            const name = document.getElementById('pavilion_name').value;
+            const description = document.getElementById('pavilion_description').value;
+            const country = document.getElementById('pavilion_country').value;
+            const lat = document.getElementById('pavilion_lat').value;
+            const lng = document.getElementById('pavilion_lng').value;
+            const openHours = document.getElementById('pavilion_open_hours').value;
+            const iconFile = form.querySelector('input[name="icon"]').files[0];
+
+            // Always add required fields (name and description are required)
+            formData.append('name', name || '');
+            formData.append('description', description || '');
+
+            // Add optional fields only if they have values
+            if (country) formData.append('country', country);
+            if (lat) formData.append('lat', lat);
+            if (lng) formData.append('lng', lng);
+            if (openHours) formData.append('open_hours', openHours);
+            if (iconFile) formData.append('icon', iconFile);
 
             const isEdit = pavilionId && pavilionId !== '';
 
-            // Remove pavilion_id from formData for PUT requests (it's in the URL)
-            if (isEdit) {
-                formData.delete('pavilion_id');
+            // Debug: Log form data to verify values are captured
+            console.log('Form data before processing:');
+            for (let [key, value] of formData.entries()) {
+                console.log(key, value);
             }
 
             try {
                 const url = isEdit ? `/api/admin/pavilions/${pavilionId}` : '/api/admin/pavilions';
                 const method = isEdit ? 'PUT' : 'POST';
 
+                // Don't set Content-Type header - let browser set it with boundary for FormData
+                const headers = {
+                    'Authorization': `Bearer ${authToken}`,
+                    'Accept': 'application/json'
+                    // Note: We intentionally don't set Content-Type - browser will set it with boundary
+                };
+
                 const response = await fetch(url, {
                     method: method,
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`,
-                        'Accept': 'application/json'
-                    },
+                    headers: headers,
                     body: formData
                 });
 
