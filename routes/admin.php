@@ -50,7 +50,7 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
     // Pavilion management
     Route::get('/pavilions', [AdminController::class, 'pavilions']);
     Route::post('/pavilions', [AdminPavilionController::class, 'store']);
-    Route::put('/pavilions/{id}', [AdminPavilionController::class, 'update']);
+    Route::match(['put', 'post'], '/pavilions/{id}', [AdminPavilionController::class, 'update']);
     Route::delete('/pavilions/{id}', [AdminPavilionController::class, 'destroy']);
 
     // Banner management

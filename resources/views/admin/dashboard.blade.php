@@ -1043,8 +1043,10 @@
             }
 
             try {
+                // Use POST for both create and update (route accepts both PUT and POST)
+                // Laravel has issues parsing FormData with PUT requests, so we use POST
                 const url = isEdit ? `/api/admin/pavilions/${pavilionId}` : '/api/admin/pavilions';
-                const method = isEdit ? 'PUT' : 'POST';
+                const method = 'POST'; // Use POST for FormData (route accepts both PUT and POST)
 
                 // Don't set Content-Type header - let browser set it with boundary for FormData
                 const headers = {
