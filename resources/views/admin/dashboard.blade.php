@@ -617,15 +617,15 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Tags</label>
-                            <div id="product-tags-container" class="flex flex-wrap gap-2 border rounded px-3 py-2 bg-white">
-                                <!-- Tag chips will be loaded here -->
+                            <div class="relative">
+                                <div id="product-tags-field" class="flex flex-wrap items-center gap-2 border rounded px-3 py-2 bg-white cursor-text" onclick="focusProductTagInput()">
+                                    <div id="product-selected-tags" class="flex flex-wrap gap-2"></div>
+                                    <input id="product-tag-input" type="text" class="flex-1 min-w-[120px] border-0 focus:outline-none focus:ring-0 text-sm py-1" placeholder="Type to add tags..." autocomplete="off">
+                                </div>
+                                <div id="product-tag-suggestions" class="absolute left-0 right-0 mt-1 bg-white border rounded shadow hidden z-10 max-h-48 overflow-y-auto"></div>
                             </div>
-                            <p class="text-xs text-gray-500 mt-1">Click to toggle tags. Use “New Tags” to create additional ones.</p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">New Tags (Optional)</label>
-                            <input type="text" id="product-new-tags" class="w-full border rounded px-3 py-2" placeholder="Comma-separated new tags (e.g. Sweet, Vegan)">
-                            <p class="text-xs text-gray-500 mt-1">New tags will be created automatically and linked to this product.</p>
+                            <div id="product-tags-hidden-inputs"></div>
+                            <p class="text-xs text-gray-500 mt-1">Type to search for an existing tag. If it doesn’t exist, press Enter to create it.</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
@@ -744,6 +744,8 @@
         let currentUser = null;
         let productTagsCache = [];
         let currentEditingProductTagId = null;
+        let selectedProductTagIds = [];
+        let selectedProductNewTags = [];
 
         // Initialize the admin panel
         document.addEventListener('DOMContentLoaded', function() {
@@ -757,6 +759,62 @@
             authToken = token;
             loadDashboard();
             ensureProductTagsCache();
+
+            const tagInput = document.getElementById('product-tag-input');
+            if (tagInput) {
+                tagInput.addEventListener('keydown', function(event) {
+                    if (event.key === 'Enter' || event.key === ',') {
+                        event.preventDefault();
+                        handleProductTagInputCommit();
+                    } else if (event.key === 'Backspace' && !tagInput.value) {
+                        if (selectedProductNewTags.length) {
+                            selectedProductNewTags.pop();
+                            renderSelectedProductTags();
+                        } else if (selectedProductTagIds.length) {
+                            selectedProductTagIds.pop();
+                            renderSelectedProductTags();
+                        }
+                        updateProductTagSuggestions('');
+                    }
+                });
+
+                tagInput.addEventListener('input', function(event) {
+                    updateProductTagSuggestions(event.target.value);
+                });
+
+                tagInput.addEventListener('blur', function() {
+                    setTimeout(() => {
+                        handleProductTagInputCommit();
+                        const suggestions = document.getElementById('product-tag-suggestions');
+                        if (suggestions) {
+                            suggestions.classList.add('hidden');
+                        }
+                    }, 150);
+                });
+            }
+
+            const suggestions = document.getElementById('product-tag-suggestions');
+            if (suggestions) {
+                suggestions.addEventListener('mousedown', function(event) {
+                    const button = event.target.closest('[data-tag-id]');
+                    if (!button) return;
+                    event.preventDefault();
+                    addExistingProductTag(button.getAttribute('data-tag-id'));
+                });
+            }
+
+            const selectedWrapper = document.getElementById('product-selected-tags');
+            if (selectedWrapper) {
+                selectedWrapper.addEventListener('click', function(event) {
+                    const removeExisting = event.target.closest('button[data-remove-existing]');
+                    const removeNew = event.target.closest('button[data-remove-new]');
+                    if (removeExisting) {
+                        removeExistingProductTag(Number(removeExisting.getAttribute('data-remove-existing')));
+                    } else if (removeNew) {
+                        removeNewProductTag(removeNew.getAttribute('data-remove-new'));
+                    }
+                });
+            }
         });
 
         // API helper function
@@ -1521,8 +1579,12 @@
                 console.error('Error loading shops:', error);
             }
 
-            await loadProductTagOptions([]);
-            document.getElementById('product-new-tags').value = '';
+            await loadProductTagOptions([], []);
+            const tagInput = document.getElementById('product-tag-input');
+            if (tagInput) {
+                tagInput.value = '';
+            }
+            updateProductTagSuggestions('');
 
             document.getElementById('add-product-modal').classList.remove('hidden');
         }
@@ -1530,20 +1592,25 @@
         function closeAddProductModal() {
             document.getElementById('add-product-modal').classList.add('hidden');
             document.getElementById('add-product-form').reset();
-            document.getElementById('product-new-tags').value = '';
-            document.querySelectorAll('#product-tags-container input[name="tags[]"]').forEach(input => {
-                input.checked = false;
-            });
+            selectedProductTagIds = [];
+            selectedProductNewTags = [];
+            const tagInput = document.getElementById('product-tag-input');
+            if (tagInput) {
+                tagInput.value = '';
+            }
+            renderSelectedProductTags();
+            updateProductTagSuggestions('');
+            const suggestions = document.getElementById('product-tag-suggestions');
+            if (suggestions) {
+                suggestions.classList.add('hidden');
+            }
         }
 
         async function addProduct(event) {
             event.preventDefault();
             const form = event.target;
-            const selectedTags = Array.from(form.querySelectorAll('#product-tags-container input[name="tags[]"]:checked')).map(input => Number(input.value));
-            const newTagsInput = document.getElementById('product-new-tags').value;
-            const newTags = newTagsInput
-                ? newTagsInput.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
-                : [];
+            const selectedTags = Array.from(form.querySelectorAll('input[name="tags[]"]')).map(input => Number(input.value));
+            const newTags = Array.from(form.querySelectorAll('input[name="new_tags[]"]')).map(input => input.value);
 
             const data = {
                 shop_id: form.shop_id.value,
@@ -1565,6 +1632,7 @@
                     closeAddProductModal();
                     loadProducts();
                     await ensureProductTagsCache(true);
+                    await loadProductTagOptions([], []);
                     alert('Product added successfully');
                 } else if (response && response.errors) {
                     const messages = Object.values(response.errors).flat().join('\n');
@@ -1584,14 +1652,14 @@
 
         async function deleteProduct(productId) {
             if (confirm('Are you sure you want to delete this product?')) {
-                const currentlySelectedTagIds = Array.from(document.querySelectorAll('#product-tags-container input[name="tags[]"]:checked'))
-                    .map(input => Number(input.value));
+                const currentExistingIds = [...selectedProductTagIds];
+                const currentNewNames = [...selectedProductNewTags];
                 try {
                     const data = await apiCall(`/admin/products/${productId}`, { method: 'DELETE' });
                     if (data && data.success) {
                         loadProducts();
                         await loadProductTags(true);
-                        await loadProductTagOptions(currentlySelectedTagIds);
+                        await loadProductTagOptions(currentExistingIds, currentNewNames);
                         alert('Product deleted successfully');
                     }
                 } catch (error) {
@@ -1653,39 +1721,183 @@
             `).join('');
         }
 
-        async function loadProductTagOptions(selectedIds) {
-            const container = document.getElementById('product-tags-container');
-            if (!container) return;
+        async function loadProductTagOptions(selectedIds = [], newTagNames = []) {
+            await ensureProductTagsCache();
+            selectedProductTagIds = (selectedIds || []).map(id => Number(id));
+            selectedProductNewTags = (newTagNames || []).filter(name => !!name);
+            renderSelectedProductTags();
 
-            if (!Array.isArray(selectedIds)) {
-                selectedIds = Array.from(container.querySelectorAll('input[name="tags[]"]:checked'))
-                    .map(input => Number(input.value));
+            const tagInput = document.getElementById('product-tag-input');
+            updateProductTagSuggestions(tagInput ? tagInput.value : '');
+        }
+
+        function focusProductTagInput() {
+            const input = document.getElementById('product-tag-input');
+            if (input) {
+                input.focus();
             }
+        }
 
-            const tags = await ensureProductTagsCache();
-            const selectedSet = new Set((selectedIds || []).map(id => Number(id)));
+        function renderSelectedProductTags() {
+            const wrapper = document.getElementById('product-selected-tags');
+            if (!wrapper) return;
 
-            if (!tags.length) {
-                container.innerHTML = '<p class="text-sm text-gray-500">No tags available yet. Create one below.</p>';
+            wrapper.innerHTML = '';
+
+            selectedProductTagIds.forEach(id => {
+                const tag = productTagsCache.find(item => Number(item.id) === Number(id));
+                if (!tag) return;
+                const chip = document.createElement('span');
+                chip.className = 'inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-medium';
+                chip.innerHTML = `
+                    <span>${tag.name}</span>
+                    <button type="button" class="text-blue-600 hover:text-blue-900 focus:outline-none" data-remove-existing="${id}" aria-label="Remove tag">&times;</button>
+                `;
+                wrapper.appendChild(chip);
+            });
+
+            selectedProductNewTags.forEach(name => {
+                const chip = document.createElement('span');
+                chip.className = 'inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gray-200 text-gray-700 text-xs font-medium';
+                chip.innerHTML = `
+                    <span>${name}</span>
+                    <button type="button" class="text-gray-600 hover:text-gray-900 focus:outline-none" data-remove-new="${name}" aria-label="Remove new tag">&times;</button>
+                `;
+                wrapper.appendChild(chip);
+            });
+
+            updateProductTagHiddenInputs();
+        }
+
+        function updateProductTagHiddenInputs() {
+            const hiddenContainer = document.getElementById('product-tags-hidden-inputs');
+            if (!hiddenContainer) return;
+
+            hiddenContainer.innerHTML = '';
+
+            selectedProductTagIds.forEach(id => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'tags[]';
+                input.value = id;
+                hiddenContainer.appendChild(input);
+            });
+
+            selectedProductNewTags.forEach(name => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'new_tags[]';
+                input.value = name;
+                hiddenContainer.appendChild(input);
+            });
+        }
+
+        function addExistingProductTag(id) {
+            const numericId = Number(id);
+            if (selectedProductTagIds.includes(numericId)) {
                 return;
             }
 
-            container.innerHTML = '';
+            const tag = productTagsCache.find(item => Number(item.id) === numericId);
+            if (!tag) return;
 
-            tags.forEach(tag => {
-                const isSelected = selectedSet.has(Number(tag.id));
-                const label = document.createElement('label');
-                label.className = 'cursor-pointer';
-                label.innerHTML = `
-                    <input type="checkbox" name="tags[]" value="${tag.id}" class="sr-only peer" ${isSelected ? 'checked' : ''}>
-                    <span class="inline-flex items-center px-3 py-1 rounded-full border text-sm font-medium transition
-                        border-blue-300 text-blue-700 bg-white
-                        peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600">
-                        ${tag.name}
-                    </span>
-                `;
-                container.appendChild(label);
-            });
+            selectedProductTagIds.push(numericId);
+            selectedProductNewTags = selectedProductNewTags.filter(name => name.toLowerCase() !== tag.name.toLowerCase());
+            renderSelectedProductTags();
+            updateProductTagSuggestions('');
+            clearProductTagInput();
+            const suggestions = document.getElementById('product-tag-suggestions');
+            if (suggestions) {
+                suggestions.classList.add('hidden');
+            }
+        }
+
+        function addNewProductTag(name) {
+            const trimmed = name.trim();
+            if (!trimmed) return;
+
+            const existing = productTagsCache.find(tag => tag.name.toLowerCase() === trimmed.toLowerCase());
+            if (existing) {
+                addExistingProductTag(existing.id);
+                return;
+            }
+
+            if (selectedProductNewTags.some(tagName => tagName.toLowerCase() === trimmed.toLowerCase())) {
+                clearProductTagInput();
+                return;
+            }
+
+            selectedProductNewTags.push(trimmed);
+            renderSelectedProductTags();
+            updateProductTagSuggestions('');
+            clearProductTagInput();
+            const suggestions = document.getElementById('product-tag-suggestions');
+            if (suggestions) {
+                suggestions.classList.add('hidden');
+            }
+        }
+
+        function removeExistingProductTag(id) {
+            const numericId = Number(id);
+            selectedProductTagIds = selectedProductTagIds.filter(tagId => tagId !== numericId);
+            renderSelectedProductTags();
+            updateProductTagSuggestions(document.getElementById('product-tag-input')?.value || '');
+        }
+
+        function removeNewProductTag(name) {
+            selectedProductNewTags = selectedProductNewTags.filter(tagName => tagName !== name);
+            renderSelectedProductTags();
+            updateProductTagSuggestions(document.getElementById('product-tag-input')?.value || '');
+        }
+
+        function clearProductTagInput() {
+            const input = document.getElementById('product-tag-input');
+            if (input) {
+                input.value = '';
+            }
+        }
+
+        function handleProductTagInputCommit() {
+            const input = document.getElementById('product-tag-input');
+            if (!input) return;
+
+            const value = input.value.trim();
+            if (!value) {
+                input.value = '';
+                return;
+            }
+
+            addNewProductTag(value);
+        }
+
+        function updateProductTagSuggestions(searchTerm = '') {
+            const suggestions = document.getElementById('product-tag-suggestions');
+            if (!suggestions) return;
+
+            const normalized = searchTerm.trim().toLowerCase();
+            if (!normalized.length) {
+                suggestions.innerHTML = '';
+                suggestions.classList.add('hidden');
+                return;
+            }
+
+            const availableTags = productTagsCache.filter(tag => !selectedProductTagIds.includes(Number(tag.id)));
+
+            let matches = [];
+            matches = availableTags.filter(tag => tag.name.toLowerCase().includes(normalized)).slice(0, 10);
+
+            if (!matches.length) {
+                suggestions.innerHTML = '';
+                suggestions.classList.add('hidden');
+                return;
+            }
+
+            suggestions.innerHTML = matches.map(tag => `
+                <button type="button" class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50" data-tag-id="${tag.id}">
+                    ${tag.name}
+                </button>
+            `).join('');
+            suggestions.classList.remove('hidden');
         }
 
         function showAddProductTagModal() {
@@ -1727,8 +1939,8 @@
             const payload = { name };
             const isEdit = currentEditingProductTagId !== null;
             const url = isEdit ? `/admin/product-tags/${currentEditingProductTagId}` : '/admin/product-tags';
-            const currentlySelectedTagIds = Array.from(document.querySelectorAll('#product-tags-container input[name="tags[]"]:checked'))
-                .map(input => Number(input.value));
+            const currentExistingIds = [...selectedProductTagIds];
+            const currentNewNames = [...selectedProductNewTags];
 
             try {
                 const response = await apiCall(url, {
@@ -1738,8 +1950,9 @@
 
                 if (response && response.success) {
                     closeProductTagModal();
+                    await ensureProductTagsCache(true);
                     await loadProductTags(true);
-                    await loadProductTagOptions(currentlySelectedTagIds);
+                    await loadProductTagOptions(currentExistingIds, currentNewNames);
                     alert(isEdit ? 'Tag updated successfully' : 'Tag created successfully');
                 } else if (response && response.errors) {
                     alert(Object.values(response.errors).flat().join('\n'));
@@ -1757,15 +1970,15 @@
                 return;
             }
 
-            const currentlySelectedTagIds = Array.from(document.querySelectorAll('#product-tags-container input[name="tags[]"]:checked'))
-                .map(input => Number(input.value))
-                .filter(id => id !== Number(tagId));
-
+            const tagIdNumber = Number(tagId);
+            const remainingExistingIds = selectedProductTagIds.filter(id => id !== tagIdNumber);
+            const currentNewNames = [...selectedProductNewTags];
             try {
                 const response = await apiCall(`/admin/product-tags/${tagId}`, { method: 'DELETE' });
                 if (response && response.success) {
+                    await ensureProductTagsCache(true);
                     await loadProductTags(true);
-                    await loadProductTagOptions(currentlySelectedTagIds);
+                    await loadProductTagOptions(remainingExistingIds, currentNewNames);
                     alert('Tag deleted successfully');
                 } else {
                     alert(response?.message || 'Failed to delete tag');
