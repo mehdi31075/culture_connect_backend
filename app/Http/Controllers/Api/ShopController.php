@@ -281,11 +281,31 @@ class ShopController extends Controller
                     });
 
                 $shops->each(function ($shop) use ($allReviews) {
-                    $shop->setRelation('reviews', $allReviews->get($shop->id, collect()));
+                    $reviews = $allReviews->get($shop->id, collect());
+                    $shop->setRelation('reviews', $reviews);
+                    $reviewCount = $reviews->count();
+                    if ($reviewCount > 0) {
+                        $shop->average_rating = round($reviews->avg('rating'), 2);
+                        $shop->rating_count = $reviewCount;
+
+                        $distribution = $reviews->groupBy('rating')
+                            ->map(function ($items) {
+                                return $items->count();
+                            })
+                            ->sortKeysDesc();
+                        $shop->rating_distribution = $distribution;
+                    } else {
+                        $shop->average_rating = null;
+                        $shop->rating_count = 0;
+                        $shop->rating_distribution = (object)[];
+                    }
                 });
             } else {
                 $shops->each(function ($shop) {
                     $shop->setRelation('reviews', collect());
+                    $shop->average_rating = null;
+                    $shop->rating_count = 0;
+                    $shop->rating_distribution = (object)[];
                 });
             }
 
