@@ -111,9 +111,8 @@ Route::middleware('auth:api')->group(function () {
 // Pavilion routes
 Route::get('pavilions', [PavilionController::class, 'index']);
 Route::get('pavilions/{id}', [PavilionController::class, 'show']);
-Route::get('pavilions/{id}/shops', [PavilionController::class, 'getShops']);
-
 // Shop routes
+Route::get('pavilions/{pavilion}/shops', [ShopController::class, 'pavilionShops']);
 Route::get('shops/{shop}/products', [ShopController::class, 'products']);
 
 // Banner routes
