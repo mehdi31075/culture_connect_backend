@@ -616,11 +616,11 @@
                             <input type="number" name="price" step="0.01" min="0" required class="w-full border rounded px-3 py-2">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Tags</label>
-                            <select id="product-tags-select" multiple class="w-full border rounded px-3 py-2 h-32">
-                                <!-- Tags will be loaded here -->
-                            </select>
-                            <p class="text-xs text-gray-500 mt-1">Hold <span class="font-semibold">Ctrl</span> (or <span class="font-semibold">Cmd</span> on Mac) to select multiple tags.</p>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+                            <div id="product-tags-container" class="flex flex-wrap gap-2 border rounded px-3 py-2 bg-white">
+                                <!-- Tag chips will be loaded here -->
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Click to toggle tags. Use “New Tags” to create additional ones.</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">New Tags (Optional)</label>
@@ -1521,14 +1521,8 @@
                 console.error('Error loading shops:', error);
             }
 
-            await loadProductTagOptions();
+            await loadProductTagOptions([]);
             document.getElementById('product-new-tags').value = '';
-            const tagSelect = document.getElementById('product-tags-select');
-            if (tagSelect) {
-                Array.from(tagSelect.options).forEach(option => {
-                    option.selected = false;
-                });
-            }
 
             document.getElementById('add-product-modal').classList.remove('hidden');
         }
@@ -1537,18 +1531,15 @@
             document.getElementById('add-product-modal').classList.add('hidden');
             document.getElementById('add-product-form').reset();
             document.getElementById('product-new-tags').value = '';
-            const tagSelect = document.getElementById('product-tags-select');
-            if (tagSelect) {
-                Array.from(tagSelect.options).forEach(option => {
-                    option.selected = false;
-                });
-            }
+            document.querySelectorAll('#product-tags-container input[name="tags[]"]').forEach(input => {
+                input.checked = false;
+            });
         }
 
         async function addProduct(event) {
             event.preventDefault();
             const form = event.target;
-            const selectedTags = Array.from(document.getElementById('product-tags-select').selectedOptions).map(option => Number(option.value));
+            const selectedTags = Array.from(form.querySelectorAll('#product-tags-container input[name="tags[]"]:checked')).map(input => Number(input.value));
             const newTagsInput = document.getElementById('product-new-tags').value;
             const newTags = newTagsInput
                 ? newTagsInput.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
@@ -1593,12 +1584,14 @@
 
         async function deleteProduct(productId) {
             if (confirm('Are you sure you want to delete this product?')) {
+                const currentlySelectedTagIds = Array.from(document.querySelectorAll('#product-tags-container input[name="tags[]"]:checked'))
+                    .map(input => Number(input.value));
                 try {
                     const data = await apiCall(`/admin/products/${productId}`, { method: 'DELETE' });
                     if (data && data.success) {
                         loadProducts();
                         await loadProductTags(true);
-                        await loadProductTagOptions();
+                        await loadProductTagOptions(currentlySelectedTagIds);
                         alert('Product deleted successfully');
                     }
                 } catch (error) {
@@ -1660,22 +1653,39 @@
             `).join('');
         }
 
-        async function loadProductTagOptions(selectedIds = []) {
-            const tags = await ensureProductTagsCache();
-            const select = document.getElementById('product-tags-select');
-            if (!select) return;
+        async function loadProductTagOptions(selectedIds) {
+            const container = document.getElementById('product-tags-container');
+            if (!container) return;
 
+            if (!Array.isArray(selectedIds)) {
+                selectedIds = Array.from(container.querySelectorAll('input[name="tags[]"]:checked'))
+                    .map(input => Number(input.value));
+            }
+
+            const tags = await ensureProductTagsCache();
             const selectedSet = new Set((selectedIds || []).map(id => Number(id)));
+
             if (!tags.length) {
-                select.innerHTML = '<option value="" disabled>No tags available yet</option>';
-                select.disabled = true;
+                container.innerHTML = '<p class="text-sm text-gray-500">No tags available yet. Create one below.</p>';
                 return;
             }
 
-            select.disabled = false;
-            select.innerHTML = tags
-                .map(tag => `<option value="${tag.id}" ${selectedSet.has(Number(tag.id)) ? 'selected' : ''}>${tag.name}</option>`)
-                .join('');
+            container.innerHTML = '';
+
+            tags.forEach(tag => {
+                const isSelected = selectedSet.has(Number(tag.id));
+                const label = document.createElement('label');
+                label.className = 'cursor-pointer';
+                label.innerHTML = `
+                    <input type="checkbox" name="tags[]" value="${tag.id}" class="sr-only peer" ${isSelected ? 'checked' : ''}>
+                    <span class="inline-flex items-center px-3 py-1 rounded-full border text-sm font-medium transition
+                        border-blue-300 text-blue-700 bg-white
+                        peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600">
+                        ${tag.name}
+                    </span>
+                `;
+                container.appendChild(label);
+            });
         }
 
         function showAddProductTagModal() {
@@ -1717,6 +1727,8 @@
             const payload = { name };
             const isEdit = currentEditingProductTagId !== null;
             const url = isEdit ? `/admin/product-tags/${currentEditingProductTagId}` : '/admin/product-tags';
+            const currentlySelectedTagIds = Array.from(document.querySelectorAll('#product-tags-container input[name="tags[]"]:checked'))
+                .map(input => Number(input.value));
 
             try {
                 const response = await apiCall(url, {
@@ -1727,7 +1739,7 @@
                 if (response && response.success) {
                     closeProductTagModal();
                     await loadProductTags(true);
-                    await loadProductTagOptions();
+                    await loadProductTagOptions(currentlySelectedTagIds);
                     alert(isEdit ? 'Tag updated successfully' : 'Tag created successfully');
                 } else if (response && response.errors) {
                     alert(Object.values(response.errors).flat().join('\n'));
@@ -1745,11 +1757,15 @@
                 return;
             }
 
+            const currentlySelectedTagIds = Array.from(document.querySelectorAll('#product-tags-container input[name="tags[]"]:checked'))
+                .map(input => Number(input.value))
+                .filter(id => id !== Number(tagId));
+
             try {
                 const response = await apiCall(`/admin/product-tags/${tagId}`, { method: 'DELETE' });
                 if (response && response.success) {
                     await loadProductTags(true);
-                    await loadProductTagOptions();
+                    await loadProductTagOptions(currentlySelectedTagIds);
                     alert('Tag deleted successfully');
                 } else {
                     alert(response?.message || 'Failed to delete tag');
