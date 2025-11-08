@@ -70,6 +70,12 @@
                         </a>
                     </li>
                     <li>
+                        <a href="#product-tags" onclick="showSection('product-tags')" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
+                            <i class="fas fa-tags mr-3"></i>
+                            Product Tags
+                        </a>
+                    </li>
+                    <li>
                         <a href="#events" onclick="showSection('events')" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
                             <i class="fas fa-calendar mr-3"></i>
                             Events
@@ -315,11 +321,42 @@
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Shop</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Is Food</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tags</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="products-table">
                                     <!-- Products will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Tags Section -->
+            <div id="product-tags-section" class="section hidden">
+                <h2 class="text-2xl font-bold mb-6">Product Tag Management</h2>
+                <div class="bg-white rounded-lg shadow">
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-gray-600">Manage tags used to categorize products</span>
+                            <button onclick="showAddProductTagModal()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                                <i class="fas fa-plus"></i> Add Tag
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full table-auto">
+                                <thead>
+                                    <tr class="bg-gray-50">
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Products</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="product-tags-table">
+                                    <!-- Tags will be loaded here -->
                                 </tbody>
                             </table>
                         </div>
@@ -579,6 +616,18 @@
                             <input type="number" name="price" step="0.01" min="0" required class="w-full border rounded px-3 py-2">
                         </div>
                         <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tags</label>
+                            <select id="product-tags-select" multiple class="w-full border rounded px-3 py-2 h-32">
+                                <!-- Tags will be loaded here -->
+                            </select>
+                            <p class="text-xs text-gray-500 mt-1">Hold <span class="font-semibold">Ctrl</span> (or <span class="font-semibold">Cmd</span> on Mac) to select multiple tags.</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">New Tags (Optional)</label>
+                            <input type="text" id="product-new-tags" class="w-full border rounded px-3 py-2" placeholder="Comma-separated new tags (e.g. Sweet, Vegan)">
+                            <p class="text-xs text-gray-500 mt-1">New tags will be created automatically and linked to this product.</p>
+                        </div>
+                        <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
                             <input type="url" name="image_url" class="w-full border rounded px-3 py-2">
                         </div>
@@ -593,6 +642,37 @@
                         </button>
                         <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
                             Add Product
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Tag Modal -->
+    <div id="product-tag-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+                <div class="flex justify-between items-center p-6 border-b">
+                    <h3 id="product-tag-modal-title" class="text-lg font-semibold">Add Tag</h3>
+                    <button onclick="closeProductTagModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="product-tag-form" onsubmit="saveProductTag(event)" class="p-6">
+                    <input type="hidden" id="product-tag-id">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                            <input type="text" id="product-tag-name" required class="w-full border rounded px-3 py-2">
+                        </div>
+                    </div>
+                    <div class="flex justify-end space-x-3 mt-6">
+                        <button type="button" onclick="closeProductTagModal()" class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50">
+                            Cancel
+                        </button>
+                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                            Save Tag
                         </button>
                     </div>
                 </form>
@@ -662,6 +742,8 @@
     <script>
         let authToken = '';
         let currentUser = null;
+        let productTagsCache = [];
+        let currentEditingProductTagId = null;
 
         // Initialize the admin panel
         document.addEventListener('DOMContentLoaded', function() {
@@ -674,6 +756,7 @@
 
             authToken = token;
             loadDashboard();
+            ensureProductTagsCache();
         });
 
         // API helper function
@@ -835,6 +918,9 @@
                 loadShops();
             } else if (sectionName === 'products') {
                 loadProducts();
+                ensureProductTagsCache();
+            } else if (sectionName === 'product-tags') {
+                loadProductTags();
             } else if (sectionName === 'reviews') {
                 loadReviews();
             }
@@ -1373,7 +1459,7 @@
             try {
                 const data = await apiCall('/admin/products');
                 if (data && data.success) {
-                    displayProducts(data.data.items);
+                    displayProducts(data.data.items || []);
                 }
             } catch (error) {
                 console.error('Error loading products:', error);
@@ -1382,6 +1468,14 @@
 
         function displayProducts(products) {
             const tbody = document.getElementById('products-table');
+            if (!products.length) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="px-6 py-4 text-sm text-gray-500 text-center">No products found. Add a product to get started.</td>
+                    </tr>
+                `;
+                return;
+            }
             tbody.innerHTML = products.map(product => `
                 <tr class="border-b">
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${product.id}</td>
@@ -1392,6 +1486,9 @@
                         <span class="px-2 py-1 text-xs rounded-full ${product.is_food ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
                             ${product.is_food ? 'Yes' : 'No'}
                         </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${product.tags && product.tags.length ? product.tags.map(tag => tag.name).join(', ') : '—'}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm">
                         <button onclick="editProduct(${product.id})" class="text-blue-600 hover:text-blue-900 mr-2">
@@ -1419,19 +1516,50 @@
             } catch (error) {
                 console.error('Error loading shops:', error);
             }
+
+            await loadProductTagOptions();
+            document.getElementById('product-new-tags').value = '';
+            const tagSelect = document.getElementById('product-tags-select');
+            if (tagSelect) {
+                Array.from(tagSelect.options).forEach(option => {
+                    option.selected = false;
+                });
+            }
+
             document.getElementById('add-product-modal').classList.remove('hidden');
         }
 
         function closeAddProductModal() {
             document.getElementById('add-product-modal').classList.add('hidden');
             document.getElementById('add-product-form').reset();
+            document.getElementById('product-new-tags').value = '';
+            const tagSelect = document.getElementById('product-tags-select');
+            if (tagSelect) {
+                Array.from(tagSelect.options).forEach(option => {
+                    option.selected = false;
+                });
+            }
         }
 
         async function addProduct(event) {
             event.preventDefault();
-            const formData = new FormData(event.target);
-            const data = Object.fromEntries(formData);
-            data.is_food = document.getElementById('product_is_food').checked ? 1 : 0;
+            const form = event.target;
+            const selectedTags = Array.from(document.getElementById('product-tags-select').selectedOptions).map(option => Number(option.value));
+            const newTagsInput = document.getElementById('product-new-tags').value;
+            const newTags = newTagsInput
+                ? newTagsInput.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
+                : [];
+
+            const data = {
+                shop_id: form.shop_id.value,
+                name: form.name.value,
+                description: form.description.value || null,
+                price: form.price.value,
+                image_url: form.image_url.value || null,
+                is_food: document.getElementById('product_is_food').checked ? 1 : 0,
+                tags: selectedTags,
+                new_tags: newTags,
+            };
 
             try {
                 const response = await apiCall('/admin/products', {
@@ -1441,7 +1569,13 @@
                 if (response && response.success) {
                     closeAddProductModal();
                     loadProducts();
+                    await ensureProductTagsCache(true);
                     alert('Product added successfully');
+                } else if (response && response.errors) {
+                    const messages = Object.values(response.errors).flat().join('\n');
+                    alert(messages);
+                } else {
+                    alert(response?.message || 'Failed to add product');
                 }
             } catch (error) {
                 console.error('Error adding product:', error);
@@ -1459,12 +1593,166 @@
                     const data = await apiCall(`/admin/products/${productId}`, { method: 'DELETE' });
                     if (data && data.success) {
                         loadProducts();
+                        await loadProductTags(true);
+                        await loadProductTagOptions();
                         alert('Product deleted successfully');
                     }
                 } catch (error) {
                     console.error('Error deleting product:', error);
                     alert('Error deleting product');
                 }
+            }
+        }
+
+        // Product Tag Management Functions
+        async function ensureProductTagsCache(forceRefresh = false) {
+            if (!forceRefresh && productTagsCache.length) {
+                return productTagsCache;
+            }
+            try {
+                const data = await apiCall('/admin/product-tags');
+                if (data && data.success) {
+                    productTagsCache = data.data.items || [];
+                } else {
+                    productTagsCache = [];
+                }
+            } catch (error) {
+                console.error('Error loading product tags:', error);
+                productTagsCache = [];
+            }
+            return productTagsCache;
+        }
+
+        async function loadProductTags(forceRefresh = false) {
+            const tags = await ensureProductTagsCache(forceRefresh);
+            displayProductTags(tags);
+        }
+
+        function displayProductTags(tags) {
+            const tbody = document.getElementById('product-tags-table');
+            if (!tags.length) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="px-6 py-4 text-sm text-gray-500 text-center">No tags found. Create the first tag to get started.</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = tags.map(tag => `
+                <tr class="border-b">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${tag.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${tag.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${tag.products_count || 0}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <button onclick="showEditProductTagModal(${tag.id})" class="text-blue-600 hover:text-blue-900 mr-2">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteProductTag(${tag.id})" class="text-red-600 hover:text-red-900">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function loadProductTagOptions(selectedIds = []) {
+            const tags = await ensureProductTagsCache();
+            const select = document.getElementById('product-tags-select');
+            if (!select) return;
+
+            const selectedSet = new Set((selectedIds || []).map(id => Number(id)));
+            if (!tags.length) {
+                select.innerHTML = '<option value="" disabled>No tags available yet</option>';
+                select.disabled = true;
+                return;
+            }
+
+            select.disabled = false;
+            select.innerHTML = tags
+                .map(tag => `<option value="${tag.id}" ${selectedSet.has(Number(tag.id)) ? 'selected' : ''}>${tag.name}</option>`)
+                .join('');
+        }
+
+        function showAddProductTagModal() {
+            currentEditingProductTagId = null;
+            document.getElementById('product-tag-modal-title').textContent = 'Add Tag';
+            document.getElementById('product-tag-form').reset();
+            document.getElementById('product-tag-id').value = '';
+            document.getElementById('product-tag-modal').classList.remove('hidden');
+        }
+
+        function showEditProductTagModal(tagId) {
+            const tag = productTagsCache.find(t => Number(t.id) === Number(tagId));
+            if (!tag) {
+                alert('Tag not found');
+                return;
+            }
+            currentEditingProductTagId = tag.id;
+            document.getElementById('product-tag-modal-title').textContent = 'Edit Tag';
+            document.getElementById('product-tag-id').value = tag.id;
+            document.getElementById('product-tag-name').value = tag.name;
+            document.getElementById('product-tag-modal').classList.remove('hidden');
+        }
+
+        function closeProductTagModal() {
+            currentEditingProductTagId = null;
+            document.getElementById('product-tag-form').reset();
+            document.getElementById('product-tag-id').value = '';
+            document.getElementById('product-tag-modal').classList.add('hidden');
+        }
+
+        async function saveProductTag(event) {
+            event.preventDefault();
+            const name = document.getElementById('product-tag-name').value.trim();
+            if (!name) {
+                alert('Please enter a tag name');
+                return;
+            }
+
+            const payload = { name };
+            const isEdit = currentEditingProductTagId !== null;
+            const url = isEdit ? `/admin/product-tags/${currentEditingProductTagId}` : '/admin/product-tags';
+
+            try {
+                const response = await apiCall(url, {
+                    method: isEdit ? 'PUT' : 'POST',
+                    body: JSON.stringify(payload),
+                });
+
+                if (response && response.success) {
+                    closeProductTagModal();
+                    await loadProductTags(true);
+                    await loadProductTagOptions();
+                    alert(isEdit ? 'Tag updated successfully' : 'Tag created successfully');
+                } else if (response && response.errors) {
+                    alert(Object.values(response.errors).flat().join('\n'));
+                } else {
+                    alert('Failed to save tag');
+                }
+            } catch (error) {
+                console.error('Error saving tag:', error);
+                alert('Error saving tag');
+            }
+        }
+
+        async function deleteProductTag(tagId) {
+            if (!confirm('Are you sure you want to delete this tag?')) {
+                return;
+            }
+
+            try {
+                const response = await apiCall(`/admin/product-tags/${tagId}`, { method: 'DELETE' });
+                if (response && response.success) {
+                    await loadProductTags(true);
+                    await loadProductTagOptions();
+                    alert('Tag deleted successfully');
+                } else {
+                    alert(response?.message || 'Failed to delete tag');
+                }
+            } catch (error) {
+                console.error('Error deleting tag:', error);
+                alert('Error deleting tag');
             }
         }
 

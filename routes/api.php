@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BannerController;
 use App\Http\Controllers\Api\PavilionController;
+use App\Http\Controllers\Api\ShopController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -111,6 +112,9 @@ Route::middleware('auth:api')->group(function () {
 Route::get('pavilions', [PavilionController::class, 'index']);
 Route::get('pavilions/{id}', [PavilionController::class, 'show']);
 Route::get('pavilions/{id}/shops', [PavilionController::class, 'getShops']);
+
+// Shop routes
+Route::get('shops/{shop}/products', [ShopController::class, 'products']);
 
 // Banner routes
 Route::get('banners', [BannerController::class, 'index']);

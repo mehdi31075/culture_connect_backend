@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('food_tags', function (Blueprint $table) {
             $table->id();
+            $table->string('name', 160)->unique();
             $table->timestamps();
         });
     }

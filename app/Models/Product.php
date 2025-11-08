@@ -47,6 +47,34 @@ class Product extends Model
         return $this->hasMany(Offer::class);
     }
 
+    /**
+     * Ensure image_url is returned as a complete URL when available
+     */
+    public function getImageUrlAttribute($value)
+    {
+        if (!$value) {
+            return null;
+        }
+
+        if (filter_var($value, FILTER_VALIDATE_URL)) {
+            return $value;
+        }
+
+        if (str_starts_with($value, '/storage/')) {
+            return url($value);
+        }
+
+        if (str_starts_with($value, 'storage/')) {
+            return url($value);
+        }
+
+        if (!str_starts_with($value, 'http')) {
+            return url('storage/' . ltrim($value, '/'));
+        }
+
+        return $value;
+    }
+
     public function orderItems()
     {
         return $this->hasMany(OrderItem::class);

@@ -3,12 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\FoodTag;
 use App\Models\Product;
-use App\Models\Shop;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Storage;
 
 class AdminProductController extends Controller
 {
@@ -22,7 +21,7 @@ class AdminProductController extends Controller
             $search = $request->get('search');
             $shopId = $request->get('shop_id');
 
-            $query = Product::with('shop');
+            $query = Product::with(['shop', 'tags']);
 
             if ($search) {
                 $query->where(function ($q) use ($search) {
@@ -76,6 +75,10 @@ class AdminProductController extends Controller
                 'price' => 'required|numeric|min:0',
                 'is_food' => 'nullable|boolean',
                 'image_url' => 'nullable|url|max:500',
+                'tags' => 'nullable|array',
+                'tags.*' => 'integer|exists:food_tags,id',
+                'new_tags' => 'nullable|array',
+                'new_tags.*' => 'string|max:160',
             ]);
 
             if ($validator->fails()) {
@@ -105,8 +108,10 @@ class AdminProductController extends Controller
                 'image_url' => $request->image_url,
             ]);
 
+            $this->syncProductTags($product, $request->input('tags', []), $request->input('new_tags', []));
+
             // Load relationships
-            $product->load('shop');
+            $product->load('shop', 'tags');
 
             return response()->json([
                 'success' => true,
@@ -146,6 +151,10 @@ class AdminProductController extends Controller
                 'price' => 'sometimes|required|numeric|min:0',
                 'is_food' => 'nullable|boolean',
                 'image_url' => 'nullable|url|max:500',
+                'tags' => 'nullable|array',
+                'tags.*' => 'integer|exists:food_tags,id',
+                'new_tags' => 'nullable|array',
+                'new_tags.*' => 'string|max:160',
             ]);
 
             if ($validator->fails()) {
@@ -163,8 +172,10 @@ class AdminProductController extends Controller
             }
             $product->update($updateData);
 
+            $this->syncProductTags($product, $request->input('tags', []), $request->input('new_tags', []));
+
             // Load relationships
-            $product->load('shop');
+            $product->load('shop', 'tags');
 
             return response()->json([
                 'success' => true,
@@ -196,7 +207,8 @@ class AdminProductController extends Controller
                 ], 404);
             }
 
-            // Delete product
+            // Detach tags and delete product
+            $product->tags()->detach();
             $product->delete();
 
             return response()->json([
@@ -212,5 +224,39 @@ class AdminProductController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Sync product tags, including creating new tags if provided
+     */
+    protected function syncProductTags(Product $product, $tagIds, $newTags): void
+    {
+        $tagIdsCollection = collect($tagIds ?? []);
+        if (is_string($tagIds)) {
+            $tagIdsCollection = collect(explode(',', $tagIds));
+        }
+
+        $tagIdsCollection = $tagIdsCollection
+            ->filter(fn ($id) => $id !== null && $id !== '')
+            ->map(fn ($id) => (int) $id)
+            ->filter();
+
+        $newTagsCollection = collect($newTags ?? []);
+        if (is_string($newTags)) {
+            $newTagsCollection = collect(explode(',', $newTags));
+        }
+
+        $newTagIds = $newTagsCollection
+            ->map(fn ($tag) => trim($tag))
+            ->filter()
+            ->map(function (string $tagName) {
+                $tag = FoodTag::firstOrCreate(['name' => $tagName]);
+                return $tag->id;
+            });
+
+        $allTagIds = $tagIdsCollection->merge($newTagIds)->unique()->values();
+
+        $product->tags()->sync($allTagIds->all());
+    }
 }
+
 

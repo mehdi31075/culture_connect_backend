@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\AdminPavilionController;
 use App\Http\Controllers\Admin\AdminBannerController;
 use App\Http\Controllers\Admin\AdminShopController;
 use App\Http\Controllers\Admin\AdminProductController;
+use App\Http\Controllers\Admin\AdminProductTagController;
 use App\Http\Controllers\Admin\AdminReviewController;
 
 /*
@@ -70,6 +71,12 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
     Route::post('/products', [AdminProductController::class, 'store']);
     Route::put('/products/{id}', [AdminProductController::class, 'update']);
     Route::delete('/products/{id}', [AdminProductController::class, 'destroy']);
+
+    // Product tag management
+    Route::get('/product-tags', [AdminProductTagController::class, 'index']);
+    Route::post('/product-tags', [AdminProductTagController::class, 'store']);
+    Route::put('/product-tags/{id}', [AdminProductTagController::class, 'update']);
+    Route::delete('/product-tags/{id}', [AdminProductTagController::class, 'destroy']);
 
     // Order management
     Route::get('/orders', [AdminController::class, 'orders']);
