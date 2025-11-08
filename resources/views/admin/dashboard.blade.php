@@ -1488,7 +1488,11 @@
                         </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${product.tags && product.tags.length ? product.tags.map(tag => tag.name).join(', ') : '—'}
+                        ${
+                            product.tags && product.tags.length
+                                ? `<div class="flex flex-wrap gap-1">${product.tags.map(tag => `<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">${tag.name}</span>`).join('')}</div>`
+                                : '—'
+                        }
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm">
                         <button onclick="editProduct(${product.id})" class="text-blue-600 hover:text-blue-900 mr-2">
