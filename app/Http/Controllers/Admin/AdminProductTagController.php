@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\FoodTag;
+use App\Models\ProductTag;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -15,7 +15,7 @@ class AdminProductTagController extends Controller
      */
     public function index(): JsonResponse
     {
-        $tags = FoodTag::withCount(['tagProducts as products_count'])->orderBy('name')->get();
+        $tags = ProductTag::withCount(['products as products_count'])->orderBy('name')->get();
 
         return response()->json([
             'success' => true,
@@ -42,11 +42,11 @@ class AdminProductTagController extends Controller
             ], 422);
         }
 
-        $tag = FoodTag::create([
+        $tag = ProductTag::create([
             'name' => $request->name,
         ]);
 
-        $tag->loadCount(['tagProducts as products_count']);
+        $tag->loadCount(['products as products_count']);
 
         return response()->json([
             'success' => true,
@@ -60,7 +60,7 @@ class AdminProductTagController extends Controller
      */
     public function update(Request $request, int $id): JsonResponse
     {
-        $tag = FoodTag::find($id);
+        $tag = ProductTag::find($id);
 
         if (!$tag) {
             return response()->json([
@@ -85,7 +85,7 @@ class AdminProductTagController extends Controller
             'name' => $request->name,
         ]);
 
-        $tag->loadCount(['tagProducts as products_count']);
+        $tag->loadCount(['products as products_count']);
 
         return response()->json([
             'success' => true,
@@ -99,7 +99,7 @@ class AdminProductTagController extends Controller
      */
     public function destroy(int $id): JsonResponse
     {
-        $tag = FoodTag::find($id);
+        $tag = ProductTag::find($id);
 
         if (!$tag) {
             return response()->json([
@@ -109,8 +109,7 @@ class AdminProductTagController extends Controller
         }
 
         // Detach tag from products before deleting
-        $tag->tagProducts()->detach();
-        $tag->productTags()->delete();
+        $tag->products()->detach();
         $tag->delete();
 
         return response()->json([

@@ -32,14 +32,9 @@ class Product extends Model
         return $this->belongsTo(Shop::class);
     }
 
-    public function productTags()
-    {
-        return $this->hasMany(ProductTag::class);
-    }
-
     public function tags()
     {
-        return $this->belongsToMany(FoodTag::class, 'product_tags');
+        return $this->belongsToMany(ProductTag::class, 'product_tags', 'product_id', 'tag_id');
     }
 
     public function offers()

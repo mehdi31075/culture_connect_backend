@@ -9,18 +9,14 @@ class ProductTag extends Model
 {
     use HasFactory;
 
+    protected $table = 'food_tags';
+
     protected $fillable = [
-        'product_id',
-        'tag_id',
+        'name',
     ];
 
-    public function product()
+    public function products()
     {
-        return $this->belongsTo(Product::class);
-    }
-
-    public function tag()
-    {
-        return $this->belongsTo(FoodTag::class, 'tag_id');
+        return $this->belongsToMany(Product::class, 'product_tags', 'tag_id', 'product_id');
     }
 }

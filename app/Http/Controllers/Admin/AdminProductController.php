@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\FoodTag;
 use App\Models\Product;
+use App\Models\ProductTag;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -249,7 +249,7 @@ class AdminProductController extends Controller
             ->map(fn ($tag) => trim($tag))
             ->filter()
             ->map(function (string $tagName) {
-                $tag = FoodTag::firstOrCreate(['name' => $tagName]);
+                $tag = ProductTag::firstOrCreate(['name' => $tagName]);
                 return $tag->id;
             });
 
