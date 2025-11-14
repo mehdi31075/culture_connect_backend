@@ -34,4 +34,12 @@ class OrderItem extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+    /**
+     * Ensure unit_price is returned as a float (double) with 2 decimal places in JSON responses
+     */
+    public function getUnitPriceAttribute($value)
+    {
+        return $value !== null ? (float) number_format((float) $value, 2, '.', '') : null;
+    }
 }

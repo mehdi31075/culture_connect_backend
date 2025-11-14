@@ -43,6 +43,14 @@ class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    /**
+     * Ensure total_amount is returned as a float (double) with 2 decimal places in JSON responses
+     */
+    public function getTotalAmountAttribute($value)
+    {
+        return $value !== null ? (float) number_format((float) $value, 2, '.', '') : null;
+    }
+
     public static function getStatuses()
     {
         return [

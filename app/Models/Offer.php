@@ -50,6 +50,14 @@ class Offer extends Model
         return $this->hasMany(OfferRedemption::class);
     }
 
+    /**
+     * Ensure value is returned as a float (double) with 2 decimal places in JSON responses
+     */
+    public function getValueAttribute($value)
+    {
+        return $value !== null ? (float) number_format((float) $value, 2, '.', '') : null;
+    }
+
     public static function getDiscountTypes()
     {
         return [

@@ -43,6 +43,14 @@ class Product extends Model
     }
 
     /**
+     * Ensure price is returned as a float (double) with 2 decimal places in JSON responses
+     */
+    public function getPriceAttribute($value)
+    {
+        return $value !== null ? (float) number_format((float) $value, 2, '.', '') : null;
+    }
+
+    /**
      * Ensure image_url is returned as a complete URL when available
      */
     public function getImageUrlAttribute($value)
