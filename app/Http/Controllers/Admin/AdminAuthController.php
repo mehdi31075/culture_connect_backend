@@ -79,7 +79,8 @@ class AdminAuthController extends Controller
                 'refresh_expires_at_ms' => $refreshExpiresAt,
                 'user' => [
                     'id' => $user->id,
-                    'name' => $user->name,
+                    'first_name' => $user->first_name,
+                    'last_name' => $user->last_name,
                     'email' => $user->email,
                     'phone' => $user->phone,
                     'locale' => $user->locale,
@@ -123,7 +124,8 @@ class AdminAuthController extends Controller
             'success' => true,
             'data' => [
                 'id' => $user->id,
-                'name' => $user->name,
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
                 'email' => $user->email,
                 'phone' => $user->phone,
                 'locale' => $user->locale,

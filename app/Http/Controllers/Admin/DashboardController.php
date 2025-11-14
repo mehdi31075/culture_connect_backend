@@ -72,10 +72,10 @@ class DashboardController extends Controller
                 'cancelled' => Order::where('status', 'cancelled')->count(),
             ],
             'recent_activity' => [
-                'recent_users' => User::latest()->take(5)->get(['id', 'name', 'email', 'created_at']),
+                'recent_users' => User::latest()->take(5)->get(['id', 'first_name', 'last_name', 'email', 'created_at']),
                 'recent_events' => Event::latest()->take(5)->get(['id', 'name', 'start_time', 'created_at']),
-                'recent_orders' => Order::with('user:id,name')->latest()->take(5)->get(['id', 'user_id', 'total_amount', 'status', 'created_at']),
-                'recent_reviews' => Review::with('user:id,name')->latest()->take(5)->get(['id', 'user_id', 'rating', 'created_at']),
+                'recent_orders' => Order::with('user:id,first_name,last_name')->latest()->take(5)->get(['id', 'user_id', 'total_amount', 'status', 'created_at']),
+                'recent_reviews' => Review::with('user:id,first_name,last_name')->latest()->take(5)->get(['id', 'user_id', 'rating', 'created_at']),
             ]
         ];
 

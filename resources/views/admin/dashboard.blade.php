@@ -927,7 +927,7 @@
             tbody.innerHTML = users.map(user => `
                 <tr class="border-b">
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${user.id}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${user.name || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${((user.first_name || '') + ' ' + (user.last_name || '')).trim() || 'N/A'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${user.email || 'N/A'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${user.phone || 'N/A'}</td>
                     <td class="px-6 py-4 whitespace-nowrap">
@@ -2006,7 +2006,7 @@
             tbody.innerHTML = reviews.map(review => `
                 <tr class="border-b">
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${review.id}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${review.user ? (review.user.first_name || review.user.name || 'N/A') : 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${review.user ? (((review.user.first_name || '') + ' ' + (review.user.last_name || '')).trim() || 'N/A') : 'N/A'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${review.shop ? review.shop.name : 'N/A'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${review.product ? review.product.name : 'N/A'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${'⭐'.repeat(review.rating)}</td>
@@ -2031,7 +2031,7 @@
                     const userSelect = document.getElementById('review-user-select');
                     userSelect.innerHTML = '<option value="">Select a user...</option>';
                     userData.data.items.forEach(user => {
-                        const name = user.first_name || user.name || user.email || 'User';
+                        const name = ((user.first_name || '') + ' ' + (user.last_name || '')).trim() || user.email || 'User';
                         userSelect.innerHTML += `<option value="${user.id}">${name}</option>`;
                     });
                 }

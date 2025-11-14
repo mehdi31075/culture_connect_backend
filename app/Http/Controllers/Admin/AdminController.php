@@ -100,7 +100,8 @@ class AdminController extends Controller
 
         if ($search) {
             $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
+                $q->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
                   ->orWhere('phone', 'like', "%{$search}%");
             });
@@ -154,7 +155,8 @@ class AdminController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|string|max:120',
+            'first_name' => 'sometimes|string|max:255',
+            'last_name' => 'sometimes|string|max:255',
             'email' => 'sometimes|email|unique:users,email,' . $id,
             'phone' => 'sometimes|string|max:32|unique:users,phone,' . $id,
             'is_active' => 'sometimes|boolean',
@@ -166,7 +168,7 @@ class AdminController extends Controller
             return response()->json(['error' => $validator->errors()], 422);
         }
 
-        $user->update($request->only(['name', 'email', 'phone', 'is_active', 'is_staff', 'locale']));
+        $user->update($request->only(['first_name', 'last_name', 'email', 'phone', 'is_active', 'is_staff', 'locale']));
 
         return response()->json([
             'success' => true,

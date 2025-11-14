@@ -193,7 +193,7 @@ class ShopController extends Controller
 
             if ($shopIds->isNotEmpty()) {
                 $allReviews = Review::whereIn('shop_id', $shopIds)
-                    ->with('user:id,first_name,last_name,name,email,phone')
+                    ->with('user:id,first_name,last_name,email,phone')
                     ->orderBy('created_at', 'desc')
                     ->get()
                     ->groupBy('shop_id')
