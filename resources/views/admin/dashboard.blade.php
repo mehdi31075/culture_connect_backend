@@ -858,11 +858,16 @@
                             </div>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Tags</label>
-                            <select name="tags[]" id="event-tags-select" multiple class="w-full border rounded px-3 py-2">
-                                <option value="">Loading tags...</option>
-                            </select>
-                            <p class="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple tags</p>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+                            <div class="relative">
+                                <div id="event-tags-field" class="flex flex-wrap items-center gap-2 border rounded px-3 py-2 bg-white cursor-text" onclick="focusEventTagInput()">
+                                    <div id="event-selected-tags" class="flex flex-wrap gap-2"></div>
+                                    <input id="event-tag-input" type="text" class="flex-1 min-w-[120px] border-0 focus:outline-none focus:ring-0 text-sm py-1" placeholder="Type to add tags..." autocomplete="off" oninput="updateEventTagSuggestions(this.value)" onkeydown="handleEventTagInput(event)">
+                                </div>
+                                <div id="event-tag-suggestions" class="absolute left-0 right-0 mt-1 bg-white border rounded shadow hidden z-10 max-h-48 overflow-y-auto"></div>
+                            </div>
+                            <div id="event-tags-hidden-inputs"></div>
+                            <p class="text-xs text-gray-500 mt-1">Type to search for an existing tag. If it doesn't exist, press Enter to create it.</p>
                         </div>
                     </div>
                     <div class="flex justify-end space-x-3 mt-6">
@@ -947,6 +952,8 @@
         let currentEditingEventId = null;
         let eventTagsCache = [];
         let currentEditingEventTagId = null;
+        let selectedEventTagIds = [];
+        let selectedEventNewTags = [];
 
         // Initialize the admin panel
         document.addEventListener('DOMContentLoaded', function() {
@@ -2329,6 +2336,241 @@
             }
         }
 
+        // Event Tag Chip Management Functions (for Event form)
+        async function ensureEventTagsCache(forceRefresh = false) {
+            if (!forceRefresh && eventTagsCache.length) {
+                return eventTagsCache;
+            }
+            try {
+                const data = await apiCall('/admin/event-tags');
+                if (data && data.success) {
+                    eventTagsCache = data.data.items || [];
+                } else {
+                    eventTagsCache = [];
+                }
+            } catch (error) {
+                console.error('Error loading event tags:', error);
+                eventTagsCache = [];
+            }
+            return eventTagsCache;
+        }
+
+        async function loadEventTagOptions(selectedIds = [], newTagNames = []) {
+            await ensureEventTagsCache();
+            selectedEventTagIds = (selectedIds || []).map(id => Number(id));
+            selectedEventNewTags = (newTagNames || []).filter(name => !!name);
+            renderSelectedEventTags();
+
+            const tagInput = document.getElementById('event-tag-input');
+            updateEventTagSuggestions(tagInput ? tagInput.value : '');
+        }
+
+        function focusEventTagInput() {
+            const input = document.getElementById('event-tag-input');
+            if (input) {
+                input.focus();
+            }
+        }
+
+        function renderSelectedEventTags() {
+            const wrapper = document.getElementById('event-selected-tags');
+            if (!wrapper) return;
+
+            wrapper.innerHTML = '';
+
+            selectedEventTagIds.forEach(id => {
+                const tag = eventTagsCache.find(item => Number(item.id) === Number(id));
+                if (!tag) return;
+                const chip = document.createElement('span');
+                chip.className = 'inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-medium';
+                chip.innerHTML = `
+                    <span>${tag.name}</span>
+                    <button type="button" class="text-blue-600 hover:text-blue-900 focus:outline-none" data-remove-existing="${id}" aria-label="Remove tag">&times;</button>
+                `;
+                wrapper.appendChild(chip);
+            });
+
+            selectedEventNewTags.forEach(name => {
+                const chip = document.createElement('span');
+                chip.className = 'inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gray-200 text-gray-700 text-xs font-medium';
+                chip.innerHTML = `
+                    <span>${name}</span>
+                    <button type="button" class="text-gray-600 hover:text-gray-900 focus:outline-none" data-remove-new="${name}" aria-label="Remove new tag">&times;</button>
+                `;
+                wrapper.appendChild(chip);
+            });
+
+            updateEventTagHiddenInputs();
+
+            // Add click handlers for remove buttons
+            wrapper.querySelectorAll('[data-remove-existing]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    removeExistingEventTag(btn.getAttribute('data-remove-existing'));
+                });
+            });
+
+            wrapper.querySelectorAll('[data-remove-new]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    removeNewEventTag(btn.getAttribute('data-remove-new'));
+                });
+            });
+        }
+
+        function updateEventTagHiddenInputs() {
+            const hiddenContainer = document.getElementById('event-tags-hidden-inputs');
+            if (!hiddenContainer) return;
+
+            hiddenContainer.innerHTML = '';
+
+            selectedEventTagIds.forEach(id => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'tags[]';
+                input.value = id;
+                hiddenContainer.appendChild(input);
+            });
+
+            selectedEventNewTags.forEach(name => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'new_tags[]';
+                input.value = name;
+                hiddenContainer.appendChild(input);
+            });
+        }
+
+        function addExistingEventTag(id) {
+            const numericId = Number(id);
+            if (selectedEventTagIds.includes(numericId)) {
+                return;
+            }
+
+            const tag = eventTagsCache.find(item => Number(item.id) === numericId);
+            if (!tag) return;
+
+            selectedEventTagIds.push(numericId);
+            selectedEventNewTags = selectedEventNewTags.filter(name => name.toLowerCase() !== tag.name.toLowerCase());
+            renderSelectedEventTags();
+            updateEventTagSuggestions('');
+            clearEventTagInput();
+            const suggestions = document.getElementById('event-tag-suggestions');
+            if (suggestions) {
+                suggestions.classList.add('hidden');
+            }
+        }
+
+        function addNewEventTag(name) {
+            const trimmed = name.trim();
+            if (!trimmed) return;
+
+            const existing = eventTagsCache.find(tag => tag.name.toLowerCase() === trimmed.toLowerCase());
+            if (existing) {
+                addExistingEventTag(existing.id);
+                return;
+            }
+
+            if (selectedEventNewTags.some(tagName => tagName.toLowerCase() === trimmed.toLowerCase())) {
+                clearEventTagInput();
+                return;
+            }
+
+            selectedEventNewTags.push(trimmed);
+            renderSelectedEventTags();
+            updateEventTagSuggestions('');
+            clearEventTagInput();
+            const suggestions = document.getElementById('event-tag-suggestions');
+            if (suggestions) {
+                suggestions.classList.add('hidden');
+            }
+        }
+
+        function removeExistingEventTag(id) {
+            const numericId = Number(id);
+            selectedEventTagIds = selectedEventTagIds.filter(tagId => tagId !== numericId);
+            renderSelectedEventTags();
+            updateEventTagSuggestions(document.getElementById('event-tag-input')?.value || '');
+        }
+
+        function removeNewEventTag(name) {
+            selectedEventNewTags = selectedEventNewTags.filter(tagName => tagName !== name);
+            renderSelectedEventTags();
+            updateEventTagSuggestions(document.getElementById('event-tag-input')?.value || '');
+        }
+
+        function clearEventTagInput() {
+            const input = document.getElementById('event-tag-input');
+            if (input) {
+                input.value = '';
+            }
+        }
+
+        function handleEventTagInputCommit() {
+            const input = document.getElementById('event-tag-input');
+            if (!input) return;
+
+            const value = input.value.trim();
+            if (!value) {
+                input.value = '';
+                return;
+            }
+
+            addNewEventTag(value);
+        }
+
+        function updateEventTagSuggestions(searchTerm = '') {
+            const suggestions = document.getElementById('event-tag-suggestions');
+            if (!suggestions) return;
+
+            const normalized = searchTerm.trim().toLowerCase();
+            if (!normalized.length) {
+                suggestions.innerHTML = '';
+                suggestions.classList.add('hidden');
+                return;
+            }
+
+            const availableTags = eventTagsCache.filter(tag => !selectedEventTagIds.includes(Number(tag.id)));
+
+            let matches = [];
+            matches = availableTags.filter(tag => tag.name.toLowerCase().includes(normalized)).slice(0, 10);
+
+            if (!matches.length) {
+                suggestions.innerHTML = '';
+                suggestions.classList.add('hidden');
+                return;
+            }
+
+            suggestions.innerHTML = matches.map(tag => `
+                <button type="button" class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50" data-tag-id="${tag.id}">
+                    ${tag.name}
+                </button>
+            `).join('');
+            suggestions.classList.remove('hidden');
+
+            // Add click handlers
+            suggestions.querySelectorAll('[data-tag-id]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    addExistingEventTag(btn.getAttribute('data-tag-id'));
+                });
+            });
+        }
+
+        function handleEventTagInput(event) {
+            if (event.key === 'Enter' || event.key === ',') {
+                event.preventDefault();
+                handleEventTagInputCommit();
+            } else if (event.key === 'Backspace' && !event.target.value) {
+                if (selectedEventNewTags.length) {
+                    selectedEventNewTags.pop();
+                    renderSelectedEventTags();
+                } else if (selectedEventTagIds.length) {
+                    selectedEventTagIds.pop();
+                    renderSelectedEventTags();
+                }
+            }
+        }
+
         // Review Management Functions
         async function loadEvents() {
             try {
@@ -2397,24 +2639,9 @@
                 console.error('Error loading pavilions:', error);
             }
 
-            // Load event tags for multi-select (if endpoint exists)
-            try {
-                const tagData = await apiCall('/admin/event-tags?per_page=100');
-                if (tagData && tagData.success) {
-                    const tagSelect = document.getElementById('event-tags-select');
-                    tagSelect.innerHTML = '';
-                    tagData.data.items.forEach(tag => {
-                        tagSelect.innerHTML += `<option value="${tag.id}">${tag.name}</option>`;
-                    });
-                }
-            } catch (error) {
-                // Event tags endpoint might not exist yet, show empty select
-                console.warn('Event tags endpoint not available:', error);
-                const tagSelect = document.getElementById('event-tags-select');
-                if (tagSelect) {
-                    tagSelect.innerHTML = '<option value="">No tags available</option>';
-                }
-            }
+            // Load event tags for chip input
+            await ensureEventTagsCache();
+            await loadEventTagOptions([], []);
 
             currentEditingEventId = null;
             document.getElementById('event-modal-title').textContent = 'Add Event';
@@ -2427,6 +2654,9 @@
             document.getElementById('add-event-modal').classList.add('hidden');
             document.getElementById('add-event-form').reset();
             document.getElementById('event-id').value = '';
+            selectedEventTagIds = [];
+            selectedEventNewTags = [];
+            renderSelectedEventTags();
         }
 
         async function addEvent(event) {
@@ -2444,10 +2674,9 @@
                 data.capacity = parseInt(data.capacity);
             }
 
-            // Get selected tags
-            const tagSelect = document.getElementById('event-tags-select');
-            const selectedTags = Array.from(tagSelect.selectedOptions).map(option => parseInt(option.value));
-            data.tags = selectedTags;
+            // Get selected tags from chip input
+            data.tags = selectedEventTagIds;
+            data.new_tags = selectedEventNewTags;
 
             const isEdit = currentEditingEventId !== null;
             const url = isEdit ? `/admin/events/${currentEditingEventId}` : '/admin/events';
@@ -2461,6 +2690,8 @@
                     closeAddEventModal();
                     loadEvents();
                     alert(`Event ${isEdit ? 'updated' : 'added'} successfully`);
+                } else if (response && response.errors) {
+                    alert(Object.values(response.errors).flat().join('\n'));
                 }
             } catch (error) {
                 console.error(`Error ${isEdit ? 'updating' : 'adding'} event:`, error);
@@ -2493,24 +2724,10 @@
                     });
                 }
 
-                // Load event tags (if endpoint exists)
-                try {
-                    const tagData = await apiCall('/admin/event-tags?per_page=100');
-                    if (tagData && tagData.success) {
-                        const tagSelect = document.getElementById('event-tags-select');
-                        tagSelect.innerHTML = '';
-                        tagData.data.items.forEach(tag => {
-                            const isSelected = event.tags && event.tags.some(t => t.id === tag.id);
-                            tagSelect.innerHTML += `<option value="${tag.id}" ${isSelected ? 'selected' : ''}>${tag.name}</option>`;
-                        });
-                    }
-                } catch (error) {
-                    console.warn('Event tags endpoint not available:', error);
-                    const tagSelect = document.getElementById('event-tags-select');
-                    if (tagSelect) {
-                        tagSelect.innerHTML = '<option value="">No tags available</option>';
-                    }
-                }
+                // Load event tags for chip input
+                await ensureEventTagsCache();
+                const existingTagIds = event.tags ? event.tags.map(t => t.id) : [];
+                await loadEventTagOptions(existingTagIds, []);
 
                 currentEditingEventId = event.id;
                 document.getElementById('event-modal-title').textContent = 'Edit Event';
