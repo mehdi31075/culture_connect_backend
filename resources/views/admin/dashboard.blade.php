@@ -403,8 +403,34 @@
             <!-- Events Section -->
             <div id="events-section" class="section hidden">
                 <h2 class="text-2xl font-bold mb-6">Event Management</h2>
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <p class="text-gray-600">Event management interface coming soon...</p>
+                <div class="bg-white rounded-lg shadow">
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-gray-600">Manage events</span>
+                            <button onclick="showAddEventModal()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                                <i class="fas fa-plus"></i> Add Event
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full table-auto">
+                                <thead>
+                                    <tr class="bg-gray-50">
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pavilion</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Start Time</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">End Time</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Attendees/Capacity</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="events-table">
+                                    <!-- Events will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -2317,6 +2343,17 @@
 
         function displayEvents(events) {
             const tbody = document.getElementById('events-table');
+            if (!tbody) return;
+
+            if (!events || events.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="px-6 py-4 text-sm text-gray-500 text-center">No events found. Create the first event to get started.</td>
+                    </tr>
+                `;
+                return;
+            }
+
             tbody.innerHTML = events.map(event => {
                 const startTime = event.start_time ? new Date(event.start_time).toLocaleString() : 'N/A';
                 const endTime = event.end_time ? new Date(event.end_time).toLocaleString() : 'N/A';
