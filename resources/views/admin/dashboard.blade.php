@@ -76,6 +76,12 @@
                         </a>
                     </li>
                     <li>
+                        <a href="#event-tags" onclick="showSection('event-tags', this)" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
+                            <i class="fas fa-tag mr-3"></i>
+                            Event Tags
+                        </a>
+                    </li>
+                    <li>
                         <a href="#events" onclick="showSection('events', this)" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
                             <i class="fas fa-calendar mr-3"></i>
                             Events
@@ -364,7 +370,37 @@
                 </div>
             </div>
 
-            <!-- Other sections will be similar -->
+            <!-- Event Tags Section -->
+            <div id="event-tags-section" class="section hidden">
+                <h2 class="text-2xl font-bold mb-6">Event Tag Management</h2>
+                <div class="bg-white rounded-lg shadow">
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-gray-600">Manage tags used to categorize events</span>
+                            <button onclick="showAddEventTagModal()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                                <i class="fas fa-plus"></i> Add Tag
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full table-auto">
+                                <thead>
+                                    <tr class="bg-gray-50">
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Events</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="event-tags-table">
+                                    <!-- Tags will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Events Section -->
             <div id="events-section" class="section hidden">
                 <h2 class="text-2xl font-bold mb-6">Event Management</h2>
                 <div class="bg-white p-6 rounded-lg shadow">
@@ -713,6 +749,37 @@
         </div>
     </div>
 
+    <!-- Event Tag Modal -->
+    <div id="event-tag-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+                <div class="flex justify-between items-center p-6 border-b">
+                    <h3 id="event-tag-modal-title" class="text-lg font-semibold">Add Tag</h3>
+                    <button onclick="closeEventTagModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="event-tag-form" onsubmit="saveEventTag(event)" class="p-6">
+                    <input type="hidden" id="event-tag-id">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                            <input type="text" id="event-tag-name" required class="w-full border rounded px-3 py-2">
+                        </div>
+                    </div>
+                    <div class="flex justify-end space-x-3 mt-6">
+                        <button type="button" onclick="closeEventTagModal()" class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50">
+                            Cancel
+                        </button>
+                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                            Save Tag
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Add/Edit Event Modal -->
     <div id="add-event-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 overflow-y-auto">
         <div class="flex items-center justify-center min-h-screen p-4">
@@ -852,6 +919,8 @@
         let selectedProductTagIds = [];
         let selectedProductNewTags = [];
         let currentEditingEventId = null;
+        let eventTagsCache = [];
+        let currentEditingEventTagId = null;
 
         // Initialize the admin panel
         document.addEventListener('DOMContentLoaded', function() {
@@ -1096,6 +1165,8 @@
                 ensureProductTagsCache();
             } else if (sectionName === 'product-tags') {
                 loadProductTags();
+            } else if (sectionName === 'event-tags') {
+                loadEventTags();
             } else if (sectionName === 'events') {
                 loadEvents();
             } else if (sectionName === 'reviews') {
@@ -2105,6 +2176,130 @@
             } catch (error) {
                 console.error('Error deleting tag:', error);
                 alert('Error deleting tag');
+            }
+        }
+
+        // Event Tag Management Functions
+        async function loadEventTags() {
+            try {
+                const data = await apiCall('/admin/event-tags');
+                if (data && data.success) {
+                    eventTagsCache = data.data.items || [];
+                    displayEventTags(eventTagsCache);
+                } else {
+                    eventTagsCache = [];
+                    displayEventTags([]);
+                }
+            } catch (error) {
+                console.error('Error loading event tags:', error);
+                eventTagsCache = [];
+                displayEventTags([]);
+            }
+        }
+
+        function displayEventTags(tags) {
+            const tbody = document.getElementById('event-tags-table');
+            if (!tbody) return;
+
+            if (!tags.length) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="px-6 py-4 text-sm text-gray-500 text-center">No tags found. Create the first tag to get started.</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = tags.map(tag => `
+                <tr class="border-b">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${tag.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${tag.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${tag.events_count || 0}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <button onclick="showEditEventTagModal(${tag.id})" class="text-blue-600 hover:text-blue-900 mr-2">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteEventTag(${tag.id})" class="text-red-600 hover:text-red-900">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function showAddEventTagModal() {
+            currentEditingEventTagId = null;
+            document.getElementById('event-tag-modal-title').textContent = 'Add Tag';
+            document.getElementById('event-tag-form').reset();
+            document.getElementById('event-tag-id').value = '';
+            document.getElementById('event-tag-modal').classList.remove('hidden');
+        }
+
+        function showEditEventTagModal(tagId) {
+            const tag = eventTagsCache.find(t => Number(t.id) === Number(tagId));
+            if (!tag) {
+                alert('Tag not found');
+                return;
+            }
+            currentEditingEventTagId = tag.id;
+            document.getElementById('event-tag-modal-title').textContent = 'Edit Tag';
+            document.getElementById('event-tag-id').value = tag.id;
+            document.getElementById('event-tag-name').value = tag.name;
+            document.getElementById('event-tag-modal').classList.remove('hidden');
+        }
+
+        function closeEventTagModal() {
+            currentEditingEventTagId = null;
+            document.getElementById('event-tag-form').reset();
+            document.getElementById('event-tag-id').value = '';
+            document.getElementById('event-tag-modal').classList.add('hidden');
+        }
+
+        async function saveEventTag(event) {
+            event.preventDefault();
+            const name = document.getElementById('event-tag-name').value.trim();
+            if (!name) {
+                alert('Please enter a tag name');
+                return;
+            }
+
+            const payload = { name };
+            const isEdit = currentEditingEventTagId !== null;
+            const url = isEdit ? `/admin/event-tags/${currentEditingEventTagId}` : '/admin/event-tags';
+
+            try {
+                const response = await apiCall(url, {
+                    method: isEdit ? 'PUT' : 'POST',
+                    body: JSON.stringify(payload),
+                });
+
+                if (response && response.success) {
+                    closeEventTagModal();
+                    await loadEventTags();
+                    alert(`Tag ${isEdit ? 'updated' : 'created'} successfully`);
+                } else if (response && response.errors) {
+                    alert(Object.values(response.errors).flat().join('\n'));
+                } else {
+                    alert('Failed to save tag');
+                }
+            } catch (error) {
+                console.error(`Error ${isEdit ? 'updating' : 'creating'} tag:`, error);
+                alert(`Error ${isEdit ? 'updating' : 'creating'} tag`);
+            }
+        }
+
+        async function deleteEventTag(tagId) {
+            if (confirm('Are you sure you want to delete this tag? This will remove it from all events.')) {
+                try {
+                    const response = await apiCall(`/admin/event-tags/${tagId}`, { method: 'DELETE' });
+                    if (response && response.success) {
+                        await loadEventTags();
+                        alert('Tag deleted successfully');
+                    }
+                } catch (error) {
+                    console.error('Error deleting tag:', error);
+                    alert('Error deleting tag');
+                }
             }
         }
 
