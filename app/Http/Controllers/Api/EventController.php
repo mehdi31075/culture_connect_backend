@@ -18,7 +18,7 @@ class EventController extends Controller
      * @OA\Get(
      *     path="/api/events",
      *     summary="Get upcoming events",
-     *     description="Retrieve upcoming events with filtering by date and tags. JWT token is optional - if provided, the response will include personalized fields (is_going, is_interested, has_reminder) for the authenticated user.",
+     *     description="Retrieve upcoming events with filtering by date and tags. Requires authentication. The response includes personalized fields (is_going, is_interested, has_reminder) for the authenticated user.",
      *     operationId="getEvents",
      *     tags={"Event"},
      *     security={{"bearerAuth":{}}},
@@ -35,6 +35,10 @@ class EventController extends Controller
      *         required=false,
      *         description="Tag filter: 'all' or specific tag ID/name (Cultural, Food, Shows, etc.)",
      *         @OA\Schema(type="string", default="all")
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized - JWT token required"
      *     ),
      *     @OA\Response(
      *         response=200,
@@ -55,9 +59,9 @@ class EventController extends Controller
      *                     @OA\Property(property="end_time", type="string", format="date-time"),
      *                     @OA\Property(property="capacity", type="integer", nullable=true, example=500),
      *                     @OA\Property(property="confirmed_attendees_count", type="integer", example=391),
-     *                     @OA\Property(property="is_going", type="boolean", example=false, description="Whether the authenticated user marked as going (requires JWT token)"),
-     *                     @OA\Property(property="is_interested", type="boolean", example=false, description="Whether the authenticated user marked as interested (requires JWT token)"),
-     *                     @OA\Property(property="has_reminder", type="boolean", example=false, description="Whether the authenticated user set a reminder (requires JWT token)"),
+                     *                     @OA\Property(property="is_going", type="boolean", example=false, description="Whether the authenticated user marked as going"),
+                     *                     @OA\Property(property="is_interested", type="boolean", example=false, description="Whether the authenticated user marked as interested"),
+                     *                     @OA\Property(property="has_reminder", type="boolean", example=false, description="Whether the authenticated user set a reminder"),
      *                     @OA\Property(property="pavilion", type="object", nullable=true),
      *                     @OA\Property(
      *                         property="tags",
@@ -118,32 +122,14 @@ class EventController extends Controller
 
             $events = $query->orderBy('start_time', 'asc')->get();
 
-            // Get authenticated user if available
-            // Try to authenticate from token even if route doesn't have auth middleware
-            $user = null;
+            // Get authenticated user (required since route has auth:api middleware)
+            $user = auth('api')->user();
 
-            // Check if Authorization header is present
-            $token = $request->bearerToken();
-
-            if ($token) {
-                try {
-                    // Set the token and authenticate
-                    JWTAuth::setToken($token);
-                    $user = JWTAuth::authenticate();
-                } catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
-                    // Token expired
-                } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
-                    // Token invalid
-                } catch (\Tymon\JWTAuth\Exceptions\JWTException $e) {
-                    // JWT exception
-                } catch (\Exception $e) {
-                    // Other exceptions
-                }
-            }
-
-            // Fallback: try standard auth guards (in case middleware already set user)
             if (!$user) {
-                $user = auth('api')->user();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized',
+                ], 401);
             }
 
             $userAttendance = collect();
