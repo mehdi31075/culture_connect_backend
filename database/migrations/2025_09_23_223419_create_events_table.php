@@ -13,6 +13,13 @@ return new class extends Migration
     {
         Schema::create('events', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('pavilion_id')->nullable()->constrained()->onDelete('set null');
+            $table->string('title', 160);
+            $table->text('description')->nullable();
+            $table->string('stage', 160)->nullable();
+            $table->string('price', 60)->default('Free');
+            $table->timestamp('start_time');
+            $table->timestamp('end_time');
             $table->timestamps();
         });
     }
