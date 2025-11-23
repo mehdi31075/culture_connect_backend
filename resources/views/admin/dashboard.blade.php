@@ -34,67 +34,67 @@
             <div class="p-4">
                 <ul class="space-y-2">
                     <li>
-                        <a href="#dashboard" onclick="showSection('dashboard')" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100 active">
+                        <a href="#dashboard" onclick="showSection('dashboard', this)" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100 active">
                             <i class="fas fa-tachometer-alt mr-3"></i>
                             Dashboard
                         </a>
                     </li>
                     <li>
-                        <a href="#users" onclick="showSection('users')" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
+                        <a href="#users" onclick="showSection('users', this)" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
                             <i class="fas fa-users mr-3"></i>
                             Users
                         </a>
                     </li>
                     <li>
-                        <a href="#pavilions" onclick="showSection('pavilions')" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
+                        <a href="#pavilions" onclick="showSection('pavilions', this)" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
                             <i class="fas fa-building mr-3"></i>
                             Pavilions
                         </a>
                     </li>
                     <li>
-                        <a href="#banners" onclick="showSection('banners')" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
+                        <a href="#banners" onclick="showSection('banners', this)" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
                             <i class="fas fa-images mr-3"></i>
                             Banners
                         </a>
                     </li>
                     <li>
-                        <a href="#shops" onclick="showSection('shops')" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
+                        <a href="#shops" onclick="showSection('shops', this)" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
                             <i class="fas fa-store mr-3"></i>
                             Shops
                         </a>
                     </li>
                     <li>
-                        <a href="#products" onclick="showSection('products')" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
+                        <a href="#products" onclick="showSection('products', this)" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
                             <i class="fas fa-box mr-3"></i>
                             Products
                         </a>
                     </li>
                     <li>
-                        <a href="#product-tags" onclick="showSection('product-tags')" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
+                        <a href="#product-tags" onclick="showSection('product-tags', this)" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
                             <i class="fas fa-tags mr-3"></i>
                             Product Tags
                         </a>
                     </li>
                     <li>
-                        <a href="#events" onclick="showSection('events')" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
+                        <a href="#events" onclick="showSection('events', this)" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
                             <i class="fas fa-calendar mr-3"></i>
                             Events
                         </a>
                     </li>
                     <li>
-                        <a href="#orders" onclick="showSection('orders')" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
+                        <a href="#orders" onclick="showSection('orders', this)" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
                             <i class="fas fa-shopping-cart mr-3"></i>
                             Orders
                         </a>
                     </li>
                     <li>
-                        <a href="#reviews" onclick="showSection('reviews')" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
+                        <a href="#reviews" onclick="showSection('reviews', this)" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
                             <i class="fas fa-star mr-3"></i>
                             Reviews
                         </a>
                     </li>
                     <li>
-                        <a href="#notifications" onclick="showSection('notifications')" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
+                        <a href="#notifications" onclick="showSection('notifications', this)" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
                             <i class="fas fa-bell mr-3"></i>
                             Notifications
                         </a>
@@ -1054,7 +1054,7 @@
         }
 
         // Show section
-        function showSection(sectionName) {
+        function showSection(sectionName, clickedElement) {
             // Hide all sections
             document.querySelectorAll('.section').forEach(section => {
                 section.classList.add('hidden');
@@ -1066,10 +1066,21 @@
             });
 
             // Show selected section
-            document.getElementById(`${sectionName}-section`).classList.remove('hidden');
+            const section = document.getElementById(`${sectionName}-section`);
+            if (section) {
+                section.classList.remove('hidden');
+            }
 
             // Add active class to clicked nav item
-            event.target.classList.add('active');
+            if (clickedElement) {
+                clickedElement.classList.add('active');
+            } else {
+                // Fallback: find the link by href
+                const link = document.querySelector(`nav a[href="#${sectionName}"]`);
+                if (link) {
+                    link.classList.add('active');
+                }
+            }
 
             // Load section data
             if (sectionName === 'users') {
@@ -2240,47 +2251,46 @@
                     return;
                 }
 
-                    // Load pavilions
-                    const pavilionData = await apiCall('/admin/pavilions?per_page=100');
-                    if (pavilionData && pavilionData.success) {
-                        const pavilionSelect = document.getElementById('event-pavilion-select');
-                        pavilionSelect.innerHTML = '<option value="">Select a pavilion...</option>';
-                        pavilionData.data.items.forEach(pavilion => {
-                            pavilionSelect.innerHTML += `<option value="${pavilion.id}" ${pavilion.id === event.pavilion_id ? 'selected' : ''}>${pavilion.name}</option>`;
+                // Load pavilions
+                const pavilionData = await apiCall('/admin/pavilions?per_page=100');
+                if (pavilionData && pavilionData.success) {
+                    const pavilionSelect = document.getElementById('event-pavilion-select');
+                    pavilionSelect.innerHTML = '<option value="">Select a pavilion...</option>';
+                    pavilionData.data.items.forEach(pavilion => {
+                        pavilionSelect.innerHTML += `<option value="${pavilion.id}" ${pavilion.id === event.pavilion_id ? 'selected' : ''}>${pavilion.name}</option>`;
+                    });
+                }
+
+                // Load event tags (if endpoint exists)
+                try {
+                    const tagData = await apiCall('/admin/event-tags?per_page=100');
+                    if (tagData && tagData.success) {
+                        const tagSelect = document.getElementById('event-tags-select');
+                        tagSelect.innerHTML = '';
+                        tagData.data.items.forEach(tag => {
+                            const isSelected = event.tags && event.tags.some(t => t.id === tag.id);
+                            tagSelect.innerHTML += `<option value="${tag.id}" ${isSelected ? 'selected' : ''}>${tag.name}</option>`;
                         });
                     }
-
-                    // Load event tags (if endpoint exists)
-                    try {
-                        const tagData = await apiCall('/admin/event-tags?per_page=100');
-                        if (tagData && tagData.success) {
-                            const tagSelect = document.getElementById('event-tags-select');
-                            tagSelect.innerHTML = '';
-                            tagData.data.items.forEach(tag => {
-                                const isSelected = event.tags && event.tags.some(t => t.id === tag.id);
-                                tagSelect.innerHTML += `<option value="${tag.id}" ${isSelected ? 'selected' : ''}>${tag.name}</option>`;
-                            });
-                        }
-                    } catch (error) {
-                        console.warn('Event tags endpoint not available:', error);
-                        const tagSelect = document.getElementById('event-tags-select');
-                        if (tagSelect) {
-                            tagSelect.innerHTML = '<option value="">No tags available</option>';
-                        }
+                } catch (error) {
+                    console.warn('Event tags endpoint not available:', error);
+                    const tagSelect = document.getElementById('event-tags-select');
+                    if (tagSelect) {
+                        tagSelect.innerHTML = '<option value="">No tags available</option>';
                     }
-
-                    currentEditingEventId = event.id;
-                    document.getElementById('event-modal-title').textContent = 'Edit Event';
-                    document.getElementById('event-id').value = event.id;
-                    document.getElementById('event-title').value = event.title || '';
-                    document.getElementById('event-description').value = event.description || '';
-                    document.getElementById('event-stage').value = event.stage || '';
-                    document.getElementById('event-price').value = event.price || 'Free';
-                    document.getElementById('event-start-time').value = event.start_time ? new Date(event.start_time).toISOString().slice(0, 16) : '';
-                    document.getElementById('event-end-time').value = event.end_time ? new Date(event.end_time).toISOString().slice(0, 16) : '';
-                    document.getElementById('event-capacity').value = event.capacity || '';
-                    document.getElementById('add-event-modal').classList.remove('hidden');
                 }
+
+                currentEditingEventId = event.id;
+                document.getElementById('event-modal-title').textContent = 'Edit Event';
+                document.getElementById('event-id').value = event.id;
+                document.getElementById('event-title').value = event.title || '';
+                document.getElementById('event-description').value = event.description || '';
+                document.getElementById('event-stage').value = event.stage || '';
+                document.getElementById('event-price').value = event.price || 'Free';
+                document.getElementById('event-start-time').value = event.start_time ? new Date(event.start_time).toISOString().slice(0, 16) : '';
+                document.getElementById('event-end-time').value = event.end_time ? new Date(event.end_time).toISOString().slice(0, 16) : '';
+                document.getElementById('event-capacity').value = event.capacity || '';
+                document.getElementById('add-event-modal').classList.remove('hidden');
             } catch (error) {
                 console.error('Error loading event:', error);
                 alert('Error loading event');
