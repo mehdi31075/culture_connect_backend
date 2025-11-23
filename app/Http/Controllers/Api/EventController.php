@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use Tymon\JWTAuth\Exceptions\JWTException;
 
 class EventController extends Controller
 {
@@ -119,19 +120,29 @@ class EventController extends Controller
             // Get authenticated user if available
             // Try to authenticate from token even if route doesn't have auth middleware
             $user = null;
-            try {
-                // Try to get user from JWT token if present in request
-                if ($request->bearerToken()) {
-                    JWTAuth::setToken($request->bearerToken());
+
+            // Check if Authorization header is present
+            $token = $request->bearerToken();
+
+            if ($token) {
+                try {
+                    // Set the token and authenticate
+                    JWTAuth::setToken($token);
                     $user = JWTAuth::authenticate();
+                } catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
+                    // Token expired
+                } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
+                    // Token invalid
+                } catch (\Tymon\JWTAuth\Exceptions\JWTException $e) {
+                    // JWT exception
+                } catch (\Exception $e) {
+                    // Other exceptions
                 }
-            } catch (\Exception $e) {
-                // Token invalid or expired, user will remain null
             }
 
-            // Fallback to standard auth if JWT didn't work
+            // Fallback: try standard auth guards (in case middleware already set user)
             if (!$user) {
-                $user = auth('api')->user() ?? auth()->user();
+                $user = auth('api')->user();
             }
 
             $userAttendance = collect();
@@ -139,6 +150,7 @@ class EventController extends Controller
             if ($user) {
                 $eventIds = $events->pluck('id');
                 if ($eventIds->isNotEmpty()) {
+                    // Query attendance records for this user and these events
                     $userAttendance = EventAttendance::where('user_id', $user->id)
                         ->whereIn('event_id', $eventIds)
                         ->get()
@@ -147,19 +159,22 @@ class EventController extends Controller
             }
 
             // Add confirmed attendees count and user status to each event
-            $events->each(function ($event) use ($userAttendance) {
+            $events->each(function ($event) use ($userAttendance, $user) {
                 $event->confirmed_attendees_count = $event->confirmed_attendees_count;
 
                 // Add user status flags (default to false if no user or no attendance)
                 $attendance = $userAttendance->get($event->id);
+
                 if ($attendance) {
                     // Use strict comparison and ensure status matches exactly
-                    $event->is_going = (string)$attendance->status === (string)EventAttendance::STATUS_GOING;
+                    $status = (string)$attendance->status;
+                    $event->is_going = $status === (string)EventAttendance::STATUS_GOING;
                     // If going, also considered interested. Otherwise check if status is interested
-                    $event->is_interested = (string)$attendance->status === (string)EventAttendance::STATUS_GOING
-                        || (string)$attendance->status === (string)EventAttendance::STATUS_INTERESTED;
-                    $event->has_reminder = $attendance->reminder_at !== null;
+                    $event->is_interested = $status === (string)EventAttendance::STATUS_GOING
+                        || $status === (string)EventAttendance::STATUS_INTERESTED;
+                    $event->has_reminder = $attendance->reminder_at !== null && $attendance->reminder_at !== '';
                 } else {
+                    // No attendance record found for this user and event
                     $event->is_going = false;
                     $event->is_interested = false;
                     $event->has_reminder = false;
