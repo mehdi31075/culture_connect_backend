@@ -80,6 +80,8 @@ class AdminEventController extends Controller
                 'capacity' => 'nullable|integer|min:0',
                 'tags' => 'nullable|array',
                 'tags.*' => 'integer|exists:event_tags,id',
+                'new_tags' => 'nullable|array',
+                'new_tags.*' => 'string|max:60',
             ]);
 
             if ($validator->fails()) {
@@ -102,8 +104,25 @@ class AdminEventController extends Controller
             ]);
 
             // Sync tags if provided
-            if ($request->has('tags')) {
-                $event->tags()->sync($request->tags);
+            $tagIds = $request->tags ?? [];
+
+            // Create new tags if provided
+            if ($request->has('new_tags') && is_array($request->new_tags)) {
+                foreach ($request->new_tags as $tagName) {
+                    $tagName = trim($tagName);
+                    if (!empty($tagName)) {
+                        $tag = EventTag::firstOrCreate(['name' => $tagName]);
+                        $tagIds[] = $tag->id;
+                    }
+                }
+            }
+
+            // Remove duplicates and sync
+            $tagIds = array_unique($tagIds);
+            if (!empty($tagIds)) {
+                $event->tags()->sync($tagIds);
+            } else {
+                $event->tags()->detach();
             }
 
             // Load relationships
@@ -150,6 +169,8 @@ class AdminEventController extends Controller
                 'capacity' => 'nullable|integer|min:0',
                 'tags' => 'nullable|array',
                 'tags.*' => 'integer|exists:event_tags,id',
+                'new_tags' => 'nullable|array',
+                'new_tags.*' => 'string|max:60',
             ]);
 
             if ($validator->fails()) {
@@ -173,8 +194,25 @@ class AdminEventController extends Controller
             $event->update($updateData);
 
             // Sync tags if provided
-            if ($request->has('tags')) {
-                $event->tags()->sync($request->tags);
+            $tagIds = $request->tags ?? [];
+
+            // Create new tags if provided
+            if ($request->has('new_tags') && is_array($request->new_tags)) {
+                foreach ($request->new_tags as $tagName) {
+                    $tagName = trim($tagName);
+                    if (!empty($tagName)) {
+                        $tag = EventTag::firstOrCreate(['name' => $tagName]);
+                        $tagIds[] = $tag->id;
+                    }
+                }
+            }
+
+            // Remove duplicates and sync
+            $tagIds = array_unique($tagIds);
+            if (!empty($tagIds)) {
+                $event->tags()->sync($tagIds);
+            } else {
+                $event->tags()->detach();
             }
 
             // Load relationships

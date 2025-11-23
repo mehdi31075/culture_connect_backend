@@ -13,7 +13,12 @@ return new class extends Migration
     {
         Schema::create('event_tag_maps', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('event_id')->constrained()->onDelete('cascade');
+            $table->foreignId('tag_id')->constrained('event_tags')->onDelete('cascade');
             $table->timestamps();
+
+            // Ensure unique combination of event and tag
+            $table->unique(['event_id', 'tag_id']);
         });
     }
 

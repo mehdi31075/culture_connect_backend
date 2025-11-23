@@ -41,7 +41,7 @@ class Event extends Model
 
     public function tags()
     {
-        return $this->belongsToMany(EventTag::class, 'event_tag_maps');
+        return $this->belongsToMany(EventTag::class, 'event_tag_maps', 'event_id', 'tag_id');
     }
 
     public function attendees()
