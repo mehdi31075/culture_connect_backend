@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\AdminShopController;
 use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Admin\AdminProductTagController;
 use App\Http\Controllers\Admin\AdminReviewController;
+use App\Http\Controllers\Admin\AdminEventController;
 
 /*
 |--------------------------------------------------------------------------
@@ -46,7 +47,10 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
     Route::delete('/users/{id}', [AdminController::class, 'deleteUser']);
 
     // Event management
-    Route::get('/events', [AdminController::class, 'events']);
+    Route::get('/events', [AdminEventController::class, 'index']);
+    Route::post('/events', [AdminEventController::class, 'store']);
+    Route::put('/events/{id}', [AdminEventController::class, 'update']);
+    Route::delete('/events/{id}', [AdminEventController::class, 'destroy']);
 
     // Pavilion management
     Route::get('/pavilions', [AdminController::class, 'pavilions']);

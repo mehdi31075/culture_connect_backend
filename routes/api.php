@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BannerController;
+use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\PavilionController;
 use App\Http\Controllers\Api\ShopController;
 use Illuminate\Http\Request;
@@ -118,3 +119,11 @@ Route::get('shops/{shop}/products', [ShopController::class, 'products']);
 // Banner routes
 Route::get('banners', [BannerController::class, 'index']);
 Route::get('banners/{id}', [BannerController::class, 'show']);
+
+// Event routes
+Route::get('events', [EventController::class, 'index']);
+Route::middleware('auth:api')->group(function () {
+    Route::post('events/{event}/mark-going', [EventController::class, 'markGoing']);
+    Route::post('events/{event}/mark-interested', [EventController::class, 'markInterested']);
+    Route::post('events/{event}/remind-me', [EventController::class, 'remindMe']);
+});

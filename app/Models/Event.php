@@ -17,6 +17,7 @@ class Event extends Model
         'price',
         'start_time',
         'end_time',
+        'capacity',
     ];
 
     protected $casts = [
@@ -51,5 +52,15 @@ class Event extends Model
     public function checkins()
     {
         return $this->hasMany(Checkin::class);
+    }
+
+    /**
+     * Get confirmed attendees count (status = 'going' or 'checked_in')
+     */
+    public function getConfirmedAttendeesCountAttribute()
+    {
+        return $this->attendees()
+            ->whereIn('status', [EventAttendance::STATUS_GOING, EventAttendance::STATUS_CHECKED_IN])
+            ->count();
     }
 }

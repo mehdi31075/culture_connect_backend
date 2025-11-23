@@ -411,6 +411,39 @@
                 </div>
             </div>
 
+            <div id="events-section" class="section hidden">
+                <h2 class="text-2xl font-bold mb-6">Event Management</h2>
+                <div class="bg-white rounded-lg shadow">
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-gray-600">Manage events</span>
+                            <button onclick="showAddEventModal()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                                <i class="fas fa-plus"></i> Add Event
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full table-auto">
+                                <thead>
+                                    <tr class="bg-gray-50">
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pavilion</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Start Time</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">End Time</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Attendees/Capacity</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="events-table">
+                                    <!-- Events will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div id="notifications-section" class="section hidden">
                 <h2 class="text-2xl font-bold mb-6">Notification Management</h2>
                 <div class="bg-white p-6 rounded-lg shadow">
@@ -680,6 +713,78 @@
         </div>
     </div>
 
+    <!-- Add/Edit Event Modal -->
+    <div id="add-event-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[85vh] overflow-y-auto">
+                <div class="flex justify-between items-center p-6 border-b">
+                    <h3 id="event-modal-title" class="text-lg font-semibold">Add New Event</h3>
+                    <button onclick="closeAddEventModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="add-event-form" onsubmit="addEvent(event)" class="p-6">
+                    <input type="hidden" name="event_id" id="event-id">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                            <input type="text" name="title" id="event-title" required class="w-full border rounded px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                            <textarea name="description" id="event-description" rows="3" class="w-full border rounded px-3 py-2"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Pavilion</label>
+                            <select name="pavilion_id" id="event-pavilion-select" class="w-full border rounded px-3 py-2">
+                                <option value="">Select a pavilion...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Stage</label>
+                            <input type="text" name="stage" id="event-stage" class="w-full border rounded px-3 py-2">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Start Time *</label>
+                                <input type="datetime-local" name="start_time" id="event-start-time" required class="w-full border rounded px-3 py-2">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">End Time *</label>
+                                <input type="datetime-local" name="end_time" id="event-end-time" required class="w-full border rounded px-3 py-2">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Price</label>
+                                <input type="text" name="price" id="event-price" value="Free" class="w-full border rounded px-3 py-2">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Capacity</label>
+                                <input type="number" name="capacity" id="event-capacity" min="0" class="w-full border rounded px-3 py-2">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tags</label>
+                            <select name="tags[]" id="event-tags-select" multiple class="w-full border rounded px-3 py-2">
+                                <option value="">Loading tags...</option>
+                            </select>
+                            <p class="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple tags</p>
+                        </div>
+                    </div>
+                    <div class="flex justify-end space-x-3 mt-6">
+                        <button type="button" onclick="closeAddEventModal()" class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50">
+                            Cancel
+                        </button>
+                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                            Save Event
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Add Review Modal -->
     <div id="add-review-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 overflow-y-auto">
         <div class="flex items-center justify-center min-h-screen p-4">
@@ -746,6 +851,7 @@
         let currentEditingProductTagId = null;
         let selectedProductTagIds = [];
         let selectedProductNewTags = [];
+        let currentEditingEventId = null;
 
         // Initialize the admin panel
         document.addEventListener('DOMContentLoaded', function() {
@@ -979,6 +1085,8 @@
                 ensureProductTagsCache();
             } else if (sectionName === 'product-tags') {
                 loadProductTags();
+            } else if (sectionName === 'events') {
+                loadEvents();
             } else if (sectionName === 'reviews') {
                 loadReviews();
             }
@@ -1990,6 +2098,210 @@
         }
 
         // Review Management Functions
+        async function loadEvents() {
+            try {
+                const data = await apiCall('/admin/events');
+                if (data && data.success) {
+                    displayEvents(data.data.items);
+                }
+            } catch (error) {
+                console.error('Error loading events:', error);
+            }
+        }
+
+        function displayEvents(events) {
+            const tbody = document.getElementById('events-table');
+            tbody.innerHTML = events.map(event => {
+                const startTime = event.start_time ? new Date(event.start_time).toLocaleString() : 'N/A';
+                const endTime = event.end_time ? new Date(event.end_time).toLocaleString() : 'N/A';
+                const capacity = event.capacity || 'N/A';
+                const attendees = event.confirmed_attendees_count || 0;
+                const capacityDisplay = capacity !== 'N/A' ? `${attendees}/${capacity}` : attendees;
+                return `
+                <tr class="border-b">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${event.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${event.title || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${event.pavilion ? event.pavilion.name : 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${startTime}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${endTime}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${capacityDisplay}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${event.price || 'Free'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <button onclick="editEvent(${event.id})" class="text-blue-600 hover:text-blue-900 mr-2">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteEvent(${event.id})" class="text-red-600 hover:text-red-900">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+            }).join('');
+        }
+
+        async function showAddEventModal() {
+            // Load pavilions for dropdown
+            try {
+                const pavilionData = await apiCall('/admin/pavilions?per_page=100');
+                if (pavilionData && pavilionData.success) {
+                    const pavilionSelect = document.getElementById('event-pavilion-select');
+                    pavilionSelect.innerHTML = '<option value="">Select a pavilion...</option>';
+                    pavilionData.data.items.forEach(pavilion => {
+                        pavilionSelect.innerHTML += `<option value="${pavilion.id}">${pavilion.name}</option>`;
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading pavilions:', error);
+            }
+
+            // Load event tags for multi-select (if endpoint exists)
+            try {
+                const tagData = await apiCall('/admin/event-tags?per_page=100');
+                if (tagData && tagData.success) {
+                    const tagSelect = document.getElementById('event-tags-select');
+                    tagSelect.innerHTML = '';
+                    tagData.data.items.forEach(tag => {
+                        tagSelect.innerHTML += `<option value="${tag.id}">${tag.name}</option>`;
+                    });
+                }
+            } catch (error) {
+                // Event tags endpoint might not exist yet, show empty select
+                console.warn('Event tags endpoint not available:', error);
+                const tagSelect = document.getElementById('event-tags-select');
+                if (tagSelect) {
+                    tagSelect.innerHTML = '<option value="">No tags available</option>';
+                }
+            }
+
+            currentEditingEventId = null;
+            document.getElementById('event-modal-title').textContent = 'Add Event';
+            document.getElementById('add-event-form').reset();
+            document.getElementById('event-id').value = '';
+            document.getElementById('add-event-modal').classList.remove('hidden');
+        }
+
+        function closeAddEventModal() {
+            document.getElementById('add-event-modal').classList.add('hidden');
+            document.getElementById('add-event-form').reset();
+            document.getElementById('event-id').value = '';
+        }
+
+        async function addEvent(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const data = Object.fromEntries(formData);
+
+            // Convert empty strings to null for optional fields
+            if (!data.pavilion_id || data.pavilion_id === '') {
+                data.pavilion_id = null;
+            }
+            if (!data.capacity || data.capacity === '') {
+                data.capacity = null;
+            } else {
+                data.capacity = parseInt(data.capacity);
+            }
+
+            // Get selected tags
+            const tagSelect = document.getElementById('event-tags-select');
+            const selectedTags = Array.from(tagSelect.selectedOptions).map(option => parseInt(option.value));
+            data.tags = selectedTags;
+
+            const isEdit = currentEditingEventId !== null;
+            const url = isEdit ? `/admin/events/${currentEditingEventId}` : '/admin/events';
+
+            try {
+                const response = await apiCall(url, {
+                    method: isEdit ? 'PUT' : 'POST',
+                    body: JSON.stringify(data),
+                });
+                if (response && response.success) {
+                    closeAddEventModal();
+                    loadEvents();
+                    alert(`Event ${isEdit ? 'updated' : 'added'} successfully`);
+                }
+            } catch (error) {
+                console.error(`Error ${isEdit ? 'updating' : 'adding'} event:`, error);
+                alert(`Error ${isEdit ? 'updating' : 'adding'} event`);
+            }
+        }
+
+        async function editEvent(eventId) {
+            try {
+                // Load all events to find the one we need
+                const eventData = await apiCall(`/admin/events?per_page=1000`);
+                if (!eventData || !eventData.success) {
+                    alert('Error loading events');
+                    return;
+                }
+
+                const event = eventData.data.items.find(e => e.id === eventId);
+                if (!event) {
+                    alert('Event not found');
+                    return;
+                }
+
+                    // Load pavilions
+                    const pavilionData = await apiCall('/admin/pavilions?per_page=100');
+                    if (pavilionData && pavilionData.success) {
+                        const pavilionSelect = document.getElementById('event-pavilion-select');
+                        pavilionSelect.innerHTML = '<option value="">Select a pavilion...</option>';
+                        pavilionData.data.items.forEach(pavilion => {
+                            pavilionSelect.innerHTML += `<option value="${pavilion.id}" ${pavilion.id === event.pavilion_id ? 'selected' : ''}>${pavilion.name}</option>`;
+                        });
+                    }
+
+                    // Load event tags (if endpoint exists)
+                    try {
+                        const tagData = await apiCall('/admin/event-tags?per_page=100');
+                        if (tagData && tagData.success) {
+                            const tagSelect = document.getElementById('event-tags-select');
+                            tagSelect.innerHTML = '';
+                            tagData.data.items.forEach(tag => {
+                                const isSelected = event.tags && event.tags.some(t => t.id === tag.id);
+                                tagSelect.innerHTML += `<option value="${tag.id}" ${isSelected ? 'selected' : ''}>${tag.name}</option>`;
+                            });
+                        }
+                    } catch (error) {
+                        console.warn('Event tags endpoint not available:', error);
+                        const tagSelect = document.getElementById('event-tags-select');
+                        if (tagSelect) {
+                            tagSelect.innerHTML = '<option value="">No tags available</option>';
+                        }
+                    }
+
+                    currentEditingEventId = event.id;
+                    document.getElementById('event-modal-title').textContent = 'Edit Event';
+                    document.getElementById('event-id').value = event.id;
+                    document.getElementById('event-title').value = event.title || '';
+                    document.getElementById('event-description').value = event.description || '';
+                    document.getElementById('event-stage').value = event.stage || '';
+                    document.getElementById('event-price').value = event.price || 'Free';
+                    document.getElementById('event-start-time').value = event.start_time ? new Date(event.start_time).toISOString().slice(0, 16) : '';
+                    document.getElementById('event-end-time').value = event.end_time ? new Date(event.end_time).toISOString().slice(0, 16) : '';
+                    document.getElementById('event-capacity').value = event.capacity || '';
+                    document.getElementById('add-event-modal').classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Error loading event:', error);
+                alert('Error loading event');
+            }
+        }
+
+        async function deleteEvent(eventId) {
+            if (confirm('Are you sure you want to delete this event?')) {
+                try {
+                    const data = await apiCall(`/admin/events/${eventId}`, { method: 'DELETE' });
+                    if (data && data.success) {
+                        loadEvents();
+                        alert('Event deleted successfully');
+                    }
+                } catch (error) {
+                    console.error('Error deleting event:', error);
+                    alert('Error deleting event');
+                }
+            }
+        }
+
         async function loadReviews() {
             try {
                 const data = await apiCall('/admin/reviews');
