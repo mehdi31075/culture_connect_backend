@@ -121,10 +121,12 @@ class EventController extends Controller
 
             if ($user) {
                 $eventIds = $events->pluck('id');
-                $userAttendance = EventAttendance::where('user_id', $user->id)
-                    ->whereIn('event_id', $eventIds)
-                    ->get()
-                    ->keyBy('event_id');
+                if ($eventIds->isNotEmpty()) {
+                    $userAttendance = EventAttendance::where('user_id', $user->id)
+                        ->whereIn('event_id', $eventIds)
+                        ->get()
+                        ->keyBy('event_id');
+                }
             }
 
             // Add confirmed attendees count and user status to each event
@@ -133,9 +135,18 @@ class EventController extends Controller
 
                 // Add user status flags (default to false if no user or no attendance)
                 $attendance = $userAttendance->get($event->id);
-                $event->is_going = $attendance ? ($attendance->status === EventAttendance::STATUS_GOING) : false;
-                $event->is_interested = $attendance ? ($attendance->status === EventAttendance::STATUS_INTERESTED) : false;
-                $event->has_reminder = $attendance ? ($attendance->reminder_at !== null) : false;
+                if ($attendance) {
+                    // Use strict comparison and ensure status matches exactly
+                    $event->is_going = (string)$attendance->status === (string)EventAttendance::STATUS_GOING;
+                    // If going, also considered interested. Otherwise check if status is interested
+                    $event->is_interested = (string)$attendance->status === (string)EventAttendance::STATUS_GOING
+                        || (string)$attendance->status === (string)EventAttendance::STATUS_INTERESTED;
+                    $event->has_reminder = $attendance->reminder_at !== null;
+                } else {
+                    $event->is_going = false;
+                    $event->is_interested = false;
+                    $event->has_reminder = false;
+                }
             });
 
             return response()->json([
