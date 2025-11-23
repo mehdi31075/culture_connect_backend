@@ -234,7 +234,8 @@ class EventController extends Controller
                 ], 404);
             }
 
-            // Create or update event attendance as going
+            // Create or update event attendance pivot record as going
+            // This updates the pivot table (event_attendances) with status 'going'
             EventAttendance::updateOrCreate(
                 [
                     'user_id' => $user->id,
@@ -242,6 +243,7 @@ class EventController extends Controller
                 ],
                 [
                     'status' => EventAttendance::STATUS_GOING,
+                    // Preserve reminder_at if it exists, don't clear it
                 ]
             );
 
@@ -312,16 +314,20 @@ class EventController extends Controller
                 ], 404);
             }
 
-            // Create or update event attendance as interested
-            EventAttendance::updateOrCreate(
-                [
-                    'user_id' => $user->id,
-                    'event_id' => $event->id,
-                ],
-                [
-                    'status' => EventAttendance::STATUS_INTERESTED,
-                ]
-            );
+            // Create or update event attendance pivot record as interested
+            // This updates the pivot table (event_attendances) with status 'interested'
+            // Only set to interested if not already going (going is higher priority)
+            $attendance = EventAttendance::firstOrNew([
+                'user_id' => $user->id,
+                'event_id' => $event->id,
+            ]);
+
+            // Only update status if not already going
+            if ($attendance->status !== EventAttendance::STATUS_GOING) {
+                $attendance->status = EventAttendance::STATUS_INTERESTED;
+            }
+
+            $attendance->save();
 
             return response()->json([
                 'success' => true,
@@ -404,7 +410,9 @@ class EventController extends Controller
                 $reminderAt = Carbon::parse($event->start_time)->subHour();
             }
 
-            // Create or update event attendance with reminder (preserve existing status if any)
+            // Create or update event attendance pivot record with reminder
+            // This updates the pivot table (event_attendances) with reminder_at
+            // Preserve existing status if any, otherwise default to interested
             $attendance = EventAttendance::firstOrNew([
                 'user_id' => $user->id,
                 'event_id' => $event->id,
@@ -415,6 +423,7 @@ class EventController extends Controller
                 $attendance->status = EventAttendance::STATUS_INTERESTED;
             }
 
+            // Update reminder_at in pivot table
             $attendance->reminder_at = $reminderAt;
             $attendance->save();
 
