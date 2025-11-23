@@ -19,22 +19,28 @@ return new class extends Migration
             if (!Schema::hasColumn('event_tag_maps', 'tag_id')) {
                 $table->foreignId('tag_id')->after('event_id')->constrained('event_tags')->onDelete('cascade');
             }
-
-            // Add unique constraint if it doesn't exist
-            $indexes = Schema::getConnection()->getDoctrineSchemaManager()->listTableIndexes('event_tag_maps');
-            $uniqueExists = false;
-            foreach ($indexes as $index) {
-                if ($index->isUnique() && count($index->getColumns()) === 2 &&
-                    in_array('event_id', $index->getColumns()) &&
-                    in_array('tag_id', $index->getColumns())) {
-                    $uniqueExists = true;
-                    break;
-                }
-            }
-            if (!$uniqueExists && Schema::hasColumn('event_tag_maps', 'event_id') && Schema::hasColumn('event_tag_maps', 'tag_id')) {
-                $table->unique(['event_id', 'tag_id']);
-            }
         });
+
+        // Add unique constraint if columns exist
+        if (Schema::hasColumn('event_tag_maps', 'event_id') && Schema::hasColumn('event_tag_maps', 'tag_id')) {
+            $connection = Schema::getConnection();
+
+            // Check if unique constraint already exists
+            $indexExists = $connection->selectOne("
+                SELECT 1
+                FROM pg_indexes
+                WHERE tablename = 'event_tag_maps'
+                AND indexdef LIKE '%UNIQUE%'
+                AND (indexdef LIKE '%event_id%' AND indexdef LIKE '%tag_id%')
+                LIMIT 1
+            ");
+
+            if (!$indexExists) {
+                Schema::table('event_tag_maps', function (Blueprint $table) {
+                    $table->unique(['event_id', 'tag_id']);
+                });
+            }
+        }
     }
 
     /**
@@ -42,18 +48,23 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('event_tag_maps', function (Blueprint $table) {
-            // Drop unique constraint
-            $indexes = Schema::getConnection()->getDoctrineSchemaManager()->listTableIndexes('event_tag_maps');
-            foreach ($indexes as $indexName => $index) {
-                if ($index->isUnique() && count($index->getColumns()) === 2 &&
-                    in_array('event_id', $index->getColumns()) &&
-                    in_array('tag_id', $index->getColumns())) {
-                    $table->dropUnique([$indexName]);
-                    break;
-                }
-            }
+        $connection = Schema::getConnection();
 
+        // Drop unique constraint if it exists
+        $index = $connection->selectOne("
+            SELECT indexname
+            FROM pg_indexes
+            WHERE tablename = 'event_tag_maps'
+            AND indexdef LIKE '%UNIQUE%'
+            AND (indexdef LIKE '%event_id%' AND indexdef LIKE '%tag_id%')
+            LIMIT 1
+        ");
+
+        if ($index) {
+            $connection->statement("DROP INDEX IF EXISTS {$index->indexname}");
+        }
+
+        Schema::table('event_tag_maps', function (Blueprint $table) {
             if (Schema::hasColumn('event_tag_maps', 'tag_id')) {
                 $table->dropForeign(['tag_id']);
                 $table->dropColumn('tag_id');
