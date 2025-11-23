@@ -13,6 +13,12 @@ class EventTag extends Model
         'name',
     ];
 
+    protected $hidden = [
+        'pivot',
+        'created_at',
+        'updated_at',
+    ];
+
     public function eventMaps()
     {
         return $this->hasMany(EventTagMap::class, 'tag_id');
