@@ -18,9 +18,10 @@ class EventController extends Controller
      * @OA\Get(
      *     path="/api/events",
      *     summary="Get upcoming events",
-     *     description="Retrieve upcoming events with filtering by date and tags",
+     *     description="Retrieve upcoming events with filtering by date and tags. JWT token is optional - if provided, the response will include personalized fields (is_going, is_interested, has_reminder) for the authenticated user.",
      *     operationId="getEvents",
      *     tags={"Event"},
+     *     security={{"bearerAuth":{}}},
      *     @OA\Parameter(
      *         name="date_filter",
      *         in="query",
@@ -54,9 +55,9 @@ class EventController extends Controller
      *                     @OA\Property(property="end_time", type="string", format="date-time"),
      *                     @OA\Property(property="capacity", type="integer", nullable=true, example=500),
      *                     @OA\Property(property="confirmed_attendees_count", type="integer", example=391),
-     *                     @OA\Property(property="is_going", type="boolean", example=false, description="Whether the authenticated user marked as going"),
-     *                     @OA\Property(property="is_interested", type="boolean", example=false, description="Whether the authenticated user marked as interested"),
-     *                     @OA\Property(property="has_reminder", type="boolean", example=false, description="Whether the authenticated user set a reminder"),
+     *                     @OA\Property(property="is_going", type="boolean", example=false, description="Whether the authenticated user marked as going (requires JWT token)"),
+     *                     @OA\Property(property="is_interested", type="boolean", example=false, description="Whether the authenticated user marked as interested (requires JWT token)"),
+     *                     @OA\Property(property="has_reminder", type="boolean", example=false, description="Whether the authenticated user set a reminder (requires JWT token)"),
      *                     @OA\Property(property="pavilion", type="object", nullable=true),
      *                     @OA\Property(
      *                         property="tags",
