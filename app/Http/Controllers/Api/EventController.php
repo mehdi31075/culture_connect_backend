@@ -9,6 +9,7 @@ use App\Models\EventAttendance;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class EventController extends Controller
 {
@@ -116,7 +117,23 @@ class EventController extends Controller
             $events = $query->orderBy('start_time', 'asc')->get();
 
             // Get authenticated user if available
-            $user = auth()->user();
+            // Try to authenticate from token even if route doesn't have auth middleware
+            $user = null;
+            try {
+                // Try to get user from JWT token if present in request
+                if ($request->bearerToken()) {
+                    JWTAuth::setToken($request->bearerToken());
+                    $user = JWTAuth::authenticate();
+                }
+            } catch (\Exception $e) {
+                // Token invalid or expired, user will remain null
+            }
+
+            // Fallback to standard auth if JWT didn't work
+            if (!$user) {
+                $user = auth('api')->user() ?? auth()->user();
+            }
+
             $userAttendance = collect();
 
             if ($user) {
