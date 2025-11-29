@@ -15,13 +15,16 @@ return new class extends Migration
         // Check if price column exists and is string type
         if (Schema::hasColumn('events', 'price')) {
             // For PostgreSQL, we need to convert string to numeric
-            // First, update any 'Free' values to -1.00
+            // First, drop the default constraint if it exists
+            DB::statement("ALTER TABLE events ALTER COLUMN price DROP DEFAULT");
+
+            // Update any 'Free' values to -1.00
             DB::statement("UPDATE events SET price = '-1.00' WHERE price = 'Free' OR price IS NULL OR price = ''");
 
-            // For PostgreSQL, alter the column type
-            DB::statement("ALTER TABLE events ALTER COLUMN price TYPE DECIMAL(10,2) USING CASE WHEN price ~ '^[0-9]+\.?[0-9]*$' THEN price::DECIMAL(10,2) ELSE -1.00 END");
+            // For PostgreSQL, alter the column type (convert string to decimal)
+            DB::statement("ALTER TABLE events ALTER COLUMN price TYPE DECIMAL(10,2) USING CASE WHEN price ~ '^[-]?[0-9]+\.?[0-9]*$' THEN price::DECIMAL(10,2) ELSE -1.00 END");
 
-            // Set default and nullable
+            // Set default and make NOT NULL
             DB::statement("ALTER TABLE events ALTER COLUMN price SET DEFAULT -1.00");
             DB::statement("ALTER TABLE events ALTER COLUMN price SET NOT NULL");
         } else {
