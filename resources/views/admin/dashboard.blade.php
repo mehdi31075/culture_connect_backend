@@ -869,6 +869,19 @@
                             <div id="event-tags-hidden-inputs"></div>
                             <p class="text-xs text-gray-500 mt-1">Type to search for an existing tag. If it doesn't exist, press Enter to create it.</p>
                         </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Banners (Images)</label>
+                            <div id="event-banners-container" class="space-y-2">
+                                <div id="event-banners-list" class="space-y-2"></div>
+                                <div class="flex items-center gap-2">
+                                    <input type="file" id="event-banner-upload" accept="image/*" multiple class="hidden" onchange="handleEventBannerUpload(event)">
+                                    <button type="button" onclick="document.getElementById('event-banner-upload').click()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm">
+                                        <i class="fas fa-plus mr-1"></i> Add Banner Image
+                                    </button>
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Upload multiple banner images for this event</p>
+                        </div>
                     </div>
                     <div class="flex justify-end space-x-3 mt-6">
                         <button type="button" onclick="closeAddEventModal()" class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50">
@@ -954,6 +967,7 @@
         let currentEditingEventTagId = null;
         let selectedEventTagIds = [];
         let selectedEventNewTags = [];
+        let eventBanners = []; // Array of banner image URLs
 
         // Initialize the admin panel
         document.addEventListener('DOMContentLoaded', function() {
@@ -2571,6 +2585,79 @@
             }
         }
 
+        // Event Banner Management Functions
+        async function handleEventBannerUpload(event) {
+            const files = Array.from(event.target.files);
+            if (files.length === 0) return;
+
+            for (const file of files) {
+                if (!file.type.startsWith('image/')) {
+                    alert(`${file.name} is not an image file`);
+                    continue;
+                }
+
+                const formData = new FormData();
+                formData.append('image', file);
+                formData.append('event_id', currentEditingEventId || '0');
+
+                try {
+                    const response = await fetch('/api/admin/upload-event-banner', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${authToken}`
+                        },
+                        body: formData
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.success && result.data && result.data.url) {
+                            eventBanners.push(result.data.url);
+                            renderEventBanners();
+                        }
+                    } else {
+                        const error = await response.json();
+                        alert(`Failed to upload ${file.name}: ${error.message || 'Upload failed'}`);
+                    }
+                } catch (error) {
+                    console.error('Error uploading banner:', error);
+                    alert(`Failed to upload ${file.name}`);
+                }
+            }
+
+            // Reset input
+            event.target.value = '';
+        }
+
+        function renderEventBanners() {
+            const container = document.getElementById('event-banners-list');
+            if (!container) return;
+
+            container.innerHTML = '';
+
+            eventBanners.forEach((bannerUrl, index) => {
+                const bannerDiv = document.createElement('div');
+                bannerDiv.className = 'flex items-center gap-2 p-2 border rounded bg-gray-50';
+                bannerDiv.innerHTML = `
+                    <img src="${bannerUrl}" alt="Banner ${index + 1}" class="w-20 h-20 object-cover rounded">
+                    <div class="flex-1">
+                        <p class="text-sm text-gray-600 truncate">${bannerUrl}</p>
+                    </div>
+                    <button type="button" onclick="removeEventBanner(${index})" class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm">
+                        <i class="fas fa-trash"></i> Remove
+                    </button>
+                `;
+                container.appendChild(bannerDiv);
+            });
+        }
+
+        function removeEventBanner(index) {
+            if (confirm('Are you sure you want to remove this banner?')) {
+                eventBanners.splice(index, 1);
+                renderEventBanners();
+            }
+        }
+
         // Review Management Functions
         async function loadEvents() {
             try {
@@ -2642,6 +2729,8 @@
             // Load event tags for chip input
             await ensureEventTagsCache();
             await loadEventTagOptions([], []);
+            eventBanners = [];
+            renderEventBanners();
 
             currentEditingEventId = null;
             document.getElementById('event-modal-title').textContent = 'Add Event';
@@ -2656,7 +2745,9 @@
             document.getElementById('event-id').value = '';
             selectedEventTagIds = [];
             selectedEventNewTags = [];
+            eventBanners = [];
             renderSelectedEventTags();
+            renderEventBanners();
         }
 
         async function addEvent(event) {
@@ -2677,6 +2768,9 @@
             // Get selected tags from chip input
             data.tags = selectedEventTagIds;
             data.new_tags = selectedEventNewTags;
+
+            // Get banners array
+            data.banners = eventBanners;
 
             const isEdit = currentEditingEventId !== null;
             const url = isEdit ? `/admin/events/${currentEditingEventId}` : '/admin/events';
@@ -2728,6 +2822,10 @@
                 await ensureEventTagsCache();
                 const existingTagIds = event.tags ? event.tags.map(t => t.id) : [];
                 await loadEventTagOptions(existingTagIds, []);
+
+                // Load banners
+                eventBanners = event.banners || [];
+                renderEventBanners();
 
                 currentEditingEventId = event.id;
                 document.getElementById('event-modal-title').textContent = 'Edit Event';

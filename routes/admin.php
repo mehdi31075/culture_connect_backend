@@ -52,6 +52,7 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
     Route::post('/events', [AdminEventController::class, 'store']);
     Route::put('/events/{id}', [AdminEventController::class, 'update']);
     Route::delete('/events/{id}', [AdminEventController::class, 'destroy']);
+    Route::post('/upload-event-banner', [AdminEventController::class, 'uploadBanner']);
 
     // Event tag management
     Route::get('/event-tags', [AdminEventTagController::class, 'index']);

@@ -62,15 +62,21 @@ class EventController extends Controller
                      *                     @OA\Property(property="is_going", type="boolean", example=false, description="Whether the authenticated user marked as going"),
                      *                     @OA\Property(property="is_interested", type="boolean", example=false, description="Whether the authenticated user marked as interested"),
                      *                     @OA\Property(property="has_reminder", type="boolean", example=false, description="Whether the authenticated user set a reminder"),
-     *                     @OA\Property(property="pavilion", type="object", nullable=true),
-     *                     @OA\Property(
-     *                         property="tags",
-     *                         type="array",
-     *                         @OA\Items(
-     *                             @OA\Property(property="id", type="integer"),
-     *                             @OA\Property(property="name", type="string")
-     *                         )
-     *                     )
+                     *                     @OA\Property(property="pavilion", type="object", nullable=true),
+                     *                     @OA\Property(
+                     *                         property="tags",
+                     *                         type="array",
+                     *                         @OA\Items(
+                     *                             @OA\Property(property="id", type="integer"),
+                     *                             @OA\Property(property="name", type="string")
+                     *                         )
+                     *                     ),
+                     *                     @OA\Property(
+                     *                         property="banners",
+                     *                         type="array",
+                     *                         description="List of banner image URLs for this event",
+                     *                         @OA\Items(type="string", example="https://example.com/storage/events/banner1.jpg")
+                     *                     )
      *                 )
      *             )
      *         )

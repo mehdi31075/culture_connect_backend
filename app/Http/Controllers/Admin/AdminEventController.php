@@ -9,6 +9,7 @@ use App\Models\Pavilion;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
 class AdminEventController extends Controller
@@ -82,6 +83,8 @@ class AdminEventController extends Controller
                 'tags.*' => 'integer|exists:event_tags,id',
                 'new_tags' => 'nullable|array',
                 'new_tags.*' => 'string|max:60',
+                'banners' => 'nullable|array',
+                'banners.*' => 'string|url|max:2048',
             ]);
 
             if ($validator->fails()) {
@@ -101,6 +104,7 @@ class AdminEventController extends Controller
                 'start_time' => Carbon::parse($request->start_time),
                 'end_time' => Carbon::parse($request->end_time),
                 'capacity' => $request->capacity,
+                'banners' => $request->banners ?? [],
             ]);
 
             // Sync tags if provided
@@ -171,6 +175,8 @@ class AdminEventController extends Controller
                 'tags.*' => 'integer|exists:event_tags,id',
                 'new_tags' => 'nullable|array',
                 'new_tags.*' => 'string|max:60',
+                'banners' => 'nullable|array',
+                'banners.*' => 'string|url|max:2048',
             ]);
 
             if ($validator->fails()) {
@@ -181,7 +187,17 @@ class AdminEventController extends Controller
                 ], 422);
             }
 
-            $updateData = $request->only(['pavilion_id', 'title', 'description', 'stage', 'price', 'capacity']);
+            $updateData = [];
+            foreach (['pavilion_id', 'title', 'description', 'stage', 'price', 'capacity'] as $field) {
+                if ($request->has($field)) {
+                    $updateData[$field] = $request->$field;
+                }
+            }
+
+            // Handle banners array
+            if ($request->has('banners')) {
+                $updateData['banners'] = $request->banners;
+            }
 
             if ($request->has('start_time')) {
                 $updateData['start_time'] = Carbon::parse($request->start_time);
@@ -258,6 +274,53 @@ class AdminEventController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete event',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Upload event banner image
+     */
+    public function uploadBanner(Request $request): JsonResponse
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'image' => 'required|file|mimes:jpeg,png,jpg,gif,svg|max:4096',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
+            if ($request->hasFile('image')) {
+                $file = $request->file('image');
+                $filename = 'event_banner_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                $path = $file->storeAs('events/banners', $filename, 'public');
+                $url = url('storage/' . $path);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Banner uploaded successfully',
+                    'data' => [
+                        'url' => $url,
+                        'path' => $path,
+                    ],
+                ], 201);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'No image file provided',
+            ], 400);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to upload banner',
                 'error' => $e->getMessage(),
             ], 500);
         }
