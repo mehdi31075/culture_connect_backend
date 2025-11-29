@@ -34,36 +34,47 @@ class HomeController extends Controller
      */
     public function stats(): JsonResponse
     {
-        $now = Carbon::now();
+        try {
+            $now = Carbon::now();
 
-        // Count all pavilions
-        $pavilionsCount = Pavilion::count();
+            // Count all pavilions
+            $pavilionsCount = Pavilion::count();
 
-        // Count live events (events that are currently happening or upcoming)
-        // Live events are those where:
-        // - start_time <= now AND end_time >= now (currently happening)
-        // - OR start_time >= now (upcoming)
-        $liveEventsCount = Event::where(function ($query) use ($now) {
-            $query->where('start_time', '<=', $now)
-                  ->where('end_time', '>=', $now);
-        })->orWhere('start_time', '>=', $now)->count();
+            // Count live events (events that are currently happening or upcoming)
+            // Include events that:
+            // 1. Start in the future (start_time >= now), OR
+            // 2. Are currently ongoing (start_time <= now AND end_time >= now)
+            $liveEventsCount = Event::where(function ($q) use ($now) {
+                $q->where('start_time', '>=', $now)
+                  ->orWhere(function ($subQ) use ($now) {
+                      $subQ->where('start_time', '<=', $now)
+                           ->where('end_time', '>=', $now);
+                  });
+            })->count();
 
-        // Count active offers (offers that are currently active based on start_at and end_at)
-        // Active offers are those where:
-        // - start_at <= now AND end_at >= now
-        $activeOffersCount = Offer::where('start_at', '<=', $now)
-            ->where('end_at', '>=', $now)
-            ->count();
+            // Count active offers (offers that are currently active based on start_at and end_at)
+            // Active offers are those where:
+            // - start_at <= now AND end_at >= now
+            $activeOffersCount = Offer::where('start_at', '<=', $now)
+                ->where('end_at', '>=', $now)
+                ->count();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Statistics retrieved successfully',
-            'data' => [
-                'pavilions_count' => $pavilionsCount,
-                'live_events_count' => $liveEventsCount,
-                'active_offers_count' => $activeOffersCount,
-            ],
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Statistics retrieved successfully',
+                'data' => [
+                    'pavilions_count' => $pavilionsCount,
+                    'live_events_count' => $liveEventsCount,
+                    'active_offers_count' => $activeOffersCount,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve statistics',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 }
 
