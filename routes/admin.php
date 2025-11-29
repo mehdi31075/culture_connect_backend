@@ -13,6 +13,8 @@ use App\Http\Controllers\Admin\AdminReviewController;
 use App\Http\Controllers\Admin\AdminEventController;
 use App\Http\Controllers\Admin\AdminEventTagController;
 use App\Http\Controllers\Admin\AdminEventFeatureController;
+use App\Http\Controllers\Admin\AdminFoodController;
+use App\Http\Controllers\Admin\AdminOfferController;
 
 /*
 |--------------------------------------------------------------------------
@@ -91,15 +93,29 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
     Route::put('/products/{id}', [AdminProductController::class, 'update']);
     Route::delete('/products/{id}', [AdminProductController::class, 'destroy']);
 
-    // Product tag management
+    // Product tag management (also used for food tags)
     Route::get('/product-tags', [AdminProductTagController::class, 'index']);
     Route::post('/product-tags', [AdminProductTagController::class, 'store']);
     Route::put('/product-tags/{id}', [AdminProductTagController::class, 'update']);
     Route::delete('/product-tags/{id}', [AdminProductTagController::class, 'destroy']);
 
+    // Food management
+    Route::get('/foods', [AdminFoodController::class, 'index']);
+    Route::post('/foods', [AdminFoodController::class, 'store']);
+    Route::match(['put', 'post'], '/foods/{id}', [AdminFoodController::class, 'update']);
+    Route::delete('/foods/{id}', [AdminFoodController::class, 'destroy']);
+
+    // Offer management
+    Route::get('/offers', [AdminOfferController::class, 'index']);
+    Route::post('/offers', [AdminOfferController::class, 'store']);
+    Route::put('/offers/{id}', [AdminOfferController::class, 'update']);
+    Route::delete('/offers/{id}', [AdminOfferController::class, 'destroy']);
+
     // Order management
     Route::get('/orders', [AdminController::class, 'orders']);
     Route::put('/orders/{id}/status', [AdminController::class, 'updateOrderStatus']);
+    Route::put('/orders/{id}', [AdminController::class, 'updateOrder']);
+    Route::delete('/orders/{id}', [AdminController::class, 'deleteOrder']);
 
     // Review management
     Route::get('/reviews', [AdminController::class, 'reviews']);

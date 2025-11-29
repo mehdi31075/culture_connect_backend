@@ -316,11 +316,23 @@ class AdminController extends Controller
     {
         $perPage = $request->get('per_page', 15);
         $status = $request->get('status');
+        $search = $request->get('search');
 
-        $query = Order::with(['user', 'items.product']);
+        $query = Order::with(['user', 'shop', 'items.product', 'items.food']);
 
         if ($status) {
             $query->where('status', $status);
+        }
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('user', function ($userQuery) use ($search) {
+                    $userQuery->where('first_name', 'like', "%{$search}%")
+                              ->orWhere('last_name', 'like', "%{$search}%")
+                              ->orWhere('email', 'like', "%{$search}%");
+                })
+                ->orWhere('id', 'like', "%{$search}%");
+            });
         }
 
         $orders = $query->latest()->paginate($perPage);
@@ -354,7 +366,7 @@ class AdminController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'status' => 'required|string|in:pending,confirmed,preparing,ready,delivered,cancelled',
+            'status' => 'required|string|in:' . implode(',', array_keys(Order::getStatuses())),
         ]);
 
         if ($validator->fails()) {
@@ -366,8 +378,84 @@ class AdminController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Order status updated successfully',
-            'data' => $order
+            'data' => $order->load(['user', 'shop', 'items.product', 'items.food'])
         ]);
+    }
+
+    /**
+     * Update an order
+     */
+    public function updateOrder(Request $request, $id)
+    {
+        try {
+            $order = Order::find($id);
+
+            if (!$order) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Order not found',
+                ], 404);
+            }
+
+            $validator = Validator::make($request->all(), [
+                'status' => 'sometimes|string|in:' . implode(',', array_keys(Order::getStatuses())),
+                'total_amount' => 'sometimes|numeric|min:0',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
+            $order->update($request->only(['status', 'total_amount']));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Order updated successfully',
+                'data' => $order->fresh()->load(['user', 'shop', 'items.product', 'items.food']),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update order',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete an order
+     */
+    public function deleteOrder($id)
+    {
+        try {
+            $order = Order::find($id);
+
+            if (!$order) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Order not found',
+                ], 404);
+            }
+
+            // Delete order items first
+            $order->items()->delete();
+            $order->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Order deleted successfully',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete order',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**

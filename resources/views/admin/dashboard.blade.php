@@ -76,6 +76,18 @@
                         </a>
                     </li>
                     <li>
+                        <a href="#foods" onclick="showSection('foods', this)" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
+                            <i class="fas fa-utensils mr-3"></i>
+                            Foods
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#offers" onclick="showSection('offers', this)" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
+                            <i class="fas fa-percent mr-3"></i>
+                            Offers
+                        </a>
+                    </li>
+                    <li>
                         <a href="#event-tags" onclick="showSection('event-tags', this)" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
                             <i class="fas fa-tag mr-3"></i>
                             Event Tags
@@ -377,6 +389,73 @@
                 </div>
             </div>
 
+            <!-- Foods Section -->
+            <div id="foods-section" class="section hidden">
+                <h2 class="text-2xl font-bold mb-6">Food Management</h2>
+                <div class="bg-white rounded-lg shadow">
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-gray-600">Manage food items</span>
+                            <button onclick="showAddFoodModal()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                                <i class="fas fa-plus"></i> Add Food
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full table-auto">
+                                <thead>
+                                    <tr class="bg-gray-50">
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Shop</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Trending</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tags</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="foods-table">
+                                    <!-- Foods will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Offers Section -->
+            <div id="offers-section" class="section hidden">
+                <h2 class="text-2xl font-bold mb-6">Offer Management</h2>
+                <div class="bg-white rounded-lg shadow">
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-gray-600">Manage offers and discounts</span>
+                            <button onclick="showAddOfferModal()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                                <i class="fas fa-plus"></i> Add Offer
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full table-auto">
+                                <thead>
+                                    <tr class="bg-gray-50">
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Shop</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Value</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Start Date</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">End Date</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="offers-table">
+                                    <!-- Offers will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Event Tags Section -->
             <div id="event-tags-section" class="section hidden">
                 <h2 class="text-2xl font-bold mb-6">Event Tag Management</h2>
@@ -461,8 +540,36 @@
 
             <div id="orders-section" class="section hidden">
                 <h2 class="text-2xl font-bold mb-6">Order Management</h2>
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <p class="text-gray-600">Order management interface coming soon...</p>
+                <div class="bg-white rounded-lg shadow">
+                    <div class="p-6">
+                        <div class="mb-4">
+                            <input type="text" id="orders-search" placeholder="Search by user name, email, or order ID..." class="w-full px-4 py-2 border rounded-lg mb-4">
+                            <select id="orders-status-filter" class="px-4 py-2 border rounded-lg">
+                                <option value="">All Statuses</option>
+                                <option value="pending">Pending</option>
+                                <option value="paid">Paid</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full table-auto">
+                                <thead>
+                                    <tr class="bg-gray-50">
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Shop</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="orders-table">
+                                    <!-- Orders will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -864,6 +971,165 @@
         </div>
     </div>
 
+    <!-- Add/Edit Food Modal -->
+    <div id="add-food-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[85vh] overflow-y-auto">
+                <div class="flex justify-between items-center p-6 border-b">
+                    <h3 id="food-modal-title" class="text-lg font-semibold">Add New Food</h3>
+                    <button onclick="closeAddFoodModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="add-food-form" class="p-6 space-y-4">
+                    <input type="hidden" id="food-id" name="id">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Shop *</label>
+                        <select id="food-shop-select" name="shop_id" required class="w-full px-3 py-2 border rounded-lg">
+                            <option value="">Select a shop...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                        <input type="text" id="food-name" name="name" required class="w-full px-3 py-2 border rounded-lg" maxlength="160">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                        <textarea id="food-description" name="description" rows="3" class="w-full px-3 py-2 border rounded-lg"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Price *</label>
+                        <input type="number" id="food-price" name="price" step="0.01" min="0" required class="w-full px-3 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Images</label>
+                        <input type="file" id="food-images" name="images[]" multiple accept="image/*" class="w-full px-3 py-2 border rounded-lg">
+                        <div id="food-images-preview" class="mt-2 grid grid-cols-3 gap-2"></div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Views Count</label>
+                            <input type="number" id="food-views-count" name="views_count" min="0" class="w-full px-3 py-2 border rounded-lg" value="0">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Likes Count</label>
+                            <input type="number" id="food-likes-count" name="likes_count" min="0" class="w-full px-3 py-2 border rounded-lg" value="0">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Comments Count</label>
+                            <input type="number" id="food-comments-count" name="comments_count" min="0" class="w-full px-3 py-2 border rounded-lg" value="0">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label class="flex items-center">
+                                <input type="checkbox" id="food-is-trending" name="is_trending" class="mr-2">
+                                <span class="text-sm font-medium text-gray-700">Is Trending</span>
+                            </label>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Trending Position</label>
+                            <input type="number" id="food-trending-position" name="trending_position" min="1" class="w-full px-3 py-2 border rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Trending Score (%)</label>
+                            <input type="number" id="food-trending-score" name="trending_score" step="0.01" min="0" max="100" class="w-full px-3 py-2 border rounded-lg">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Preparation Time (minutes)</label>
+                        <input type="number" id="food-preparation-time" name="preparation_time" min="0" class="w-full px-3 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="flex items-center">
+                            <input type="checkbox" id="food-is-available" name="is_available" checked class="mr-2">
+                            <span class="text-sm font-medium text-gray-700">Is Available</span>
+                        </label>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tags</label>
+                        <div id="food-tags-field" class="border rounded-lg p-2 min-h-[50px]">
+                            <div id="food-selected-tags" class="flex flex-wrap gap-2 mb-2"></div>
+                            <input type="text" id="food-tag-input" placeholder="Type to search or add tags..." class="w-full px-2 py-1 border-0 focus:outline-none">
+                            <div id="food-tag-suggestions" class="hidden absolute bg-white border rounded-lg shadow-lg mt-1 max-h-40 overflow-y-auto z-10"></div>
+                        </div>
+                        <div id="food-tags-hidden-inputs"></div>
+                    </div>
+                    <div class="flex justify-end space-x-3 pt-4">
+                        <button type="button" onclick="closeAddFoodModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Offer Modal -->
+    <div id="add-offer-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[85vh] overflow-y-auto">
+                <div class="flex justify-between items-center p-6 border-b">
+                    <h3 id="offer-modal-title" class="text-lg font-semibold">Add New Offer</h3>
+                    <button onclick="closeAddOfferModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="add-offer-form" class="p-6 space-y-4">
+                    <input type="hidden" id="offer-id" name="id">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Shop *</label>
+                        <select id="offer-shop-select" name="shop_id" required class="w-full px-3 py-2 border rounded-lg">
+                            <option value="">Select a shop...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Product (Optional)</label>
+                        <select id="offer-product-select" name="product_id" class="w-full px-3 py-2 border rounded-lg">
+                            <option value="">No specific product</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                        <input type="text" id="offer-title" name="title" required class="w-full px-3 py-2 border rounded-lg" maxlength="255">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                        <textarea id="offer-description" name="description" rows="3" class="w-full px-3 py-2 border rounded-lg"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Discount Type *</label>
+                        <select id="offer-discount-type" name="discount_type" required class="w-full px-3 py-2 border rounded-lg">
+                            <option value="percent">Percent (%)</option>
+                            <option value="fixed">Fixed Amount</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Value *</label>
+                        <input type="number" id="offer-value" name="value" step="0.01" min="0" required class="w-full px-3 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="flex items-center">
+                            <input type="checkbox" id="offer-is-bundle" name="is_bundle" class="mr-2">
+                            <span class="text-sm font-medium text-gray-700">Is Bundle</span>
+                        </label>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Start Date *</label>
+                        <input type="datetime-local" id="offer-start-at" name="start_at" required class="w-full px-3 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">End Date *</label>
+                        <input type="datetime-local" id="offer-end-at" name="end_at" required class="w-full px-3 py-2 border rounded-lg">
+                    </div>
+                    <div class="flex justify-end space-x-3 pt-4">
+                        <button type="button" onclick="closeAddOfferModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Add/Edit Event Modal -->
     <div id="add-event-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 overflow-y-auto">
         <div class="flex items-center justify-center min-h-screen p-4">
@@ -1111,6 +1377,46 @@
                     }
                 });
             }
+
+            // Food tag input handlers (reusing product tag system)
+            const foodTagInput = document.getElementById('food-tag-input');
+            if (foodTagInput) {
+                foodTagInput.addEventListener('input', function(e) {
+                    updateProductTagSuggestions(e.target.value);
+                });
+                foodTagInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ',') {
+                        e.preventDefault();
+                        const value = e.target.value.trim();
+                        if (value) {
+                            addNewProductTag(value);
+                        }
+                    }
+                });
+            }
+
+            const foodTagSuggestions = document.getElementById('food-tag-suggestions');
+            if (foodTagSuggestions) {
+                foodTagSuggestions.addEventListener('mousedown', function(event) {
+                    const button = event.target.closest('[data-tag-id]');
+                    if (!button) return;
+                    event.preventDefault();
+                    addExistingProductTag(button.getAttribute('data-tag-id'));
+                });
+            }
+
+            const foodSelectedWrapper = document.getElementById('food-selected-tags');
+            if (foodSelectedWrapper) {
+                foodSelectedWrapper.addEventListener('click', function(event) {
+                    const removeExisting = event.target.closest('button[data-remove-existing]');
+                    const removeNew = event.target.closest('button[data-remove-new]');
+                    if (removeExisting) {
+                        removeExistingProductTag(Number(removeExisting.getAttribute('data-remove-existing')));
+                    } else if (removeNew) {
+                        removeNewProductTag(removeNew.getAttribute('data-remove-new'));
+                    }
+                });
+            }
         });
 
         // API helper function
@@ -1292,6 +1598,13 @@
                 loadEventFeatures();
             } else if (sectionName === 'events') {
                 loadEvents();
+            } else if (sectionName === 'foods') {
+                loadFoods();
+                ensureProductTagsCache();
+            } else if (sectionName === 'offers') {
+                loadOffers();
+            } else if (sectionName === 'orders') {
+                loadOrders();
             } else if (sectionName === 'reviews') {
                 loadReviews();
             }
@@ -2103,6 +2416,444 @@
             }
         }
 
+        // Food Management Functions
+        async function loadFoods() {
+            try {
+                const data = await apiCall('/admin/foods');
+                if (data && data.success) {
+                    displayFoods(data.data.items || []);
+                }
+            } catch (error) {
+                console.error('Error loading foods:', error);
+            }
+        }
+
+        function displayFoods(foods) {
+            const tbody = document.getElementById('foods-table');
+            if (!foods.length) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="px-6 py-4 text-sm text-gray-500 text-center">No foods found. Add a food to get started.</td>
+                    </tr>
+                `;
+                return;
+            }
+            tbody.innerHTML = foods.map(food => `
+                <tr class="border-b">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${food.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${food.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${food.shop ? food.shop.name : 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$${parseFloat(food.price).toFixed(2)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <span class="px-2 py-1 text-xs rounded-full ${food.is_trending ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}">
+                            ${food.is_trending ? `#${food.trending_position || 'N/A'} (${food.trending_score || 0}%)` : 'No'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${
+                            food.tags && food.tags.length
+                                ? `<div class="flex flex-wrap gap-1">${food.tags.map(tag => `<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">${tag.name}</span>`).join('')}</div>`
+                                : '—'
+                        }
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <button onclick="editFood(${food.id})" class="text-blue-600 hover:text-blue-900 mr-2">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteFood(${food.id})" class="text-red-600 hover:text-red-900">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function showAddFoodModal() {
+            try {
+                const data = await apiCall('/admin/shops?per_page=100');
+                if (data && data.success) {
+                    const select = document.getElementById('food-shop-select');
+                    select.innerHTML = '<option value="">Select a shop...</option>';
+                    data.data.items.forEach(shop => {
+                        select.innerHTML += `<option value="${shop.id}">${shop.name}</option>`;
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading shops:', error);
+            }
+            await loadProductTagOptions([], []);
+            document.getElementById('food-modal-title').textContent = 'Add New Food';
+            document.getElementById('food-id').value = '';
+            document.getElementById('add-food-form').reset();
+            document.getElementById('add-food-modal').classList.remove('hidden');
+        }
+
+        function closeAddFoodModal() {
+            document.getElementById('add-food-modal').classList.add('hidden');
+            document.getElementById('add-food-form').reset();
+            document.getElementById('food-images-preview').innerHTML = '';
+            selectedProductTagIds = [];
+            selectedProductNewTags = [];
+            renderSelectedProductTags();
+        }
+
+        document.getElementById('add-food-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData();
+            const foodId = document.getElementById('food-id').value;
+
+            formData.append('shop_id', document.getElementById('food-shop-select').value);
+            formData.append('name', document.getElementById('food-name').value);
+            formData.append('description', document.getElementById('food-description').value);
+            formData.append('price', document.getElementById('food-price').value);
+            formData.append('views_count', document.getElementById('food-views-count').value || 0);
+            formData.append('likes_count', document.getElementById('food-likes-count').value || 0);
+            formData.append('comments_count', document.getElementById('food-comments-count').value || 0);
+            formData.append('is_trending', document.getElementById('food-is-trending').checked ? 1 : 0);
+            formData.append('trending_position', document.getElementById('food-trending-position').value || '');
+            formData.append('trending_score', document.getElementById('food-trending-score').value || '');
+            formData.append('preparation_time', document.getElementById('food-preparation-time').value || '');
+            formData.append('is_available', document.getElementById('food-is-available').checked ? 1 : 0);
+
+            const images = document.getElementById('food-images').files;
+            for (let i = 0; i < images.length; i++) {
+                formData.append('images[]', images[i]);
+            }
+
+            selectedProductTagIds.forEach(id => formData.append('tags[]', id));
+            selectedProductNewTags.forEach(name => formData.append('new_tags[]', name));
+
+            try {
+                const url = foodId ? `/admin/foods/${foodId}` : '/admin/foods';
+                const method = foodId ? 'POST' : 'POST';
+                const response = await apiCall(url, {
+                    method: method,
+                    body: formData,
+                    headers: {}
+                });
+                if (response && response.success) {
+                    closeAddFoodModal();
+                    loadFoods();
+                    alert('Food saved successfully');
+                } else {
+                    alert(response?.message || 'Failed to save food');
+                }
+            } catch (error) {
+                console.error('Error saving food:', error);
+                alert('Error saving food');
+            }
+        });
+
+        async function editFood(foodId) {
+            try {
+                const data = await apiCall(`/admin/foods/${foodId}`);
+                if (data && data.success) {
+                    const food = data.data;
+                    await showAddFoodModal();
+                    document.getElementById('food-modal-title').textContent = 'Edit Food';
+                    document.getElementById('food-id').value = food.id;
+                    document.getElementById('food-shop-select').value = food.shop_id;
+                    document.getElementById('food-name').value = food.name || '';
+                    document.getElementById('food-description').value = food.description || '';
+                    document.getElementById('food-price').value = food.price || '';
+                    document.getElementById('food-views-count').value = food.views_count || 0;
+                    document.getElementById('food-likes-count').value = food.likes_count || 0;
+                    document.getElementById('food-comments-count').value = food.comments_count || 0;
+                    document.getElementById('food-is-trending').checked = food.is_trending || false;
+                    document.getElementById('food-trending-position').value = food.trending_position || '';
+                    document.getElementById('food-trending-score').value = food.trending_score || '';
+                    document.getElementById('food-preparation-time').value = food.preparation_time || '';
+                    document.getElementById('food-is-available').checked = food.is_available !== false;
+
+                    const existingTagIds = food.tags ? food.tags.map(t => t.id) : [];
+                    await loadProductTagOptions(existingTagIds, []);
+                }
+            } catch (error) {
+                console.error('Error loading food:', error);
+                alert('Error loading food');
+            }
+        }
+
+        async function deleteFood(foodId) {
+            if (confirm('Are you sure you want to delete this food?')) {
+                try {
+                    const data = await apiCall(`/admin/foods/${foodId}`, { method: 'DELETE' });
+                    if (data && data.success) {
+                        loadFoods();
+                        alert('Food deleted successfully');
+                    }
+                } catch (error) {
+                    console.error('Error deleting food:', error);
+                    alert('Error deleting food');
+                }
+            }
+        }
+
+        // Offer Management Functions
+        async function loadOffers() {
+            try {
+                const data = await apiCall('/admin/offers');
+                if (data && data.success) {
+                    displayOffers(data.data.items || []);
+                }
+            } catch (error) {
+                console.error('Error loading offers:', error);
+            }
+        }
+
+        function displayOffers(offers) {
+            const tbody = document.getElementById('offers-table');
+            if (!offers.length) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="px-6 py-4 text-sm text-gray-500 text-center">No offers found. Add an offer to get started.</td>
+                    </tr>
+                `;
+                return;
+            }
+            tbody.innerHTML = offers.map(offer => `
+                <tr class="border-b">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${offer.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${offer.title}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${offer.shop ? offer.shop.name : 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${offer.discount_type === 'percent' ? 'Percent' : 'Fixed'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${offer.discount_type === 'percent' ? offer.value + '%' : '$' + parseFloat(offer.value).toFixed(2)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${offer.start_at ? new Date(offer.start_at).toLocaleDateString() : 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${offer.end_at ? new Date(offer.end_at).toLocaleDateString() : 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <button onclick="editOffer(${offer.id})" class="text-blue-600 hover:text-blue-900 mr-2">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteOffer(${offer.id})" class="text-red-600 hover:text-red-900">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function showAddOfferModal() {
+            try {
+                const shopsData = await apiCall('/admin/shops?per_page=100');
+                if (shopsData && shopsData.success) {
+                    const shopSelect = document.getElementById('offer-shop-select');
+                    shopSelect.innerHTML = '<option value="">Select a shop...</option>';
+                    shopsData.data.items.forEach(shop => {
+                        shopSelect.innerHTML += `<option value="${shop.id}">${shop.name}</option>`;
+                    });
+                }
+                const productsData = await apiCall('/admin/products?per_page=100');
+                if (productsData && productsData.success) {
+                    const productSelect = document.getElementById('offer-product-select');
+                    productSelect.innerHTML = '<option value="">No specific product</option>';
+                    productsData.data.items.forEach(product => {
+                        productSelect.innerHTML += `<option value="${product.id}">${product.name}</option>`;
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+            }
+            document.getElementById('offer-modal-title').textContent = 'Add New Offer';
+            document.getElementById('offer-id').value = '';
+            document.getElementById('add-offer-form').reset();
+            document.getElementById('add-offer-modal').classList.remove('hidden');
+        }
+
+        function closeAddOfferModal() {
+            document.getElementById('add-offer-modal').classList.add('hidden');
+            document.getElementById('add-offer-form').reset();
+        }
+
+        document.getElementById('add-offer-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const offerId = document.getElementById('offer-id').value;
+            const data = {
+                shop_id: document.getElementById('offer-shop-select').value,
+                product_id: document.getElementById('offer-product-select').value || null,
+                title: document.getElementById('offer-title').value,
+                description: document.getElementById('offer-description').value,
+                discount_type: document.getElementById('offer-discount-type').value,
+                value: parseFloat(document.getElementById('offer-value').value),
+                is_bundle: document.getElementById('offer-is-bundle').checked,
+                start_at: document.getElementById('offer-start-at').value,
+                end_at: document.getElementById('offer-end-at').value,
+            };
+
+            try {
+                const url = offerId ? `/admin/offers/${offerId}` : '/admin/offers';
+                const method = offerId ? 'PUT' : 'POST';
+                const response = await apiCall(url, {
+                    method: method,
+                    body: JSON.stringify(data),
+                });
+                if (response && response.success) {
+                    closeAddOfferModal();
+                    loadOffers();
+                    alert('Offer saved successfully');
+                } else {
+                    alert(response?.message || 'Failed to save offer');
+                }
+            } catch (error) {
+                console.error('Error saving offer:', error);
+                alert('Error saving offer');
+            }
+        });
+
+        async function editOffer(offerId) {
+            try {
+                const data = await apiCall(`/admin/offers/${offerId}`);
+                if (data && data.success) {
+                    const offer = data.data;
+                    await showAddOfferModal();
+                    document.getElementById('offer-modal-title').textContent = 'Edit Offer';
+                    document.getElementById('offer-id').value = offer.id;
+                    document.getElementById('offer-shop-select').value = offer.shop_id;
+                    document.getElementById('offer-product-select').value = offer.product_id || '';
+                    document.getElementById('offer-title').value = offer.title || '';
+                    document.getElementById('offer-description').value = offer.description || '';
+                    document.getElementById('offer-discount-type').value = offer.discount_type || 'percent';
+                    document.getElementById('offer-value').value = offer.value || '';
+                    document.getElementById('offer-is-bundle').checked = offer.is_bundle || false;
+                    document.getElementById('offer-start-at').value = offer.start_at ? new Date(offer.start_at).toISOString().slice(0, 16) : '';
+                    document.getElementById('offer-end-at').value = offer.end_at ? new Date(offer.end_at).toISOString().slice(0, 16) : '';
+                }
+            } catch (error) {
+                console.error('Error loading offer:', error);
+                alert('Error loading offer');
+            }
+        }
+
+        async function deleteOffer(offerId) {
+            if (confirm('Are you sure you want to delete this offer?')) {
+                try {
+                    const data = await apiCall(`/admin/offers/${offerId}`, { method: 'DELETE' });
+                    if (data && data.success) {
+                        loadOffers();
+                        alert('Offer deleted successfully');
+                    }
+                } catch (error) {
+                    console.error('Error deleting offer:', error);
+                    alert('Error deleting offer');
+                }
+            }
+        }
+
+        // Order Management Functions
+        async function loadOrders() {
+            try {
+                const search = document.getElementById('orders-search')?.value || '';
+                const status = document.getElementById('orders-status-filter')?.value || '';
+                let url = '/admin/orders';
+                const params = new URLSearchParams();
+                if (search) params.append('search', search);
+                if (status) params.append('status', status);
+                if (params.toString()) url += '?' + params.toString();
+
+                const data = await apiCall(url);
+                if (data && data.success) {
+                    displayOrders(data.data.items || []);
+                }
+            } catch (error) {
+                console.error('Error loading orders:', error);
+            }
+        }
+
+        function displayOrders(orders) {
+            const tbody = document.getElementById('orders-table');
+            if (!orders.length) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="px-6 py-4 text-sm text-gray-500 text-center">No orders found.</td>
+                    </tr>
+                `;
+                return;
+            }
+            tbody.innerHTML = orders.map(order => `
+                <tr class="border-b">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#${order.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${order.user ? (order.user.first_name + ' ' + order.user.last_name) : 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${order.shop ? order.shop.name : 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$${parseFloat(order.total_amount).toFixed(2)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <span class="px-2 py-1 text-xs rounded-full ${
+                            order.status === 'paid' ? 'bg-green-100 text-green-800' :
+                            order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                            'bg-yellow-100 text-yellow-800'
+                        }">
+                            ${order.status || 'pending'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${order.created_at ? new Date(order.created_at).toLocaleDateString() : 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <button onclick="editOrder(${order.id})" class="text-blue-600 hover:text-blue-900 mr-2">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteOrder(${order.id})" class="text-red-600 hover:text-red-900">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function editOrder(orderId) {
+            const newStatus = prompt('Enter new status (pending, paid, cancelled):');
+            if (newStatus && ['pending', 'paid', 'cancelled'].includes(newStatus.toLowerCase())) {
+                try {
+                    const data = await apiCall(`/admin/orders/${orderId}`, {
+                        method: 'PUT',
+                        body: JSON.stringify({ status: newStatus.toLowerCase() }),
+                    });
+                    if (data && data.success) {
+                        loadOrders();
+                        alert('Order updated successfully');
+                    }
+                } catch (error) {
+                    console.error('Error updating order:', error);
+                    alert('Error updating order');
+                }
+            }
+        }
+
+        async function deleteOrder(orderId) {
+            if (confirm('Are you sure you want to delete this order?')) {
+                try {
+                    const data = await apiCall(`/admin/orders/${orderId}`, { method: 'DELETE' });
+                    if (data && data.success) {
+                        loadOrders();
+                        alert('Order deleted successfully');
+                    }
+                } catch (error) {
+                    console.error('Error deleting order:', error);
+                    alert('Error deleting order');
+                }
+            }
+        }
+
+        // Add event listeners for order search and filter
+        document.addEventListener('DOMContentLoaded', function() {
+            const ordersSearch = document.getElementById('orders-search');
+            const ordersStatusFilter = document.getElementById('orders-status-filter');
+            if (ordersSearch) {
+                ordersSearch.addEventListener('input', debounce(loadOrders, 500));
+            }
+            if (ordersStatusFilter) {
+                ordersStatusFilter.addEventListener('change', loadOrders);
+            }
+        });
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
         // Product Tag Management Functions
         async function ensureProductTagsCache(forceRefresh = false) {
             if (!forceRefresh && productTagsCache.length) {
@@ -2174,9 +2925,12 @@
 
         function renderSelectedProductTags() {
             const wrapper = document.getElementById('product-selected-tags');
-            if (!wrapper) return;
+            const foodWrapper = document.getElementById('food-selected-tags');
+            const targetWrapper = wrapper || foodWrapper;
+            if (!targetWrapper) return;
 
-            wrapper.innerHTML = '';
+            if (wrapper) wrapper.innerHTML = '';
+            if (foodWrapper) foodWrapper.innerHTML = '';
 
             selectedProductTagIds.forEach(id => {
                 const tag = productTagsCache.find(item => Number(item.id) === Number(id));
