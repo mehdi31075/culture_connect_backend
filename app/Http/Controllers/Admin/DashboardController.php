@@ -73,7 +73,7 @@ class DashboardController extends Controller
             ],
             'recent_activity' => [
                 'recent_users' => User::latest()->take(5)->get(['id', 'first_name', 'last_name', 'email', 'created_at']),
-                'recent_events' => Event::latest()->take(5)->get(['id', 'name', 'start_time', 'created_at']),
+                'recent_events' => Event::latest()->take(5)->get(['id', 'title', 'start_time', 'created_at']),
                 'recent_orders' => Order::with('user:id,first_name,last_name')->latest()->take(5)->get(['id', 'user_id', 'total_amount', 'status', 'created_at']),
                 'recent_reviews' => Review::with('user:id,first_name,last_name')->latest()->take(5)->get(['id', 'user_id', 'rating', 'created_at']),
             ]
@@ -179,22 +179,31 @@ class DashboardController extends Controller
         $upcomingEvents = Event::where('start_time', '>', $now)
             ->orderBy('start_time')
             ->take(10)
-            ->get(['id', 'name', 'start_time', 'pavilion_id']);
+            ->get(['id', 'title', 'start_time', 'pavilion_id']);
 
         // Event attendance
-        $eventAttendance = Event::withCount('attendances')
-            ->orderBy('attendances_count', 'desc')
+        $eventAttendance = Event::withCount('attendees')
+            ->orderBy('attendees_count', 'desc')
             ->take(10)
-            ->get(['id', 'name', 'attendances_count']);
+            ->get(['id', 'title', 'attendees_count']);
+
+        // Events by pavilion - count manually since events() relationship is commented out
+        $pavilions = Pavilion::all(['id', 'name']);
+        $eventsByPavilion = $pavilions->map(function ($pavilion) {
+            $eventsCount = Event::where('pavilion_id', $pavilion->id)->count();
+            return [
+                'id' => $pavilion->id,
+                'name' => $pavilion->name,
+                'events_count' => $eventsCount
+            ];
+        })->sortByDesc('events_count')->values();
 
         return response()->json([
             'success' => true,
             'data' => [
                 'upcoming_events' => $upcomingEvents,
                 'most_popular_events' => $eventAttendance,
-                'events_by_pavilion' => Pavilion::withCount('events')
-                    ->orderBy('events_count', 'desc')
-                    ->get(['id', 'name', 'events_count'])
+                'events_by_pavilion' => $eventsByPavilion
             ]
         ]);
     }
