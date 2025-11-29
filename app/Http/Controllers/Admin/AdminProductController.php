@@ -12,6 +12,34 @@ use Illuminate\Support\Facades\Validator;
 class AdminProductController extends Controller
 {
     /**
+     * Get a single product
+     */
+    public function show(int $id): JsonResponse
+    {
+        try {
+            $product = Product::with(['shop', 'tags'])->find($id);
+
+            if (!$product) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Product not found',
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $product,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve product',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Get all products with pagination
      */
     public function index(Request $request): JsonResponse

@@ -89,6 +89,7 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
 
     // Product management
     Route::get('/products', [AdminProductController::class, 'index']);
+    Route::get('/products/{id}', [AdminProductController::class, 'show']);
     Route::post('/products', [AdminProductController::class, 'store']);
     Route::put('/products/{id}', [AdminProductController::class, 'update']);
     Route::delete('/products/{id}', [AdminProductController::class, 'destroy']);

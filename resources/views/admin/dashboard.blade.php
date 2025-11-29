@@ -825,12 +825,13 @@
         <div class="flex items-center justify-center min-h-screen p-4">
             <div class="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[85vh] overflow-y-auto">
                 <div class="flex justify-between items-center p-6 border-b">
-                    <h3 class="text-lg font-semibold">Add New Product</h3>
+                    <h3 id="product-modal-title" class="text-lg font-semibold">Add New Product</h3>
                     <button onclick="closeAddProductModal()" class="text-gray-400 hover:text-gray-600">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
                 <form id="add-product-form" onsubmit="addProduct(event)" class="p-6">
+                    <input type="hidden" id="product-id" name="product_id" value="">
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Shop *</label>
@@ -1592,7 +1593,7 @@
                 loadProducts();
                 ensureProductTagsCache();
             } else if (sectionName === 'product-tags') {
-                loadProductTags();
+                loadProductTags(true); // Force refresh to ensure tags are loaded
             } else if (sectionName === 'event-tags') {
                 loadEventTags();
             } else if (sectionName === 'event-features') {
@@ -2327,6 +2328,12 @@
                 console.error('Error loading shops:', error);
             }
 
+            // Reset form
+            document.getElementById('product-modal-title').textContent = 'Add New Product';
+            document.getElementById('product-id').value = '';
+            document.getElementById('add-product-form').reset();
+            selectedProductTagIds = [];
+            selectedProductNewTags = [];
             await loadProductTagOptions([], []);
             const tagInput = document.getElementById('product-tag-input');
             if (tagInput) {
@@ -2340,6 +2347,8 @@
         function closeAddProductModal() {
             document.getElementById('add-product-modal').classList.add('hidden');
             document.getElementById('add-product-form').reset();
+            document.getElementById('product-id').value = '';
+            document.getElementById('product-modal-title').textContent = 'Add New Product';
             selectedProductTagIds = [];
             selectedProductNewTags = [];
             const tagInput = document.getElementById('product-tag-input');
@@ -2357,6 +2366,7 @@
         async function addProduct(event) {
             event.preventDefault();
             const form = event.target;
+            const productId = document.getElementById('product-id').value;
             const selectedTags = Array.from(form.querySelectorAll('input[name="tags[]"]')).map(input => Number(input.value));
             const newTags = Array.from(form.querySelectorAll('input[name="new_tags[]"]')).map(input => input.value);
 
@@ -2372,8 +2382,10 @@
             };
 
             try {
-                const response = await apiCall('/admin/products', {
-                    method: 'POST',
+                const url = productId ? `/admin/products/${productId}` : '/admin/products';
+                const method = productId ? 'PUT' : 'POST';
+                const response = await apiCall(url, {
+                    method: method,
                     body: JSON.stringify(data),
                 });
                 if (response && response.success) {
@@ -2381,21 +2393,48 @@
                     loadProducts();
                     await ensureProductTagsCache(true);
                     await loadProductTagOptions([], []);
-                    alert('Product added successfully');
+                    alert(productId ? 'Product updated successfully' : 'Product added successfully');
                 } else if (response && response.errors) {
                     const messages = Object.values(response.errors).flat().join('\n');
                     alert(messages);
                 } else {
-                    alert(response?.message || 'Failed to add product');
+                    alert(response?.message || (productId ? 'Failed to update product' : 'Failed to add product'));
                 }
             } catch (error) {
-                console.error('Error adding product:', error);
-                alert('Error adding product');
+                console.error('Error saving product:', error);
+                alert('Error saving product');
             }
         }
 
-        function editProduct(productId) {
-            alert(`Edit product ${productId} - Feature coming soon!`);
+        async function editProduct(productId) {
+            try {
+                const data = await apiCall(`/admin/products/${productId}`);
+                if (data && data.success) {
+                    const product = data.data;
+                    await showAddProductModal();
+                    document.getElementById('product-modal-title').textContent = 'Edit Product';
+                    document.getElementById('product-id').value = product.id;
+                    document.getElementById('product-shop-select').value = product.shop_id;
+                    document.getElementById('product-name').value = product.name || '';
+                    document.getElementById('product-description').value = product.description || '';
+                    document.getElementById('product-price').value = product.price || '';
+                    document.getElementById('product-image-url').value = product.image_url || '';
+                    document.getElementById('product-is-food').checked = product.is_food || false;
+
+                    // Load and set tags
+                    const existingTagIds = product.tags ? product.tags.map(t => t.id) : [];
+                    await loadProductTagOptions(existingTagIds, []);
+                    selectedProductTagIds = existingTagIds;
+                    selectedProductNewTags = [];
+                    renderSelectedProductTags();
+                    updateProductTagHiddenInputs();
+                } else {
+                    alert('Error loading product');
+                }
+            } catch (error) {
+                console.error('Error loading product:', error);
+                alert('Error loading product');
+            }
         }
 
         async function deleteProduct(productId) {
@@ -2944,8 +2983,20 @@
         }
 
         async function loadProductTags(forceRefresh = false) {
-            const tags = await ensureProductTagsCache(forceRefresh);
-            displayProductTags(tags);
+            try {
+                const tags = await ensureProductTagsCache(forceRefresh);
+                displayProductTags(tags);
+            } catch (error) {
+                console.error('Error loading product tags:', error);
+                const tbody = document.getElementById('product-tags-table');
+                if (tbody) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="px-6 py-4 text-sm text-red-500 text-center">Error loading tags. Please refresh the page.</td>
+                        </tr>
+                    `;
+                }
+            }
         }
 
         function displayProductTags(tags) {
