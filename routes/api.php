@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BannerController;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\FoodController;
+use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\PavilionController;
 use App\Http\Controllers\Api\POIController;
 use App\Http\Controllers\Api\ShopController;
@@ -125,6 +126,9 @@ Route::get('foods/{id}', [FoodController::class, 'show']);
 Route::middleware('auth:api')->group(function () {
     Route::post('foods/{id}/like', [FoodController::class, 'toggleLike']);
 });
+
+// Home/Stats routes
+Route::get('stats', [HomeController::class, 'stats']);
 
 // Banner routes
 Route::get('banners', [BannerController::class, 'index']);
