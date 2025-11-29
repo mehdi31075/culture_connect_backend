@@ -76,7 +76,7 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
     // Banner management
     Route::get('/banners', [AdminBannerController::class, 'index']);
     Route::post('/banners', [AdminBannerController::class, 'store']);
-    Route::put('/banners/{id}', [AdminBannerController::class, 'update']);
+    Route::match(['put', 'post'], '/banners/{id}', [AdminBannerController::class, 'update']);
     Route::delete('/banners/{id}', [AdminBannerController::class, 'destroy']);
 
     // Shop management

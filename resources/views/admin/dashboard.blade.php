@@ -601,7 +601,7 @@
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
-                <form id="add-banner-form" onsubmit="addBanner(event)" class="p-6">
+                <form id="add-banner-form" class="p-6">
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Title (Optional)</label>
@@ -627,7 +627,8 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Image</label>
-                            <input type="file" name="image" accept="image/*,.svg" required class="w-full border rounded px-3 py-2">
+                            <input type="file" name="image" id="banner-image-input" accept="image/*,.svg" class="w-full border rounded px-3 py-2">
+                            <p class="text-xs text-gray-500 mt-1">Leave empty to keep current image when editing</p>
                         </div>
                     </div>
                     <div class="flex justify-end space-x-3 mt-6">
@@ -1667,6 +1668,12 @@
         }
 
         function showAddBannerModal() {
+            const form = document.getElementById('add-banner-form');
+            form.onsubmit = addBanner;
+            const imageInput = document.getElementById('banner-image-input');
+            if (imageInput) {
+                imageInput.required = true;
+            }
             document.getElementById('add-banner-modal').classList.remove('hidden');
         }
 
@@ -1676,19 +1683,25 @@
             form.reset();
             // Reset modal title and button
             document.querySelector('#add-banner-modal h3').textContent = 'Add New Banner';
-            const submitBtn = document.querySelector('#add-banner-form button[type="submit"]');
+            const submitBtn = form.querySelector('button[type="submit"]');
             submitBtn.textContent = 'Add Banner';
             // Reset form onsubmit to original
             form.onsubmit = addBanner;
             form.removeAttribute('data-banner-id');
+            // Reset image input required attribute
+            const imageInput = document.getElementById('banner-image-input');
+            if (imageInput) {
+                imageInput.required = true;
+            }
         }
 
         async function addBanner(event) {
             event.preventDefault();
 
-            const formData = new FormData(event.target);
+            const form = event.target || document.getElementById('add-banner-form');
+            const formData = new FormData(form);
             // Normalize checkbox value to 1/0 for backend boolean validation
-            const isActiveEl = document.querySelector('input[name="is_active"]');
+            const isActiveEl = document.getElementById('banner_is_active');
             formData.set('is_active', isActiveEl && isActiveEl.checked ? '1' : '0');
 
             try {
@@ -1735,16 +1748,22 @@
                 }
 
                 // Populate form fields
-                document.getElementById('add-banner-form').querySelector('input[name="title"]').value = banner.title || '';
-                document.getElementById('add-banner-form').querySelector('textarea[name="description"]').value = banner.description || '';
-                document.getElementById('add-banner-form').querySelector('input[name="link"]').value = banner.link || '';
-                document.getElementById('add-banner-form').querySelector('input[name="order"]').value = banner.order ?? 0;
+                const form = document.getElementById('add-banner-form');
+                form.querySelector('input[name="title"]').value = banner.title || '';
+                form.querySelector('textarea[name="description"]').value = banner.description || '';
+                form.querySelector('input[name="link"]').value = banner.link || '';
+                form.querySelector('input[name="order"]').value = banner.order ?? 0;
                 document.getElementById('banner_is_active').checked = banner.is_active ?? true;
 
+                // Make image field optional for editing
+                const imageInput = document.getElementById('banner-image-input');
+                if (imageInput) {
+                    imageInput.required = false;
+                }
+
                 // Update modal title and button
-                const form = document.getElementById('add-banner-form');
                 document.querySelector('#add-banner-modal h3').textContent = 'Edit Banner';
-                const submitBtn = document.querySelector('#add-banner-form button[type="submit"]');
+                const submitBtn = form.querySelector('button[type="submit"]');
                 submitBtn.textContent = 'Update Banner';
 
                 // Store banner ID for update
@@ -1768,13 +1787,30 @@
             event.preventDefault();
 
             const form = document.getElementById('add-banner-form');
-            const formData = new FormData(form);
+            const formData = new FormData();
+
+            // Explicitly add all form fields to ensure they're sent
+            const title = form.querySelector('input[name="title"]').value;
+            const description = form.querySelector('textarea[name="description"]').value;
+            const link = form.querySelector('input[name="link"]').value;
+            const order = form.querySelector('input[name="order"]').value;
+            const imageInput = form.querySelector('input[name="image"]');
             const isActiveEl = document.getElementById('banner_is_active');
-            formData.set('is_active', isActiveEl && isActiveEl.checked ? '1' : '0');
+
+            if (title !== null && title !== undefined) formData.append('title', title);
+            if (description !== null && description !== undefined) formData.append('description', description);
+            if (link !== null && link !== undefined) formData.append('link', link);
+            if (order !== null && order !== undefined) formData.append('order', order);
+            formData.append('is_active', isActiveEl && isActiveEl.checked ? '1' : '0');
+
+            // Only append image if a new file is selected
+            if (imageInput && imageInput.files && imageInput.files.length > 0) {
+                formData.append('image', imageInput.files[0]);
+            }
 
             try {
                 const response = await fetch(`/api/admin/banners/${id}`, {
-                    method: 'PUT',
+                    method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${authToken}`,
                         'Accept': 'application/json'
