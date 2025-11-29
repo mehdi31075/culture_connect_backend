@@ -18,7 +18,7 @@ class AdminProductTagController extends Controller
         try {
             // Try to get counts, but handle gracefully if relationships fail
             $tags = ProductTag::orderBy('name')->get();
-            
+
             // Manually count products and foods for each tag to avoid relationship issues
             foreach ($tags as $tag) {
                 try {
@@ -26,7 +26,7 @@ class AdminProductTagController extends Controller
                 } catch (\Exception $e) {
                     $tag->products_count = 0;
                 }
-                
+
                 try {
                     $tag->foods_count = $tag->foods()->count();
                 } catch (\Exception $e) {
@@ -78,7 +78,7 @@ class AdminProductTagController extends Controller
         } catch (\Exception $e) {
             $tag->products_count = 0;
         }
-        
+
         try {
             $tag->foods_count = $tag->foods()->count();
         } catch (\Exception $e) {
@@ -131,7 +131,7 @@ class AdminProductTagController extends Controller
         } catch (\Exception $e) {
             $tag->products_count = 0;
         }
-        
+
         try {
             $tag->foods_count = $tag->foods()->count();
         } catch (\Exception $e) {
