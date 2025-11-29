@@ -18,24 +18,10 @@ class POIController extends Controller
     /**
      * @OA\Get(
      *     path="/api/pois",
-     *     summary="Get all POIs with pagination",
-     *     description="Retrieve a paginated list of all Points of Interest with optional filtering",
+     *     summary="Get all POIs",
+     *     description="Retrieve a list of all Points of Interest with optional filtering",
      *     operationId="getPOIs",
      *     tags={"POI"},
-     *     @OA\Parameter(
-     *         name="page",
-     *         in="query",
-     *         description="Page number for pagination",
-     *         required=false,
-     *         @OA\Schema(type="integer", minimum=1, default=1)
-     *     ),
-     *     @OA\Parameter(
-     *         name="per_page",
-     *         in="query",
-     *         description="Number of items per page",
-     *         required=false,
-     *         @OA\Schema(type="integer", minimum=1, maximum=100, default=15)
-     *     ),
      *     @OA\Parameter(
      *         name="search",
      *         in="query",
@@ -94,33 +80,19 @@ class POIController extends Controller
      *             @OA\Property(
      *                 property="data",
      *                 type="object",
-     *                 @OA\Property(
-     *                     property="items",
-     *                     type="array",
-     *                     @OA\Items(
-     *                         @OA\Property(property="id", type="integer", example=1),
-     *                         @OA\Property(property="type", type="string", example="photo_spot"),
-     *                         @OA\Property(property="name", type="string", example="Main Photo Spot"),
-     *                         @OA\Property(property="lat", type="number", format="float", example=25.2048),
-     *                         @OA\Property(property="lng", type="number", format="float", example=55.2708),
-     *                         @OA\Property(property="shop_id", type="integer", nullable=true, example=null),
-     *                         @OA\Property(property="pavilion_id", type="integer", nullable=true, example=1),
-     *                         @OA\Property(property="pavilion", type="object", nullable=true),
-     *                         @OA\Property(property="shop", type="object", nullable=true),
-     *                         @OA\Property(property="created_at", type="string", format="date-time"),
-     *                         @OA\Property(property="updated_at", type="string", format="date-time")
-     *                     )
-     *                 ),
-     *                 @OA\Property(
-     *                     property="pagination",
-     *                     type="object",
-     *                     @OA\Property(property="current_page", type="integer", example=1),
-     *                     @OA\Property(property="per_page", type="integer", example=15),
-     *                     @OA\Property(property="total", type="integer", example=25),
-     *                     @OA\Property(property="last_page", type="integer", example=2),
-     *                     @OA\Property(property="from", type="integer", example=1),
-     *                     @OA\Property(property="to", type="integer", example=15),
-     *                     @OA\Property(property="has_more_pages", type="boolean", example=true)
+     *                 type="array",
+     *                 @OA\Items(
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="type", type="string", example="photo_spot"),
+     *                     @OA\Property(property="name", type="string", example="Main Photo Spot"),
+     *                     @OA\Property(property="lat", type="number", format="float", example=25.2048),
+     *                     @OA\Property(property="lng", type="number", format="float", example=55.2708),
+     *                     @OA\Property(property="shop_id", type="integer", nullable=true, example=null),
+     *                     @OA\Property(property="pavilion_id", type="integer", nullable=true, example=1),
+     *                     @OA\Property(property="pavilion", type="object", nullable=true),
+     *                     @OA\Property(property="shop", type="object", nullable=true),
+     *                     @OA\Property(property="created_at", type="string", format="date-time"),
+     *                     @OA\Property(property="updated_at", type="string", format="date-time")
      *                 )
      *             )
      *         )
@@ -138,7 +110,6 @@ class POIController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $perPage = $request->get('per_page', 15);
             $search = $request->get('search');
             $type = $request->get('type');
             $pavilionId = $request->get('pavilion_id');
@@ -186,10 +157,10 @@ class POIController extends Controller
                 $query->orderBy('name', 'asc');
             }
 
-            $pois = $query->paginate($perPage);
+            $pois = $query->get();
 
             // Ensure lat and lng are returned as floats
-            $pois->getCollection()->transform(function ($poi) {
+            $pois->transform(function ($poi) {
                 $poi->lat = $poi->lat !== null ? (float) $poi->lat : null;
                 $poi->lng = $poi->lng !== null ? (float) $poi->lng : null;
                 return $poi;
@@ -198,18 +169,7 @@ class POIController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'POIs retrieved successfully',
-                'data' => [
-                    'items' => $pois->items(),
-                    'pagination' => [
-                        'current_page' => $pois->currentPage(),
-                        'per_page' => $pois->perPage(),
-                        'total' => $pois->total(),
-                        'last_page' => $pois->lastPage(),
-                        'from' => $pois->firstItem(),
-                        'to' => $pois->lastItem(),
-                        'has_more_pages' => $pois->hasMorePages(),
-                    ]
-                ]
+                'data' => $pois,
             ]);
         } catch (\Exception $e) {
             return response()->json([

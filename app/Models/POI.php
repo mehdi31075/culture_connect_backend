@@ -9,6 +9,8 @@ class POI extends Model
 {
     use HasFactory;
 
+    protected $table = 'pois';
+
     const TYPE_PAVILION = 'pavilion';
     const TYPE_STAGE = 'stage';
     const TYPE_FOOD_TRUCK = 'food_truck';
