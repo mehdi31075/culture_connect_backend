@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Event;
 use App\Models\EventTag;
+use App\Models\EventFeature;
 use App\Models\Pavilion;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -23,7 +24,7 @@ class AdminEventController extends Controller
             $perPage = $request->get('per_page', 15);
             $search = $request->get('search');
 
-            $query = Event::with(['pavilion', 'tags']);
+            $query = Event::with(['pavilion', 'tags', 'features']);
 
             if ($search) {
                 $query->where(function ($q) use ($search) {
@@ -129,8 +130,30 @@ class AdminEventController extends Controller
                 $event->tags()->detach();
             }
 
+            // Sync features if provided
+            $featureIds = $request->features ?? [];
+
+            // Create new features if provided
+            if ($request->has('new_features') && is_array($request->new_features)) {
+                foreach ($request->new_features as $featureName) {
+                    $featureName = trim($featureName);
+                    if (!empty($featureName)) {
+                        $feature = EventFeature::firstOrCreate(['name' => $featureName]);
+                        $featureIds[] = $feature->id;
+                    }
+                }
+            }
+
+            // Remove duplicates and sync
+            $featureIds = array_unique($featureIds);
+            if (!empty($featureIds)) {
+                $event->features()->sync($featureIds);
+            } else {
+                $event->features()->detach();
+            }
+
             // Load relationships
-            $event->load('pavilion', 'tags');
+            $event->load('pavilion', 'tags', 'features');
             $event->confirmed_attendees_count = $event->confirmed_attendees_count;
 
             return response()->json([
@@ -231,8 +254,30 @@ class AdminEventController extends Controller
                 $event->tags()->detach();
             }
 
+            // Sync features if provided
+            $featureIds = $request->features ?? [];
+
+            // Create new features if provided
+            if ($request->has('new_features') && is_array($request->new_features)) {
+                foreach ($request->new_features as $featureName) {
+                    $featureName = trim($featureName);
+                    if (!empty($featureName)) {
+                        $feature = EventFeature::firstOrCreate(['name' => $featureName]);
+                        $featureIds[] = $feature->id;
+                    }
+                }
+            }
+
+            // Remove duplicates and sync
+            $featureIds = array_unique($featureIds);
+            if (!empty($featureIds)) {
+                $event->features()->sync($featureIds);
+            } else {
+                $event->features()->detach();
+            }
+
             // Load relationships
-            $event->load('pavilion', 'tags');
+            $event->load('pavilion', 'tags', 'features');
             $event->confirmed_attendees_count = $event->confirmed_attendees_count;
 
             return response()->json([

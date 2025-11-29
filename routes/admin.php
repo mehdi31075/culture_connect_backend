@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\AdminProductTagController;
 use App\Http\Controllers\Admin\AdminReviewController;
 use App\Http\Controllers\Admin\AdminEventController;
 use App\Http\Controllers\Admin\AdminEventTagController;
+use App\Http\Controllers\Admin\AdminEventFeatureController;
 
 /*
 |--------------------------------------------------------------------------
@@ -59,6 +60,12 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
     Route::post('/event-tags', [AdminEventTagController::class, 'store']);
     Route::put('/event-tags/{id}', [AdminEventTagController::class, 'update']);
     Route::delete('/event-tags/{id}', [AdminEventTagController::class, 'destroy']);
+
+    // Event feature management
+    Route::get('/event-features', [AdminEventFeatureController::class, 'index']);
+    Route::post('/event-features', [AdminEventFeatureController::class, 'store']);
+    Route::put('/event-features/{id}', [AdminEventFeatureController::class, 'update']);
+    Route::delete('/event-features/{id}', [AdminEventFeatureController::class, 'destroy']);
 
     // Pavilion management
     Route::get('/pavilions', [AdminController::class, 'pavilions']);

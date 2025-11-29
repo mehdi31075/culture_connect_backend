@@ -82,6 +82,12 @@
                         </a>
                     </li>
                     <li>
+                        <a href="#event-features" onclick="showSection('event-features', this)" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
+                            <i class="fas fa-star mr-3"></i>
+                            Event Features
+                        </a>
+                    </li>
+                    <li>
                         <a href="#events" onclick="showSection('events', this)" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
                             <i class="fas fa-calendar mr-3"></i>
                             Events
@@ -806,6 +812,52 @@
         </div>
     </div>
 
+    <!-- Event Features Section -->
+    <div id="event-features-section" class="hidden">
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800">Event Features</h2>
+                    <span class="text-gray-600">Manage features used to describe events (e.g., outdoor, accessible)</span>
+                </div>
+                <button onclick="showAddEventFeatureModal()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                    <i class="fas fa-plus mr-2"></i>Add Feature
+                </button>
+            </div>
+            <div id="event-features-table-container">
+                <p class="text-gray-500">Loading event features...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Event Feature Modal -->
+    <div id="event-feature-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+                <div class="flex justify-between items-center p-6 border-b">
+                    <h3 id="event-feature-modal-title" class="text-lg font-semibold">Add New Feature</h3>
+                    <button onclick="closeEventFeatureModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="event-feature-form" onsubmit="saveEventFeature(event)" class="p-6">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                        <input type="text" name="name" id="event-feature-name" required class="w-full border rounded px-3 py-2">
+                    </div>
+                    <div class="flex justify-end space-x-3 mt-6">
+                        <button type="button" onclick="closeEventFeatureModal()" class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50">
+                            Cancel
+                        </button>
+                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                            Save Feature
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Add/Edit Event Modal -->
     <div id="add-event-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 overflow-y-auto">
         <div class="flex items-center justify-center min-h-screen p-4">
@@ -881,6 +933,18 @@
                                 </div>
                             </div>
                             <p class="text-xs text-gray-500 mt-1">Upload multiple banner images for this event</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Features</label>
+                            <div class="relative">
+                                <div id="event-features-field" class="flex flex-wrap items-center gap-2 border rounded px-3 py-2 bg-white cursor-text" onclick="focusEventFeatureInput()">
+                                    <div id="event-selected-features" class="flex flex-wrap gap-2"></div>
+                                    <input id="event-feature-input" type="text" class="flex-1 min-w-[120px] border-0 focus:outline-none focus:ring-0 text-sm py-1" placeholder="Type to add features..." autocomplete="off" oninput="updateEventFeatureSuggestions(this.value)" onkeydown="handleEventFeatureInput(event)">
+                                </div>
+                                <div id="event-feature-suggestions" class="absolute left-0 right-0 mt-1 bg-white border rounded shadow hidden z-10 max-h-48 overflow-y-auto"></div>
+                            </div>
+                            <div id="event-features-hidden-inputs"></div>
+                            <p class="text-xs text-gray-500 mt-1">Type to search for an existing feature. If it doesn't exist, press Enter to create it.</p>
                         </div>
                     </div>
                     <div class="flex justify-end space-x-3 mt-6">
@@ -967,7 +1031,11 @@
         let currentEditingEventTagId = null;
         let selectedEventTagIds = [];
         let selectedEventNewTags = [];
+        let selectedEventFeatureIds = [];
+        let selectedEventNewFeatures = [];
         let eventBanners = []; // Array of banner image URLs
+        let eventFeaturesCache = [];
+        let currentEditingEventFeatureId = null;
 
         // Initialize the admin panel
         document.addEventListener('DOMContentLoaded', function() {
@@ -1214,6 +1282,8 @@
                 loadProductTags();
             } else if (sectionName === 'event-tags') {
                 loadEventTags();
+            } else if (sectionName === 'event-features') {
+                loadEventFeatures();
             } else if (sectionName === 'events') {
                 loadEvents();
             } else if (sectionName === 'reviews') {
@@ -2658,6 +2728,372 @@
             }
         }
 
+        // Event Feature Chip Management Functions (for Event form)
+        async function ensureEventFeaturesCache(forceRefresh = false) {
+            if (!forceRefresh && eventFeaturesCache.length) {
+                return eventFeaturesCache;
+            }
+            try {
+                const data = await apiCall('/admin/event-features');
+                if (data && data.success) {
+                    eventFeaturesCache = data.data.items || [];
+                } else {
+                    eventFeaturesCache = [];
+                }
+            } catch (error) {
+                console.error('Error loading event features:', error);
+                eventFeaturesCache = [];
+            }
+            return eventFeaturesCache;
+        }
+
+        async function loadEventFeatureOptions(selectedIds = [], newFeatureNames = []) {
+            await ensureEventFeaturesCache();
+            selectedEventFeatureIds = (selectedIds || []).map(id => Number(id));
+            selectedEventNewFeatures = (newFeatureNames || []).filter(name => !!name);
+            renderSelectedEventFeatures();
+
+            const featureInput = document.getElementById('event-feature-input');
+            updateEventFeatureSuggestions(featureInput ? featureInput.value : '');
+        }
+
+        function focusEventFeatureInput() {
+            const input = document.getElementById('event-feature-input');
+            if (input) {
+                input.focus();
+            }
+        }
+
+        function renderSelectedEventFeatures() {
+            const wrapper = document.getElementById('event-selected-features');
+            if (!wrapper) return;
+
+            wrapper.innerHTML = '';
+
+            selectedEventFeatureIds.forEach(id => {
+                const feature = eventFeaturesCache.find(item => Number(item.id) === Number(id));
+                if (!feature) return;
+                const chip = document.createElement('span');
+                chip.className = 'inline-flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 text-green-800 text-xs font-medium';
+                chip.innerHTML = `
+                    <span>${feature.name}</span>
+                    <button type="button" class="text-green-600 hover:text-green-900 focus:outline-none" data-remove-existing="${id}" aria-label="Remove feature">&times;</button>
+                `;
+                wrapper.appendChild(chip);
+            });
+
+            selectedEventNewFeatures.forEach(name => {
+                const chip = document.createElement('span');
+                chip.className = 'inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gray-200 text-gray-700 text-xs font-medium';
+                chip.innerHTML = `
+                    <span>${name}</span>
+                    <button type="button" class="text-gray-600 hover:text-gray-900 focus:outline-none" data-remove-new="${name}" aria-label="Remove new feature">&times;</button>
+                `;
+                wrapper.appendChild(chip);
+            });
+
+            updateEventFeatureHiddenInputs();
+
+            // Add click handlers for remove buttons
+            wrapper.querySelectorAll('[data-remove-existing]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    removeExistingEventFeature(btn.getAttribute('data-remove-existing'));
+                });
+            });
+
+            wrapper.querySelectorAll('[data-remove-new]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    removeNewEventFeature(btn.getAttribute('data-remove-new'));
+                });
+            });
+        }
+
+        function updateEventFeatureHiddenInputs() {
+            const hiddenContainer = document.getElementById('event-features-hidden-inputs');
+            if (!hiddenContainer) return;
+
+            hiddenContainer.innerHTML = '';
+
+            selectedEventFeatureIds.forEach(id => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'features[]';
+                input.value = id;
+                hiddenContainer.appendChild(input);
+            });
+
+            selectedEventNewFeatures.forEach(name => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'new_features[]';
+                input.value = name;
+                hiddenContainer.appendChild(input);
+            });
+        }
+
+        function addExistingEventFeature(id) {
+            const numericId = Number(id);
+            if (selectedEventFeatureIds.includes(numericId)) {
+                return;
+            }
+
+            const feature = eventFeaturesCache.find(item => Number(item.id) === numericId);
+            if (!feature) return;
+
+            selectedEventFeatureIds.push(numericId);
+            selectedEventNewFeatures = selectedEventNewFeatures.filter(name => name.toLowerCase() !== feature.name.toLowerCase());
+            renderSelectedEventFeatures();
+            updateEventFeatureSuggestions('');
+            clearEventFeatureInput();
+            const suggestions = document.getElementById('event-feature-suggestions');
+            if (suggestions) {
+                suggestions.classList.add('hidden');
+            }
+        }
+
+        function addNewEventFeature(name) {
+            const trimmed = name.trim();
+            if (!trimmed) return;
+
+            const existing = eventFeaturesCache.find(feature => feature.name.toLowerCase() === trimmed.toLowerCase());
+            if (existing) {
+                addExistingEventFeature(existing.id);
+                return;
+            }
+
+            if (selectedEventNewFeatures.some(featureName => featureName.toLowerCase() === trimmed.toLowerCase())) {
+                clearEventFeatureInput();
+                return;
+            }
+
+            selectedEventNewFeatures.push(trimmed);
+            renderSelectedEventFeatures();
+            updateEventFeatureSuggestions('');
+            clearEventFeatureInput();
+            const suggestions = document.getElementById('event-feature-suggestions');
+            if (suggestions) {
+                suggestions.classList.add('hidden');
+            }
+        }
+
+        function removeExistingEventFeature(id) {
+            const numericId = Number(id);
+            selectedEventFeatureIds = selectedEventFeatureIds.filter(featureId => featureId !== numericId);
+            renderSelectedEventFeatures();
+            updateEventFeatureSuggestions(document.getElementById('event-feature-input')?.value || '');
+        }
+
+        function removeNewEventFeature(name) {
+            selectedEventNewFeatures = selectedEventNewFeatures.filter(featureName => featureName !== name);
+            renderSelectedEventFeatures();
+            updateEventFeatureSuggestions(document.getElementById('event-feature-input')?.value || '');
+        }
+
+        function clearEventFeatureInput() {
+            const input = document.getElementById('event-feature-input');
+            if (input) {
+                input.value = '';
+            }
+        }
+
+        function handleEventFeatureInputCommit() {
+            const input = document.getElementById('event-feature-input');
+            if (!input) return;
+
+            const value = input.value.trim();
+            if (!value) {
+                input.value = '';
+                return;
+            }
+
+            addNewEventFeature(value);
+        }
+
+        function updateEventFeatureSuggestions(searchTerm = '') {
+            const suggestions = document.getElementById('event-feature-suggestions');
+            if (!suggestions) return;
+
+            const normalized = searchTerm.trim().toLowerCase();
+            if (!normalized.length) {
+                suggestions.innerHTML = '';
+                suggestions.classList.add('hidden');
+                return;
+            }
+
+            const availableFeatures = eventFeaturesCache.filter(feature => !selectedEventFeatureIds.includes(Number(feature.id)));
+
+            let matches = [];
+            matches = availableFeatures.filter(feature => feature.name.toLowerCase().includes(normalized)).slice(0, 10);
+
+            if (!matches.length) {
+                suggestions.innerHTML = '';
+                suggestions.classList.add('hidden');
+                return;
+            }
+
+            suggestions.innerHTML = matches.map(feature => `
+                <button type="button" class="w-full text-left px-3 py-2 text-sm hover:bg-green-50" data-feature-id="${feature.id}">
+                    ${feature.name}
+                </button>
+            `).join('');
+            suggestions.classList.remove('hidden');
+
+            // Add click handlers
+            suggestions.querySelectorAll('[data-feature-id]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    addExistingEventFeature(btn.getAttribute('data-feature-id'));
+                });
+            });
+        }
+
+        function handleEventFeatureInput(event) {
+            if (event.key === 'Enter' || event.key === ',') {
+                event.preventDefault();
+                handleEventFeatureInputCommit();
+            } else if (event.key === 'Backspace' && !event.target.value) {
+                if (selectedEventNewFeatures.length) {
+                    selectedEventNewFeatures.pop();
+                    renderSelectedEventFeatures();
+                } else if (selectedEventFeatureIds.length) {
+                    selectedEventFeatureIds.pop();
+                    renderSelectedEventFeatures();
+                }
+            }
+        }
+
+        // Event Feature Management Functions (for Event Features section)
+        async function loadEventFeatures() {
+            try {
+                const data = await apiCall('/admin/event-features');
+                if (data && data.success) {
+                    eventFeaturesCache = data.data.items || [];
+                    displayEventFeatures(eventFeaturesCache);
+                }
+            } catch (error) {
+                console.error('Error loading event features:', error);
+                document.getElementById('event-features-table-container').innerHTML = '<p class="text-red-500">Error loading event features</p>';
+            }
+        }
+
+        function displayEventFeatures(features) {
+            const container = document.getElementById('event-features-table-container');
+            if (!container) return;
+
+            if (!features || features.length === 0) {
+                container.innerHTML = '<p class="text-gray-500">No event features found. Add your first feature!</p>';
+                return;
+            }
+
+            const table = `
+                <table class="min-w-full bg-white border border-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Events Count</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        ${features.map(feature => `
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${feature.id}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${feature.name}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${feature.events_count || 0}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <button onclick="editEventFeature(${feature.id})" class="text-blue-600 hover:text-blue-900 mr-3">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                    <button onclick="deleteEventFeature(${feature.id})" class="text-red-600 hover:text-red-900">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            container.innerHTML = table;
+        }
+
+        function showAddEventFeatureModal() {
+            currentEditingEventFeatureId = null;
+            document.getElementById('event-feature-modal-title').textContent = 'Add New Feature';
+            document.getElementById('event-feature-form').reset();
+            document.getElementById('event-feature-modal').classList.remove('hidden');
+        }
+
+        function showEditEventFeatureModal(featureId) {
+            const feature = eventFeaturesCache.find(f => f.id === featureId);
+            if (!feature) {
+                alert('Feature not found');
+                return;
+            }
+
+            currentEditingEventFeatureId = featureId;
+            document.getElementById('event-feature-modal-title').textContent = 'Edit Feature';
+            document.getElementById('event-feature-name').value = feature.name;
+            document.getElementById('event-feature-modal').classList.remove('hidden');
+        }
+
+        function closeEventFeatureModal() {
+            document.getElementById('event-feature-modal').classList.add('hidden');
+            document.getElementById('event-feature-form').reset();
+            currentEditingEventFeatureId = null;
+        }
+
+        async function saveEventFeature(event) {
+            event.preventDefault();
+            const name = document.getElementById('event-feature-name').value.trim();
+            if (!name) {
+                alert('Feature name is required');
+                return;
+            }
+
+            const isEdit = currentEditingEventFeatureId !== null;
+            const url = isEdit ? `/admin/event-features/${currentEditingEventFeatureId}` : '/admin/event-features';
+
+            try {
+                const response = await apiCall(url, {
+                    method: isEdit ? 'PUT' : 'POST',
+                    body: JSON.stringify({ name }),
+                });
+                if (response && response.success) {
+                    closeEventFeatureModal();
+                    await loadEventFeatures();
+                    await ensureEventFeaturesCache(true); // Refresh cache
+                    alert(`Feature ${isEdit ? 'updated' : 'added'} successfully`);
+                } else if (response && response.errors) {
+                    alert(Object.values(response.errors).flat().join('\n'));
+                }
+            } catch (error) {
+                console.error(`Error ${isEdit ? 'updating' : 'adding'} feature:`, error);
+                alert(`Error ${isEdit ? 'updating' : 'adding'} feature`);
+            }
+        }
+
+        async function deleteEventFeature(featureId) {
+            if (confirm('Are you sure you want to delete this feature? This will remove it from all events.')) {
+                try {
+                    const response = await apiCall(`/admin/event-features/${featureId}`, { method: 'DELETE' });
+                    if (response && response.success) {
+                        await loadEventFeatures();
+                        await ensureEventFeaturesCache(true); // Refresh cache
+                        alert('Feature deleted successfully');
+                    }
+                } catch (error) {
+                    console.error('Error deleting feature:', error);
+                    alert('Error deleting feature');
+                }
+            }
+        }
+
+        function editEventFeature(featureId) {
+            showEditEventFeatureModal(featureId);
+        }
+
         // Review Management Functions
         async function loadEvents() {
             try {
@@ -2729,6 +3165,8 @@
             // Load event tags for chip input
             await ensureEventTagsCache();
             await loadEventTagOptions([], []);
+            await ensureEventFeaturesCache();
+            await loadEventFeatureOptions([], []);
             eventBanners = [];
             renderEventBanners();
 
@@ -2745,8 +3183,11 @@
             document.getElementById('event-id').value = '';
             selectedEventTagIds = [];
             selectedEventNewTags = [];
+            selectedEventFeatureIds = [];
+            selectedEventNewFeatures = [];
             eventBanners = [];
             renderSelectedEventTags();
+            renderSelectedEventFeatures();
             renderEventBanners();
         }
 
@@ -2768,6 +3209,10 @@
             // Get selected tags from chip input
             data.tags = selectedEventTagIds;
             data.new_tags = selectedEventNewTags;
+
+            // Get selected features from chip input
+            data.features = selectedEventFeatureIds;
+            data.new_features = selectedEventNewFeatures;
 
             // Get banners array
             data.banners = eventBanners;
@@ -2822,6 +3267,11 @@
                 await ensureEventTagsCache();
                 const existingTagIds = event.tags ? event.tags.map(t => t.id) : [];
                 await loadEventTagOptions(existingTagIds, []);
+
+                // Load event features for chip input
+                await ensureEventFeaturesCache();
+                const existingFeatureIds = event.features ? event.features.map(f => f.id) : [];
+                await loadEventFeatureOptions(existingFeatureIds, []);
 
                 // Load banners
                 eventBanners = event.banners || [];

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Event;
 use App\Models\EventTag;
+use App\Models\EventFeature;
 use App\Models\EventAttendance;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -72,6 +73,14 @@ class EventController extends Controller
                      *                         )
                      *                     ),
                      *                     @OA\Property(
+                     *                         property="features",
+                     *                         type="array",
+                     *                         @OA\Items(
+                     *                             @OA\Property(property="id", type="integer"),
+                     *                             @OA\Property(property="name", type="string")
+                     *                         )
+                     *                     ),
+                     *                     @OA\Property(
                      *                         property="banners",
                      *                         type="array",
                      *                         description="List of banner image URLs for this event",
@@ -89,7 +98,7 @@ class EventController extends Controller
             $dateFilter = $request->get('date_filter', 'all_time');
             $tagFilter = $request->get('tag');
 
-            $query = Event::with(['pavilion', 'tags'])
+            $query = Event::with(['pavilion', 'tags', 'features'])
                 ->where('start_time', '>=', Carbon::now());
 
             // Apply date filter
