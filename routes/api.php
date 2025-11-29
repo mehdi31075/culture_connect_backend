@@ -120,7 +120,8 @@ Route::get('shops/{shop}/products', [ShopController::class, 'products']);
 Route::get('banners', [BannerController::class, 'index']);
 Route::get('banners/{id}', [BannerController::class, 'show']);
 
-// Event routes (all require authentication)
+// Event routes
+Route::get('event-tags', [EventController::class, 'getTags']);
 Route::middleware('auth:api')->group(function () {
     Route::get('events', [EventController::class, 'index']);
     Route::post('events/{event}/mark-going', [EventController::class, 'markGoing']);

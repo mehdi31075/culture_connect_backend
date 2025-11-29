@@ -441,5 +441,49 @@ class EventController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * @OA\Get(
+     *     path="/api/event-tags",
+     *     summary="Get all event tags",
+     *     description="Retrieve all available event tags",
+     *     operationId="getEventTags",
+     *     tags={"Event"},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Event tags retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Event tags retrieved successfully"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="name", type="string", example="Cultural")
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function getTags(): JsonResponse
+    {
+        try {
+            $tags = EventTag::orderBy('name')->get();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Event tags retrieved successfully',
+                'data' => $tags,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve event tags',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }
 
