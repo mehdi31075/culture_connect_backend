@@ -267,6 +267,7 @@
                                     <tr class="bg-gray-50">
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Active</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Image</th>
@@ -605,6 +606,10 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Title (Optional)</label>
                             <input type="text" name="title" class="w-full border rounded px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>
+                            <textarea name="description" rows="3" class="w-full border rounded px-3 py-2"></textarea>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Link (Optional)</label>
@@ -1638,6 +1643,7 @@
                 <tr class="border-b">
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${banner.id}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${banner.title || '—'}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900 max-w-xs truncate" title="${banner.description || ''}">${banner.description || '—'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${banner.order ?? 0}</td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <span class="px-2 py-1 text-xs rounded-full ${banner.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
@@ -1666,7 +1672,15 @@
 
         function closeAddBannerModal() {
             document.getElementById('add-banner-modal').classList.add('hidden');
-            document.getElementById('add-banner-form').reset();
+            const form = document.getElementById('add-banner-form');
+            form.reset();
+            // Reset modal title and button
+            document.querySelector('#add-banner-modal h3').textContent = 'Add New Banner';
+            const submitBtn = document.querySelector('#add-banner-form button[type="submit"]');
+            submitBtn.textContent = 'Add Banner';
+            // Reset form onsubmit to original
+            form.onsubmit = addBanner;
+            form.removeAttribute('data-banner-id');
         }
 
         async function addBanner(event) {
@@ -1706,8 +1720,85 @@
             }
         }
 
-        function editBanner(id) {
-            alert(`Edit banner ${id} - Feature coming soon!`);
+        async function editBanner(id) {
+            try {
+                const data = await apiCall(`/admin/banners`);
+                if (!data || !data.success) {
+                    alert('Failed to load banner data');
+                    return;
+                }
+
+                const banner = data.data.items.find(b => b.id === id);
+                if (!banner) {
+                    alert('Banner not found');
+                    return;
+                }
+
+                // Populate form fields
+                document.getElementById('add-banner-form').querySelector('input[name="title"]').value = banner.title || '';
+                document.getElementById('add-banner-form').querySelector('textarea[name="description"]').value = banner.description || '';
+                document.getElementById('add-banner-form').querySelector('input[name="link"]').value = banner.link || '';
+                document.getElementById('add-banner-form').querySelector('input[name="order"]').value = banner.order ?? 0;
+                document.getElementById('banner_is_active').checked = banner.is_active ?? true;
+
+                // Update modal title and button
+                const form = document.getElementById('add-banner-form');
+                document.querySelector('#add-banner-modal h3').textContent = 'Edit Banner';
+                const submitBtn = document.querySelector('#add-banner-form button[type="submit"]');
+                submitBtn.textContent = 'Update Banner';
+
+                // Store banner ID for update
+                form.dataset.bannerId = id;
+
+                // Replace form onsubmit
+                form.onsubmit = (e) => {
+                    e.preventDefault();
+                    updateBanner(id, e);
+                };
+
+                // Show modal
+                document.getElementById('add-banner-modal').classList.remove('hidden');
+            } catch (err) {
+                console.error('Error loading banner:', err);
+                alert('Error loading banner data');
+            }
+        }
+
+        async function updateBanner(id, event) {
+            event.preventDefault();
+
+            const form = document.getElementById('add-banner-form');
+            const formData = new FormData(form);
+            const isActiveEl = document.getElementById('banner_is_active');
+            formData.set('is_active', isActiveEl && isActiveEl.checked ? '1' : '0');
+
+            try {
+                const response = await fetch(`/api/admin/banners/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    closeAddBannerModal();
+                    loadBanners();
+                    alert('Banner updated successfully!');
+                } else {
+                    let msg = data.message || 'Failed to update banner';
+                    if (data.errors) {
+                        msg += '\n';
+                        for (const k in data.errors) msg += `${k}: ${data.errors[k].join(', ')}\n`;
+                    }
+                    alert(msg);
+                }
+            } catch (err) {
+                console.error('Error updating banner:', err);
+                alert('Error updating banner');
+            }
         }
 
         async function deleteBanner(id) {

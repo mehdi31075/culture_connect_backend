@@ -36,14 +36,15 @@ class AdminBannerController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'title' => 'nullable|string|max:255',
-            'link' => 'nullable|url|max:2048',
-            'order' => 'nullable|integer|min:0',
-            // accept checkbox values (on/off) and booleans
-            'is_active' => 'nullable|in:0,1,true,false,on,off',
-            'image' => 'required|file|mimes:jpeg,png,jpg,gif,svg|max:4096',
-        ]);
+            $validator = Validator::make($request->all(), [
+                'title' => 'nullable|string|max:255',
+                'description' => 'nullable|string',
+                'link' => 'nullable|url|max:2048',
+                'order' => 'nullable|integer|min:0',
+                // accept checkbox values (on/off) and booleans
+                'is_active' => 'nullable|in:0,1,true,false,on,off',
+                'image' => 'required|file|mimes:jpeg,png,jpg,gif,svg|max:4096',
+            ]);
 
         if ($validator->fails()) {
             return response()->json([
@@ -60,13 +61,14 @@ class AdminBannerController extends Controller
             $path = $file->storeAs('banners', $filename, 'public');
         }
 
-        $banner = Banner::create([
-            'title' => $request->title,
-            'link' => $request->link,
-            'order' => $request->get('order', 0),
-            'is_active' => (bool) $request->get('is_active', true),
-            'image' => $path ? url('storage/' . $path) : null,
-        ]);
+            $banner = Banner::create([
+                'title' => $request->title,
+                'description' => $request->description,
+                'link' => $request->link,
+                'order' => $request->get('order', 0),
+                'is_active' => (bool) $request->get('is_active', true),
+                'image' => $path ? url('storage/' . $path) : null,
+            ]);
 
         return response()->json([
             'success' => true,
@@ -82,14 +84,15 @@ class AdminBannerController extends Controller
             return response()->json(['success' => false, 'message' => 'Banner not found'], 404);
         }
 
-        $validator = Validator::make($request->all(), [
-            'title' => 'nullable|string|max:255',
-            'link' => 'nullable|url|max:2048',
-            'order' => 'nullable|integer|min:0',
-            // accept checkbox values (on/off) and booleans
-            'is_active' => 'nullable|in:0,1,true,false,on,off',
-            'image' => 'nullable|file|mimes:jpeg,png,jpg,gif,svg|max:4096',
-        ]);
+            $validator = Validator::make($request->all(), [
+                'title' => 'nullable|string|max:255',
+                'description' => 'nullable|string',
+                'link' => 'nullable|url|max:2048',
+                'order' => 'nullable|integer|min:0',
+                // accept checkbox values (on/off) and booleans
+                'is_active' => 'nullable|in:0,1,true,false,on,off',
+                'image' => 'nullable|file|mimes:jpeg,png,jpg,gif,svg|max:4096',
+            ]);
 
         if ($validator->fails()) {
             return response()->json([
@@ -99,12 +102,12 @@ class AdminBannerController extends Controller
             ], 422);
         }
 
-        $data = [];
-        foreach (['title','link','order','is_active'] as $field) {
-            if ($request->has($field) && $request->$field !== null) {
-                $data[$field] = $field === 'is_active' ? (bool) $request->$field : $request->$field;
+            $data = [];
+            foreach (['title','description','link','order','is_active'] as $field) {
+                if ($request->has($field) && $request->$field !== null) {
+                    $data[$field] = $field === 'is_active' ? (bool) $request->$field : $request->$field;
+                }
             }
-        }
 
         if ($request->hasFile('image')) {
             // delete old file

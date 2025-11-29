@@ -36,6 +36,7 @@ class BannerController extends Controller
      *                     @OA\Items(
      *                         @OA\Property(property="id", type="integer", example=1),
      *                         @OA\Property(property="title", type="string", nullable=true, example="Special Offer"),
+     *                         @OA\Property(property="description", type="string", nullable=true, example="Get amazing discounts on selected items"),
      *                         @OA\Property(property="image", type="string", example="https://example.com/storage/banners/banner.jpg"),
      *                         @OA\Property(property="link", type="string", nullable=true, example="https://example.com/promotions/special-offer"),
      *                         @OA\Property(property="order", type="integer", example=1),
@@ -105,6 +106,7 @@ class BannerController extends Controller
      *                 type="object",
      *                 @OA\Property(property="id", type="integer", example=1),
      *                 @OA\Property(property="title", type="string", nullable=true, example="Special Offer"),
+     *                 @OA\Property(property="description", type="string", nullable=true, example="Get amazing discounts on selected items"),
      *                 @OA\Property(property="image", type="string", example="https://example.com/storage/banners/banner.jpg"),
      *                 @OA\Property(property="link", type="string", nullable=true, example="https://example.com/promotions/special-offer"),
      *                 @OA\Property(property="order", type="integer", example=1),
