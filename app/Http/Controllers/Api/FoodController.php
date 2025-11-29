@@ -190,7 +190,30 @@ class FoodController extends Controller
      *             @OA\Property(
      *                 property="data",
      *                 type="array",
-     *                 @OA\Items(ref="#/components/schemas/Food")
+     *                 @OA\Items(
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="shop_id", type="integer", example=1),
+     *                     @OA\Property(property="name", type="string", example="Viral TikTok Shawarma"),
+     *                     @OA\Property(property="description", type="string", example="The shawarma that broke the internet!"),
+     *                     @OA\Property(property="price", type="number", format="float", example=18.00),
+     *                     @OA\Property(
+     *                         property="images",
+     *                         type="array",
+     *                         @OA\Items(type="string", example="https://example.com/storage/foods/food1.jpg")
+     *                     ),
+     *                     @OA\Property(property="views_count", type="integer", example=89300),
+     *                     @OA\Property(property="likes_count", type="integer", example=15400),
+     *                     @OA\Property(property="comments_count", type="integer", example=1234),
+     *                     @OA\Property(property="is_trending", type="boolean", example=true),
+     *                     @OA\Property(property="trending_position", type="integer", nullable=true, example=1),
+     *                     @OA\Property(property="trending_score", type="number", format="float", nullable=true, example=98.00),
+     *                     @OA\Property(property="preparation_time", type="integer", nullable=true, example=8),
+     *                     @OA\Property(property="is_available", type="boolean", example=true),
+     *                     @OA\Property(property="average_rating", type="number", format="float", example=4.5),
+     *                     @OA\Property(property="reviews_count", type="integer", example=2847),
+     *                     @OA\Property(property="shop", type="object"),
+     *                     @OA\Property(property="tags", type="array", @OA\Items(type="object"))
+     *                 )
      *             )
      *         )
      *     ),
@@ -259,7 +282,32 @@ class FoodController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Food retrieved successfully"),
-     *             @OA\Property(property="data", ref="#/components/schemas/Food")
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="shop_id", type="integer", example=1),
+     *                 @OA\Property(property="name", type="string", example="Viral TikTok Shawarma"),
+     *                 @OA\Property(property="description", type="string", example="The shawarma that broke the internet!"),
+     *                 @OA\Property(property="price", type="number", format="float", example=18.00),
+     *                 @OA\Property(
+     *                     property="images",
+     *                     type="array",
+     *                     @OA\Items(type="string", example="https://example.com/storage/foods/food1.jpg")
+     *                 ),
+     *                 @OA\Property(property="views_count", type="integer", example=89300),
+     *                 @OA\Property(property="likes_count", type="integer", example=15400),
+     *                 @OA\Property(property="comments_count", type="integer", example=1234),
+     *                 @OA\Property(property="is_trending", type="boolean", example=true),
+     *                 @OA\Property(property="trending_position", type="integer", nullable=true, example=1),
+     *                 @OA\Property(property="trending_score", type="number", format="float", nullable=true, example=98.00),
+     *                 @OA\Property(property="preparation_time", type="integer", nullable=true, example=8),
+     *                 @OA\Property(property="is_available", type="boolean", example=true),
+     *                 @OA\Property(property="average_rating", type="number", format="float", example=4.5),
+     *                 @OA\Property(property="reviews_count", type="integer", example=2847),
+     *                 @OA\Property(property="shop", type="object"),
+     *                 @OA\Property(property="tags", type="array", @OA\Items(type="object"))
+     *             )
      *         )
      *     ),
      *     @OA\Response(
