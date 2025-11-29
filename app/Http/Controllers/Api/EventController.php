@@ -164,7 +164,7 @@ class EventController extends Controller
                 // Add user status flags (default to false if no user or no attendance)
                 $attendance = $userAttendance->get($event->id);
 
-                if ($attendance) {
+                if ($attendance && $attendance->status !== null) {
                     // Use strict comparison and ensure status matches exactly
                     $status = (string)$attendance->status;
                     $event->is_going = $status === (string)EventAttendance::STATUS_GOING;
@@ -173,10 +173,11 @@ class EventController extends Controller
                         || $status === (string)EventAttendance::STATUS_INTERESTED;
                     $event->has_reminder = $attendance->reminder_at !== null && $attendance->reminder_at !== '';
                 } else {
-                    // No attendance record found for this user and event
+                    // No attendance record found, or status is null (cancelled)
                     $event->is_going = false;
                     $event->is_interested = false;
-                    $event->has_reminder = false;
+                    // Check if there's a reminder even if status is null
+                    $event->has_reminder = $attendance && $attendance->reminder_at !== null && $attendance->reminder_at !== '';
                 }
             });
 
@@ -197,8 +198,8 @@ class EventController extends Controller
     /**
      * @OA\Post(
      *     path="/api/events/{event}/mark-going",
-     *     summary="Mark event as going",
-     *     description="Mark the authenticated user as going to a specific event",
+     *     summary="Mark event as going or cancel",
+     *     description="Mark the authenticated user as going to a specific event, or cancel if cancel=true",
      *     operationId="markGoing",
      *     tags={"Event"},
      *     security={{"bearerAuth":{}}},
@@ -209,9 +210,15 @@ class EventController extends Controller
      *         description="Event ID",
      *         @OA\Schema(type="integer")
      *     ),
+     *     @OA\RequestBody(
+     *         required=false,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="cancel", type="boolean", description="Set to true to cancel/remove going status", example=false)
+     *         )
+     *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Marked as going successfully",
+     *         description="Marked as going successfully or cancelled",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Marked as going successfully")
@@ -248,6 +255,32 @@ class EventController extends Controller
                 ], 404);
             }
 
+            $cancel = filter_var($request->input('cancel', false), FILTER_VALIDATE_BOOLEAN);
+
+            if ($cancel) {
+                // Cancel: Remove going status
+                $attendance = EventAttendance::where('user_id', $user->id)
+                    ->where('event_id', $event->id)
+                    ->where('status', EventAttendance::STATUS_GOING)
+                    ->first();
+
+                if ($attendance) {
+                    // If there's a reminder, keep the record but change status to interested
+                    if ($attendance->reminder_at) {
+                        $attendance->status = EventAttendance::STATUS_INTERESTED;
+                        $attendance->save();
+                    } else {
+                        // No reminder, delete the record
+                        $attendance->delete();
+                    }
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Going status cancelled successfully',
+                ]);
+            }
+
             // Create or update event attendance pivot record as going
             // This updates the pivot table (event_attendances) with status 'going'
             EventAttendance::updateOrCreate(
@@ -277,8 +310,8 @@ class EventController extends Controller
     /**
      * @OA\Post(
      *     path="/api/events/{event}/mark-interested",
-     *     summary="Mark event as interested",
-     *     description="Mark the authenticated user as interested in a specific event",
+     *     summary="Mark event as interested or cancel",
+     *     description="Mark the authenticated user as interested in a specific event, or cancel if cancel=true",
      *     operationId="markInterested",
      *     tags={"Event"},
      *     security={{"bearerAuth":{}}},
@@ -289,9 +322,15 @@ class EventController extends Controller
      *         description="Event ID",
      *         @OA\Schema(type="integer")
      *     ),
+     *     @OA\RequestBody(
+     *         required=false,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="cancel", type="boolean", description="Set to true to cancel/remove interested status", example=false)
+     *         )
+     *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Marked as interested successfully",
+     *         description="Marked as interested successfully or cancelled",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Marked as interested successfully")
@@ -328,6 +367,32 @@ class EventController extends Controller
                 ], 404);
             }
 
+            $cancel = filter_var($request->input('cancel', false), FILTER_VALIDATE_BOOLEAN);
+
+            if ($cancel) {
+                // Cancel: Remove interested status
+                $attendance = EventAttendance::where('user_id', $user->id)
+                    ->where('event_id', $event->id)
+                    ->where('status', EventAttendance::STATUS_INTERESTED)
+                    ->first();
+
+                if ($attendance) {
+                    // If there's a reminder, keep the record but set status to null
+                    if ($attendance->reminder_at) {
+                        $attendance->status = null;
+                        $attendance->save();
+                    } else {
+                        // No reminder, delete the record
+                        $attendance->delete();
+                    }
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Interested status cancelled successfully',
+                ]);
+            }
+
             // Create or update event attendance pivot record as interested
             // This updates the pivot table (event_attendances) with status 'interested'
             // Only set to interested if not already going (going is higher priority)
@@ -359,8 +424,8 @@ class EventController extends Controller
     /**
      * @OA\Post(
      *     path="/api/events/{event}/remind-me",
-     *     summary="Set reminder for an event",
-     *     description="Create or update a reminder for the authenticated user for a specific event",
+     *     summary="Set reminder for an event or cancel",
+     *     description="Create or update a reminder for the authenticated user for a specific event, or cancel if cancel=true",
      *     operationId="remindMe",
      *     tags={"Event"},
      *     security={{"bearerAuth":{}}},
@@ -374,12 +439,13 @@ class EventController extends Controller
      *     @OA\RequestBody(
      *         required=false,
      *         @OA\JsonContent(
-     *             @OA\Property(property="reminder_at", type="string", format="date-time", nullable=true, description="Custom reminder time. If not provided, defaults to 1 hour before event start time.")
+     *             @OA\Property(property="reminder_at", type="string", format="date-time", nullable=true, description="Custom reminder time. If not provided, defaults to 1 hour before event start time."),
+     *             @OA\Property(property="cancel", type="boolean", description="Set to true to cancel/remove reminder", example=false)
      *         )
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Reminder set successfully",
+     *         description="Reminder set successfully or cancelled",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Reminder set successfully")
@@ -414,6 +480,32 @@ class EventController extends Controller
                     'success' => false,
                     'message' => 'Event not found',
                 ], 404);
+            }
+
+            $cancel = filter_var($request->input('cancel', false), FILTER_VALIDATE_BOOLEAN);
+
+            if ($cancel) {
+                // Cancel: Remove reminder
+                $attendance = EventAttendance::where('user_id', $user->id)
+                    ->where('event_id', $event->id)
+                    ->first();
+
+                if ($attendance && $attendance->reminder_at) {
+                    // Clear reminder_at
+                    $attendance->reminder_at = null;
+
+                    // If no status is set, delete the record
+                    if (!$attendance->status) {
+                        $attendance->delete();
+                    } else {
+                        $attendance->save();
+                    }
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Reminder cancelled successfully',
+                ]);
             }
 
             // Calculate reminder time (default: 1 hour before event start)
