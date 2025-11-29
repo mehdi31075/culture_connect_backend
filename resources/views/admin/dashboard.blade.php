@@ -72,7 +72,7 @@
                     <li>
                         <a href="#product-tags" onclick="showSection('product-tags', this)" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
                             <i class="fas fa-tags mr-3"></i>
-                            Product Tags
+                            Product & Food Tags
                         </a>
                     </li>
                     <li>
@@ -359,13 +359,13 @@
                 </div>
             </div>
 
-            <!-- Product Tags Section -->
+            <!-- Product Tags Section (also used for Food Tags) -->
             <div id="product-tags-section" class="section hidden">
-                <h2 class="text-2xl font-bold mb-6">Product Tag Management</h2>
+                <h2 class="text-2xl font-bold mb-6">Product & Food Tag Management</h2>
                 <div class="bg-white rounded-lg shadow">
                     <div class="p-6">
                         <div class="flex justify-between items-center mb-4">
-                            <span class="text-gray-600">Manage tags used to categorize products</span>
+                            <span class="text-gray-600">Manage tags used to categorize products and foods (shared tags)</span>
                             <button onclick="showAddProductTagModal()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
                                 <i class="fas fa-plus"></i> Add Tag
                             </button>
@@ -377,6 +377,7 @@
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Products</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Foods</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                                     </tr>
                                 </thead>
@@ -2873,7 +2874,7 @@
             if (!tags.length) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="4" class="px-6 py-4 text-sm text-gray-500 text-center">No tags found. Create the first tag to get started.</td>
+                        <td colspan="5" class="px-6 py-4 text-sm text-gray-500 text-center">No tags found. Create the first tag to get started.</td>
                     </tr>
                 `;
                 return;
@@ -2884,6 +2885,7 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${tag.id}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${tag.name}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${tag.products_count || 0}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${tag.foods_count || 0}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm">
                         <button onclick="showEditProductTagModal(${tag.id})" class="text-blue-600 hover:text-blue-900 mr-2">
                             <i class="fas fa-edit"></i>

@@ -15,7 +15,10 @@ class AdminProductTagController extends Controller
      */
     public function index(): JsonResponse
     {
-        $tags = ProductTag::withCount(['products as products_count'])->orderBy('name')->get();
+        $tags = ProductTag::withCount([
+            'products as products_count',
+            'foods as foods_count'
+        ])->orderBy('name')->get();
 
         return response()->json([
             'success' => true,
@@ -46,7 +49,10 @@ class AdminProductTagController extends Controller
             'name' => $request->name,
         ]);
 
-        $tag->loadCount(['products as products_count']);
+        $tag->loadCount([
+            'products as products_count',
+            'foods as foods_count'
+        ]);
 
         return response()->json([
             'success' => true,
@@ -85,7 +91,10 @@ class AdminProductTagController extends Controller
             'name' => $request->name,
         ]);
 
-        $tag->loadCount(['products as products_count']);
+        $tag->loadCount([
+            'products as products_count',
+            'foods as foods_count'
+        ]);
 
         return response()->json([
             'success' => true,
@@ -108,8 +117,9 @@ class AdminProductTagController extends Controller
             ], 404);
         }
 
-        // Detach tag from products before deleting
+        // Detach tag from products and foods before deleting
         $tag->products()->detach();
+        $tag->foods()->detach();
         $tag->delete();
 
         return response()->json([
