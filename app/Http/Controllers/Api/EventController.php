@@ -98,9 +98,18 @@ class EventController extends Controller
             $dateFilter = $request->get('date_filter', 'all_time');
             $tagFilter = $request->get('tag');
 
-            // Build base query for upcoming events
-            // Use distinct() to avoid duplicate results from joins in eager loading
-            $query = Event::where('start_time', '>=', Carbon::now());
+            // Build base query for upcoming and ongoing events
+            // Include events that:
+            // 1. Start in the future (start_time >= now), OR
+            // 2. Are currently ongoing (start_time <= now AND end_time >= now)
+            $now = Carbon::now();
+            $query = Event::where(function ($q) use ($now) {
+                $q->where('start_time', '>=', $now)
+                  ->orWhere(function ($subQ) use ($now) {
+                      $subQ->where('start_time', '<=', $now)
+                           ->where('end_time', '>=', $now);
+                  });
+            });
 
             // Eager load relationships (this doesn't filter, just loads related data)
             $query->with(['pavilion', 'tags', 'features']);
