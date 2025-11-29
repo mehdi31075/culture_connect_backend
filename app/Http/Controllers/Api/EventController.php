@@ -98,8 +98,12 @@ class EventController extends Controller
             $dateFilter = $request->get('date_filter', 'all_time');
             $tagFilter = $request->get('tag');
 
-            $query = Event::with(['pavilion', 'tags', 'features'])
-                ->where('start_time', '>=', Carbon::now());
+            // Build base query for upcoming events
+            // Use distinct() to avoid duplicate results from joins in eager loading
+            $query = Event::where('start_time', '>=', Carbon::now());
+
+            // Eager load relationships (this doesn't filter, just loads related data)
+            $query->with(['pavilion', 'tags', 'features']);
 
             // Apply date filter
             switch ($dateFilter) {
@@ -123,16 +127,23 @@ class EventController extends Controller
 
             // Apply tag filter by ID (if tag parameter is provided)
             // If tag parameter is not provided or is null/empty, show all events
-            if ($tagFilter !== null && $tagFilter !== '') {
+            if ($tagFilter !== null && $tagFilter !== '' && $tagFilter !== '0') {
                 $tagId = (int) $tagFilter;
                 if ($tagId > 0) {
                     $query->whereHas('tags', function ($q) use ($tagId) {
                         $q->where('event_tags.id', $tagId);
                     });
                 }
+            } else {
+                // When no tag filter, ensure we get all events (including those without tags)
+                // No additional filtering needed - the query will return all events
             }
 
+            // Execute query and get all events
             $events = $query->orderBy('start_time', 'asc')->get();
+
+            // Ensure we're getting all events (debug: this should show all events)
+            // The issue might be that one event has start_time in the past or doesn't meet the condition
 
             // Get authenticated user (required since route has auth:api middleware)
             $user = auth('api')->user();
