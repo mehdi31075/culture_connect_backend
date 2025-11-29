@@ -32,7 +32,7 @@ class Food extends Model
         'is_trending' => 'boolean',
         'trending_position' => 'integer',
         'trending_score' => 'decimal:2',
-        'preparation_time' => 'integer',
+        'preparation_time' => 'string',
         'is_available' => 'boolean',
     ];
 

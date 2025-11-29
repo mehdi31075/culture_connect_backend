@@ -1036,8 +1036,8 @@
                         </div>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Preparation Time (minutes)</label>
-                        <input type="number" id="food-preparation-time" name="preparation_time" min="0" class="w-full px-3 py-2 border rounded-lg">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Preparation Time</label>
+                        <input type="text" id="food-preparation-time" name="preparation_time" placeholder="e.g., 15 minutes, 30-45 min" class="w-full px-3 py-2 border rounded-lg">
                     </div>
                     <div>
                         <label class="flex items-center">
@@ -1046,13 +1046,16 @@
                         </label>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Tags</label>
-                        <div id="food-tags-field" class="border rounded-lg p-2 min-h-[50px]">
-                            <div id="food-selected-tags" class="flex flex-wrap gap-2 mb-2"></div>
-                            <input type="text" id="food-tag-input" placeholder="Type to search or add tags..." class="w-full px-2 py-1 border-0 focus:outline-none">
-                            <div id="food-tag-suggestions" class="hidden absolute bg-white border rounded-lg shadow-lg mt-1 max-h-40 overflow-y-auto z-10"></div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+                        <div class="relative">
+                            <div id="food-tags-field" class="flex flex-wrap items-center gap-2 border rounded px-3 py-2 bg-white cursor-text" onclick="focusFoodTagInput()">
+                                <div id="food-selected-tags" class="flex flex-wrap gap-2"></div>
+                                <input id="food-tag-input" type="text" class="flex-1 min-w-[120px] border-0 focus:outline-none focus:ring-0 text-sm py-1" placeholder="Type to add tags..." autocomplete="off" oninput="updateFoodTagSuggestions(this.value)" onkeydown="handleFoodTagInput(event)">
+                            </div>
+                            <div id="food-tag-suggestions" class="absolute left-0 right-0 mt-1 bg-white border rounded shadow hidden z-10 max-h-48 overflow-y-auto"></div>
                         </div>
                         <div id="food-tags-hidden-inputs"></div>
+                        <p class="text-xs text-gray-500 mt-1">Type to search for an existing tag. If it doesn't exist, press Enter to create it.</p>
                     </div>
                     <div class="flex justify-end space-x-3 pt-4">
                         <button type="button" onclick="closeAddFoodModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">Cancel</button>
@@ -1309,6 +1312,9 @@
         let currentEditingProductTagId = null;
         let selectedProductTagIds = [];
         let selectedProductNewTags = [];
+        // Food tag management (separate from product tags)
+        let selectedFoodTagIds = [];
+        let selectedFoodNewTags = [];
         let currentEditingEventId = null;
         let eventTagsCache = [];
         let currentEditingEventTagId = null;
@@ -1389,45 +1395,7 @@
                 });
             }
 
-            // Food tag input handlers (reusing product tag system)
-            const foodTagInput = document.getElementById('food-tag-input');
-            if (foodTagInput) {
-                foodTagInput.addEventListener('input', function(e) {
-                    updateProductTagSuggestions(e.target.value);
-                });
-                foodTagInput.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter' || e.key === ',') {
-                        e.preventDefault();
-                        const value = e.target.value.trim();
-                        if (value) {
-                            addNewProductTag(value);
-                        }
-                    }
-                });
-            }
-
-            const foodTagSuggestions = document.getElementById('food-tag-suggestions');
-            if (foodTagSuggestions) {
-                foodTagSuggestions.addEventListener('mousedown', function(event) {
-                    const button = event.target.closest('[data-tag-id]');
-                    if (!button) return;
-                    event.preventDefault();
-                    addExistingProductTag(button.getAttribute('data-tag-id'));
-                });
-            }
-
-            const foodSelectedWrapper = document.getElementById('food-selected-tags');
-            if (foodSelectedWrapper) {
-                foodSelectedWrapper.addEventListener('click', function(event) {
-                    const removeExisting = event.target.closest('button[data-remove-existing]');
-                    const removeNew = event.target.closest('button[data-remove-new]');
-                    if (removeExisting) {
-                        removeExistingProductTag(Number(removeExisting.getAttribute('data-remove-existing')));
-                    } else if (removeNew) {
-                        removeNewProductTag(removeNew.getAttribute('data-remove-new'));
-                    }
-                });
-            }
+            // Food tag input handlers are now handled by inline oninput and onkeydown handlers
         });
 
         // API helper function
@@ -2530,7 +2498,7 @@
             } catch (error) {
                 console.error('Error loading shops:', error);
             }
-            await loadProductTagOptions([], []);
+            await loadFoodTagOptions([], []);
             document.getElementById('food-modal-title').textContent = 'Add New Food';
             document.getElementById('food-id').value = '';
             document.getElementById('add-food-form').reset();
@@ -2541,9 +2509,18 @@
             document.getElementById('add-food-modal').classList.add('hidden');
             document.getElementById('add-food-form').reset();
             document.getElementById('food-images-preview').innerHTML = '';
-            selectedProductTagIds = [];
-            selectedProductNewTags = [];
-            renderSelectedProductTags();
+            selectedFoodTagIds = [];
+            selectedFoodNewTags = [];
+            renderSelectedFoodTags();
+            const tagInput = document.getElementById('food-tag-input');
+            if (tagInput) {
+                tagInput.value = '';
+            }
+            updateFoodTagSuggestions('');
+            const suggestions = document.getElementById('food-tag-suggestions');
+            if (suggestions) {
+                suggestions.classList.add('hidden');
+            }
         }
 
         document.getElementById('add-food-form').addEventListener('submit', async function(e) {
@@ -2568,8 +2545,8 @@
                 formData.append('images[]', images[i]);
             }
 
-            selectedProductTagIds.forEach(id => formData.append('tags[]', id));
-            selectedProductNewTags.forEach(name => formData.append('new_tags[]', name));
+            selectedFoodTagIds.forEach(id => formData.append('tags[]', id));
+            selectedFoodNewTags.forEach(name => formData.append('new_tags[]', name));
 
             try {
                 const url = foodId ? `/admin/foods/${foodId}` : '/admin/foods';
@@ -2612,7 +2589,7 @@
                     document.getElementById('food-is-available').checked = food.is_available !== false;
 
                     const existingTagIds = food.tags ? food.tags.map(t => t.id) : [];
-                    await loadProductTagOptions(existingTagIds, []);
+                    await loadFoodTagOptions(existingTagIds, []);
                 }
             } catch (error) {
                 console.error('Error loading food:', error);
@@ -3675,6 +3652,233 @@
                 } else if (selectedEventTagIds.length) {
                     selectedEventTagIds.pop();
                     renderSelectedEventTags();
+                }
+            }
+        }
+
+        // Food Tag Chip Management Functions (similar to Event tags)
+        async function loadFoodTagOptions(selectedIds = [], newTagNames = []) {
+            await ensureProductTagsCache();
+            selectedFoodTagIds = (selectedIds || []).map(id => Number(id));
+            selectedFoodNewTags = (newTagNames || []).filter(name => !!name);
+            renderSelectedFoodTags();
+
+            const tagInput = document.getElementById('food-tag-input');
+            updateFoodTagSuggestions(tagInput ? tagInput.value : '');
+        }
+
+        function focusFoodTagInput() {
+            const input = document.getElementById('food-tag-input');
+            if (input) {
+                input.focus();
+            }
+        }
+
+        function renderSelectedFoodTags() {
+            const wrapper = document.getElementById('food-selected-tags');
+            if (!wrapper) return;
+
+            wrapper.innerHTML = '';
+
+            selectedFoodTagIds.forEach(id => {
+                const tag = productTagsCache.find(item => Number(item.id) === Number(id));
+                if (!tag) return;
+                const chip = document.createElement('span');
+                chip.className = 'inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-medium';
+                chip.innerHTML = `
+                    <span>${tag.name}</span>
+                    <button type="button" class="text-blue-600 hover:text-blue-900 focus:outline-none" data-remove-existing="${id}" aria-label="Remove tag">&times;</button>
+                `;
+                wrapper.appendChild(chip);
+            });
+
+            selectedFoodNewTags.forEach(name => {
+                const chip = document.createElement('span');
+                chip.className = 'inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gray-200 text-gray-700 text-xs font-medium';
+                chip.innerHTML = `
+                    <span>${name}</span>
+                    <button type="button" class="text-gray-600 hover:text-gray-900 focus:outline-none" data-remove-new="${name}" aria-label="Remove new tag">&times;</button>
+                `;
+                wrapper.appendChild(chip);
+            });
+
+            updateFoodTagHiddenInputs();
+
+            // Add click handlers for remove buttons
+            wrapper.querySelectorAll('[data-remove-existing]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    removeExistingFoodTag(btn.getAttribute('data-remove-existing'));
+                });
+            });
+
+            wrapper.querySelectorAll('[data-remove-new]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    removeNewFoodTag(btn.getAttribute('data-remove-new'));
+                });
+            });
+        }
+
+        function updateFoodTagHiddenInputs() {
+            const hiddenContainer = document.getElementById('food-tags-hidden-inputs');
+            if (!hiddenContainer) return;
+
+            hiddenContainer.innerHTML = '';
+
+            selectedFoodTagIds.forEach(id => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'tags[]';
+                input.value = id;
+                hiddenContainer.appendChild(input);
+            });
+
+            selectedFoodNewTags.forEach(name => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'new_tags[]';
+                input.value = name;
+                hiddenContainer.appendChild(input);
+            });
+        }
+
+        function addExistingFoodTag(id) {
+            const numericId = Number(id);
+            if (selectedFoodTagIds.includes(numericId)) {
+                return;
+            }
+
+            const tag = productTagsCache.find(item => Number(item.id) === numericId);
+            if (!tag) return;
+
+            selectedFoodTagIds.push(numericId);
+            selectedFoodNewTags = selectedFoodNewTags.filter(name => name.toLowerCase() !== tag.name.toLowerCase());
+            renderSelectedFoodTags();
+            updateFoodTagSuggestions('');
+            clearFoodTagInput();
+            const suggestions = document.getElementById('food-tag-suggestions');
+            if (suggestions) {
+                suggestions.classList.add('hidden');
+            }
+        }
+
+        function addNewFoodTag(name) {
+            const trimmed = name.trim();
+            if (!trimmed) return;
+
+            const existing = productTagsCache.find(tag => tag.name.toLowerCase() === trimmed.toLowerCase());
+            if (existing) {
+                addExistingFoodTag(existing.id);
+                return;
+            }
+
+            if (selectedFoodNewTags.some(tagName => tagName.toLowerCase() === trimmed.toLowerCase())) {
+                clearFoodTagInput();
+                return;
+            }
+
+            selectedFoodNewTags.push(trimmed);
+            renderSelectedFoodTags();
+            updateFoodTagSuggestions('');
+            clearFoodTagInput();
+            const suggestions = document.getElementById('food-tag-suggestions');
+            if (suggestions) {
+                suggestions.classList.add('hidden');
+            }
+        }
+
+        function removeExistingFoodTag(id) {
+            const numericId = Number(id);
+            selectedFoodTagIds = selectedFoodTagIds.filter(tagId => tagId !== numericId);
+            renderSelectedFoodTags();
+            updateFoodTagSuggestions(document.getElementById('food-tag-input')?.value || '');
+        }
+
+        function removeNewFoodTag(name) {
+            selectedFoodNewTags = selectedFoodNewTags.filter(tagName => tagName !== name);
+            renderSelectedFoodTags();
+            updateFoodTagSuggestions(document.getElementById('food-tag-input')?.value || '');
+        }
+
+        function clearFoodTagInput() {
+            const input = document.getElementById('food-tag-input');
+            if (input) {
+                input.value = '';
+            }
+        }
+
+        function handleFoodTagInputCommit() {
+            const input = document.getElementById('food-tag-input');
+            if (!input) return;
+
+            const value = input.value.trim();
+            if (!value) {
+                input.value = '';
+                return;
+            }
+
+            addNewFoodTag(value);
+        }
+
+        function updateFoodTagSuggestions(searchTerm = '') {
+            const suggestions = document.getElementById('food-tag-suggestions');
+            if (!suggestions) return;
+
+            const normalized = searchTerm.trim().toLowerCase();
+            if (!normalized.length) {
+                suggestions.innerHTML = '';
+                suggestions.classList.add('hidden');
+                return;
+            }
+
+            const availableTags = productTagsCache.filter(tag => !selectedFoodTagIds.includes(Number(tag.id)));
+
+            let matches = [];
+            if (normalized.length) {
+                matches = availableTags.filter(tag =>
+                    tag.name.toLowerCase().includes(normalized)
+                ).slice(0, 10);
+            }
+
+            if (matches.length === 0) {
+                const createBtn = document.createElement('button');
+                createBtn.type = 'button';
+                createBtn.className = 'w-full text-left px-3 py-2 text-sm hover:bg-blue-50 text-gray-600';
+                createBtn.textContent = `Create "${normalized}"`;
+                createBtn.addEventListener('click', () => {
+                    addNewFoodTag(normalized);
+                });
+                suggestions.innerHTML = '';
+                suggestions.appendChild(createBtn);
+            } else {
+                suggestions.innerHTML = matches.map(tag => `
+                    <button type="button" class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50" data-tag-id="${tag.id}">
+                        ${tag.name}
+                    </button>
+                `).join('');
+            }
+            suggestions.classList.remove('hidden');
+
+            // Add click handlers
+            suggestions.querySelectorAll('[data-tag-id]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    addExistingFoodTag(btn.getAttribute('data-tag-id'));
+                });
+            });
+        }
+
+        function handleFoodTagInput(event) {
+            if (event.key === 'Enter' || event.key === ',') {
+                event.preventDefault();
+                handleFoodTagInputCommit();
+            } else if (event.key === 'Backspace' && !event.target.value) {
+                if (selectedFoodNewTags.length) {
+                    selectedFoodNewTags.pop();
+                    renderSelectedFoodTags();
+                } else if (selectedFoodTagIds.length) {
+                    selectedFoodTagIds.pop();
+                    renderSelectedFoodTags();
                 }
             }
         }
