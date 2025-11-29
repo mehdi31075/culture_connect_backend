@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('food_tag_maps', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('food_id')->constrained()->onDelete('cascade');
+            $table->foreignId('food_id')->constrained('foods')->onDelete('cascade');
             $table->foreignId('tag_id')->constrained('food_tags')->onDelete('cascade');
             $table->timestamps();
             $table->unique(['food_id', 'tag_id']);
