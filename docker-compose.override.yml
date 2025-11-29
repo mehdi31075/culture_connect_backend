@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   app:
@@ -11,5 +11,5 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - JWT_SECRET=BunDaeRQncO6zgTfxrWDV8EsiqRbj0AUgwHRL5GbUTR1P0bJfeNTnngGY9liasgW
-      - JWT_TTL=60
+      - JWT_TTL=10080
       - JWT_REFRESH_TTL=20160

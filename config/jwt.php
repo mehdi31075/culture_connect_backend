@@ -101,7 +101,7 @@ return [
     |
     */
 
-    'ttl' => (int) env('JWT_TTL', 60),
+    'ttl' => (int) env('JWT_TTL', 10080), // 1 week in minutes (7 days * 24 hours * 60 minutes)
 
     /*
     |--------------------------------------------------------------------------
