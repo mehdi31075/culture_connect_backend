@@ -77,9 +77,6 @@ class AdminFoodController extends Controller
                 'price' => 'required|numeric|min:0',
                 'images' => 'nullable|array',
                 'images.*' => 'file|mimes:jpeg,png,jpg,gif,svg|max:4096',
-                'views_count' => 'nullable|integer|min:0',
-                'likes_count' => 'nullable|integer|min:0',
-                'comments_count' => 'nullable|integer|min:0',
                 'is_trending' => 'nullable|boolean',
                 'trending_position' => 'nullable|integer|min:1',
                 'trending_score' => 'nullable|numeric|min:0|max:100',
@@ -115,9 +112,6 @@ class AdminFoodController extends Controller
                 'description' => $request->description,
                 'price' => $request->price,
                 'images' => !empty($imageUrls) ? $imageUrls : null,
-                'views_count' => $request->get('views_count', 0),
-                'likes_count' => $request->get('likes_count', 0),
-                'comments_count' => $request->get('comments_count', 0),
                 'is_trending' => $request->get('is_trending', false),
                 'trending_position' => $request->trending_position,
                 'trending_score' => $request->trending_score,
@@ -164,9 +158,6 @@ class AdminFoodController extends Controller
                 'price' => 'sometimes|numeric|min:0',
                 'images' => 'nullable|array',
                 'images.*' => 'file|mimes:jpeg,png,jpg,gif,svg|max:4096',
-                'views_count' => 'nullable|integer|min:0',
-                'likes_count' => 'nullable|integer|min:0',
-                'comments_count' => 'nullable|integer|min:0',
                 'is_trending' => 'nullable|boolean',
                 'trending_position' => 'nullable|integer|min:1',
                 'trending_score' => 'nullable|numeric|min:0|max:100',
@@ -188,7 +179,6 @@ class AdminFoodController extends Controller
 
             $data = $request->only([
                 'shop_id', 'name', 'description', 'price',
-                'views_count', 'likes_count', 'comments_count',
                 'is_trending', 'trending_position', 'trending_score',
                 'preparation_time', 'is_available'
             ]);

@@ -122,6 +122,9 @@ Route::get('shops/{shop}/foods', [FoodController::class, 'shopFoods']);
 // Food routes
 Route::get('foods', [FoodController::class, 'index']);
 Route::get('foods/{id}', [FoodController::class, 'show']);
+Route::middleware('auth:api')->group(function () {
+    Route::post('foods/{id}/like', [FoodController::class, 'toggleLike']);
+});
 
 // Banner routes
 Route::get('banners', [BannerController::class, 'index']);

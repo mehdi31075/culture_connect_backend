@@ -7,6 +7,7 @@ use App\Models\Review;
 use App\Models\User;
 use App\Models\Shop;
 use App\Models\Product;
+use App\Models\Food;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
@@ -22,8 +23,9 @@ class AdminReviewController extends Controller
             // Validate the request
             $validator = Validator::make($request->all(), [
                 'user_id' => 'required|exists:users,id',
-                'shop_id' => 'required_without:product_id|exists:shops,id',
+                'shop_id' => 'required_without_all:product_id,food_id|nullable|exists:shops,id',
                 'product_id' => 'nullable|exists:products,id',
+                'food_id' => 'nullable|exists:foods,id',
                 'rating' => 'required|integer|min:1|max:5',
                 'comment' => 'nullable|string|max:1000',
             ]);
@@ -41,12 +43,13 @@ class AdminReviewController extends Controller
                 'user_id' => $request->user_id,
                 'shop_id' => $request->shop_id,
                 'product_id' => $request->product_id,
+                'food_id' => $request->food_id,
                 'rating' => $request->rating,
                 'comment' => $request->comment,
             ]);
 
             // Load relationships
-            $review->load(['user', 'shop', 'product']);
+            $review->load(['user', 'shop', 'product', 'food']);
 
             return response()->json([
                 'success' => true,
@@ -83,6 +86,7 @@ class AdminReviewController extends Controller
                 'user_id' => 'sometimes|required|exists:users,id',
                 'shop_id' => 'nullable|exists:shops,id',
                 'product_id' => 'nullable|exists:products,id',
+                'food_id' => 'nullable|exists:foods,id',
                 'rating' => 'sometimes|required|integer|min:1|max:5',
                 'comment' => 'nullable|string|max:1000',
             ]);
@@ -96,10 +100,10 @@ class AdminReviewController extends Controller
             }
 
             // Update review
-            $review->update($request->only(['user_id', 'shop_id', 'product_id', 'rating', 'comment']));
+            $review->update($request->only(['user_id', 'shop_id', 'product_id', 'food_id', 'rating', 'comment']));
 
             // Load relationships
-            $review->load(['user', 'shop', 'product']);
+            $review->load(['user', 'shop', 'product', 'food']);
 
             return response()->json([
                 'success' => true,

@@ -591,6 +591,7 @@
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Shop</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Food</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rating</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Comment</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
@@ -1008,20 +1009,6 @@
                     </div>
                     <div class="grid grid-cols-3 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Views Count</label>
-                            <input type="number" id="food-views-count" name="views_count" min="0" class="w-full px-3 py-2 border rounded-lg" value="0">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Likes Count</label>
-                            <input type="number" id="food-likes-count" name="likes_count" min="0" class="w-full px-3 py-2 border rounded-lg" value="0">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Comments Count</label>
-                            <input type="number" id="food-comments-count" name="comments_count" min="0" class="w-full px-3 py-2 border rounded-lg" value="0">
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-3 gap-4">
-                        <div>
                             <label class="flex items-center">
                                 <input type="checkbox" id="food-is-trending" name="is_trending" class="mr-2">
                                 <span class="text-sm font-medium text-gray-700">Is Trending</span>
@@ -1251,7 +1238,7 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Shop (Required if no product)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Shop (Required if no product or food)</label>
                             <select name="shop_id" id="review-shop-select" class="w-full border rounded px-3 py-2">
                                 <option value="">Select a shop...</option>
                             </select>
@@ -1260,6 +1247,12 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">Product (Optional)</label>
                             <select name="product_id" id="review-product-select" class="w-full border rounded px-3 py-2">
                                 <option value="">Select a product...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Food (Optional)</label>
+                            <select name="food_id" id="review-food-select" class="w-full border rounded px-3 py-2">
+                                <option value="">Select a food...</option>
                             </select>
                         </div>
                         <div>
@@ -2506,14 +2499,13 @@
             formData.append('name', document.getElementById('food-name').value);
             formData.append('description', document.getElementById('food-description').value);
             formData.append('price', document.getElementById('food-price').value);
-            formData.append('views_count', document.getElementById('food-views-count').value || 0);
-            formData.append('likes_count', document.getElementById('food-likes-count').value || 0);
-            formData.append('comments_count', document.getElementById('food-comments-count').value || 0);
+            // Note: views_count, likes_count, and comments_count are automatically calculated
             formData.append('is_trending', document.getElementById('food-is-trending').checked ? 1 : 0);
             formData.append('trending_position', document.getElementById('food-trending-position').value || '');
             formData.append('trending_score', document.getElementById('food-trending-score').value || '');
             formData.append('preparation_time', document.getElementById('food-preparation-time').value || '');
             formData.append('is_available', document.getElementById('food-is-available').checked ? 1 : 0);
+            // Note: views_count, likes_count, and comments_count are automatically calculated
 
             const images = document.getElementById('food-images').files;
             for (let i = 0; i < images.length; i++) {
@@ -2556,9 +2548,7 @@
                     document.getElementById('food-name').value = food.name || '';
                     document.getElementById('food-description').value = food.description || '';
                     document.getElementById('food-price').value = food.price || '';
-                    document.getElementById('food-views-count').value = food.views_count || 0;
-                    document.getElementById('food-likes-count').value = food.likes_count || 0;
-                    document.getElementById('food-comments-count').value = food.comments_count || 0;
+                    // Note: views_count, likes_count, and comments_count are automatically calculated
                     document.getElementById('food-is-trending').checked = food.is_trending || false;
                     document.getElementById('food-trending-position').value = food.trending_position || '';
                     document.getElementById('food-trending-score').value = food.trending_score || '';
@@ -4209,6 +4199,7 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${review.user ? (((review.user.first_name || '') + ' ' + (review.user.last_name || '')).trim() || 'N/A') : 'N/A'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${review.shop ? review.shop.name : 'N/A'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${review.product ? review.product.name : 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${review.food ? review.food.name : 'N/A'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${'⭐'.repeat(review.rating)}</td>
                     <td class="px-6 py-4 text-sm text-gray-900">${review.comment || 'N/A'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm">
@@ -4267,6 +4258,55 @@
                 console.error('Error loading products:', error);
             }
 
+            // Load foods for dropdown
+            try {
+                const foodData = await apiCall('/admin/foods?per_page=100');
+                if (foodData && foodData.success) {
+                    const foodSelect = document.getElementById('review-food-select');
+                    foodSelect.innerHTML = '<option value="">Select a food...</option>';
+                    foodData.data.items.forEach(food => {
+                        foodSelect.innerHTML += `<option value="${food.id}">${food.name}</option>`;
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading foods:', error);
+            }
+
+            // Add event listener to load foods when shop is selected
+            const shopSelect = document.getElementById('review-shop-select');
+            const foodSelect = document.getElementById('review-food-select');
+            if (shopSelect && foodSelect) {
+                shopSelect.addEventListener('change', async function() {
+                    const shopId = this.value;
+                    if (shopId) {
+                        try {
+                            const foodData = await apiCall(`/admin/foods?shop_id=${shopId}&per_page=100`);
+                            if (foodData && foodData.success) {
+                                foodSelect.innerHTML = '<option value="">Select a food...</option>';
+                                foodData.data.items.forEach(food => {
+                                    foodSelect.innerHTML += `<option value="${food.id}">${food.name}</option>`;
+                                });
+                            }
+                        } catch (error) {
+                            console.error('Error loading foods for shop:', error);
+                        }
+                    } else {
+                        // Reload all foods
+                        try {
+                            const foodData = await apiCall('/admin/foods?per_page=100');
+                            if (foodData && foodData.success) {
+                                foodSelect.innerHTML = '<option value="">Select a food...</option>';
+                                foodData.data.items.forEach(food => {
+                                    foodSelect.innerHTML += `<option value="${food.id}">${food.name}</option>`;
+                                });
+                            }
+                        } catch (error) {
+                            console.error('Error loading foods:', error);
+                        }
+                    }
+                });
+            }
+
             document.getElementById('add-review-modal').classList.remove('hidden');
         }
 
@@ -4284,13 +4324,16 @@
             if (!data.product_id || data.product_id === '') {
                 data.product_id = null;
             }
+            if (!data.food_id || data.food_id === '') {
+                data.food_id = null;
+            }
             if (!data.shop_id || data.shop_id === '') {
                 data.shop_id = null;
             }
 
             // Ensure at least one is provided
-            if (!data.shop_id && !data.product_id) {
-                alert('Please select either a shop or a product');
+            if (!data.shop_id && !data.product_id && !data.food_id) {
+                alert('Please select either a shop, product, or food');
                 return;
             }
 

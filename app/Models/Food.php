@@ -15,9 +15,8 @@ class Food extends Model
         'description',
         'price',
         'images',
-        'views_count',
-        'likes_count',
-        'comments_count',
+        'views_count', // Stored in DB, auto-incremented on fetch
+        // likes_count and comments_count are calculated via accessors
         'is_trending',
         'trending_position',
         'trending_score',
@@ -28,9 +27,8 @@ class Food extends Model
     protected $casts = [
         'price' => 'decimal:2',
         'images' => 'array',
-        'views_count' => 'integer',
-        'likes_count' => 'integer',
-        'comments_count' => 'integer',
+        'views_count' => 'integer', // Stored in DB
+        // likes_count and comments_count are calculated via accessors, not stored
         'is_trending' => 'boolean',
         'trending_position' => 'integer',
         'trending_score' => 'decimal:2',
@@ -40,8 +38,7 @@ class Food extends Model
 
     protected $attributes = [
         'views_count' => 0,
-        'likes_count' => 0,
-        'comments_count' => 0,
+        // likes_count and comments_count are calculated via accessors
         'is_trending' => false,
         'is_available' => true,
     ];
@@ -65,6 +62,16 @@ class Food extends Model
     public function orderItems()
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function likes()
+    {
+        return $this->hasMany(FoodLike::class);
+    }
+
+    public function userLikes()
+    {
+        return $this->hasMany(FoodLike::class)->where('user_id', auth()->id());
     }
 
     /**
@@ -119,6 +126,45 @@ class Food extends Model
     public function getReviewsCountAttribute()
     {
         return $this->reviews()->count();
+    }
+
+    /**
+     * Get likes count from food_likes table
+     * This accessor overrides the database column value
+     */
+    public function getLikesCountAttribute($value)
+    {
+        // Always calculate from the relationship, ignore DB value
+        return $this->likes()->count();
+    }
+
+    /**
+     * Get comments count from reviews (reviews with comments)
+     * This accessor overrides the database column value
+     */
+    public function getCommentsCountAttribute($value)
+    {
+        // Always calculate from the relationship, ignore DB value
+        return $this->reviews()->whereNotNull('comment')->where('comment', '!=', '')->count();
+    }
+
+    /**
+     * Increment views count
+     */
+    public function incrementViews()
+    {
+        $this->increment('views_count');
+    }
+
+    /**
+     * Check if authenticated user has liked this food
+     */
+    public function getIsLikedAttribute()
+    {
+        if (!auth()->check()) {
+            return false;
+        }
+        return $this->likes()->where('user_id', auth()->id())->exists();
     }
 }
 

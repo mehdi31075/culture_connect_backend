@@ -147,10 +147,14 @@ class FoodController extends Controller
 
             $foods = $query->get();
 
-            // Add calculated fields
+            // Increment views for each food and add calculated fields
             $foods->each(function ($food) {
+                $food->incrementViews(); // Auto-increment views on fetch
                 $food->average_rating = $food->average_rating;
                 $food->reviews_count = $food->reviews_count;
+                $food->likes_count = $food->likes_count; // Calculated from food_likes
+                $food->comments_count = $food->comments_count; // Calculated from reviews
+                $food->is_liked = $food->is_liked; // Check if user liked this food
             });
 
             return response()->json([
@@ -242,10 +246,14 @@ class FoodController extends Controller
                 ->orderBy('name', 'asc')
                 ->get();
 
-            // Add calculated fields
+            // Increment views for each food and add calculated fields
             $foods->each(function ($food) {
+                $food->incrementViews(); // Auto-increment views on fetch
                 $food->average_rating = $food->average_rating;
                 $food->reviews_count = $food->reviews_count;
+                $food->likes_count = $food->likes_count; // Calculated from food_likes
+                $food->comments_count = $food->comments_count; // Calculated from reviews
+                $food->is_liked = $food->is_liked; // Check if user liked this food
             });
 
             return response()->json([
@@ -328,9 +336,13 @@ class FoodController extends Controller
                 ], 404);
             }
 
-            // Add calculated fields
+            // Increment views and add calculated fields
+            $food->incrementViews(); // Auto-increment views on fetch
             $food->average_rating = $food->average_rating;
             $food->reviews_count = $food->reviews_count;
+            $food->likes_count = $food->likes_count; // Calculated from food_likes
+            $food->comments_count = $food->comments_count; // Calculated from reviews
+            $food->is_liked = $food->is_liked; // Check if user liked this food
 
             return response()->json([
                 'success' => true,
@@ -341,6 +353,88 @@ class FoodController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve food',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/foods/{id}/like",
+     *     summary="Like or unlike a food",
+     *     description="Toggle like status for a food item. If already liked, it will be unliked.",
+     *     operationId="toggleFoodLike",
+     *     tags={"Food"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="Food ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Like status toggled successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Food liked successfully"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="is_liked", type="boolean", example=true),
+     *                 @OA\Property(property="likes_count", type="integer", example=15400)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Food not found"
+     *     )
+     * )
+     */
+    public function toggleLike(Request $request, int $id): JsonResponse
+    {
+        try {
+            $food = Food::find($id);
+
+            if (!$food) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Food not found',
+                ], 404);
+            }
+
+            $user = auth()->user();
+            $like = \App\Models\FoodLike::where('user_id', $user->id)
+                ->where('food_id', $food->id)
+                ->first();
+
+            if ($like) {
+                // Unlike
+                $like->delete();
+                $isLiked = false;
+                $message = 'Food unliked successfully';
+            } else {
+                // Like
+                \App\Models\FoodLike::create([
+                    'user_id' => $user->id,
+                    'food_id' => $food->id,
+                ]);
+                $isLiked = true;
+                $message = 'Food liked successfully';
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'data' => [
+                    'is_liked' => $isLiked,
+                    'likes_count' => $food->fresh()->likes_count,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to toggle like',
                 'error' => $e->getMessage(),
             ], 500);
         }
