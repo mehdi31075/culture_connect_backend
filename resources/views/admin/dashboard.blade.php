@@ -850,7 +850,7 @@
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Price</label>
-                                <input type="text" name="price" id="event-price" value="Free" class="w-full border rounded px-3 py-2">
+                                <input type="number" name="price" id="event-price" step="0.01" min="-1" value="-1.00" class="w-full border rounded px-3 py-2">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Capacity</label>
@@ -2610,7 +2610,7 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${startTime}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${endTime}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${capacityDisplay}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${event.price || 'Free'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${event.price !== null && event.price !== undefined ? parseFloat(event.price).toFixed(2) : '-1.00'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm">
                         <button onclick="editEvent(${event.id})" class="text-blue-600 hover:text-blue-900 mr-2">
                             <i class="fas fa-edit"></i>
@@ -2735,7 +2735,7 @@
                 document.getElementById('event-title').value = event.title || '';
                 document.getElementById('event-description').value = event.description || '';
                 document.getElementById('event-stage').value = event.stage || '';
-                document.getElementById('event-price').value = event.price || 'Free';
+                document.getElementById('event-price').value = event.price !== null && event.price !== undefined ? parseFloat(event.price).toFixed(2) : '-1.00';
                 document.getElementById('event-start-time').value = event.start_time ? new Date(event.start_time).toISOString().slice(0, 16) : '';
                 document.getElementById('event-end-time').value = event.end_time ? new Date(event.end_time).toISOString().slice(0, 16) : '';
                 document.getElementById('event-capacity').value = event.capacity || '';

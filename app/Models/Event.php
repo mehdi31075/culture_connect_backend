@@ -23,10 +23,7 @@ class Event extends Model
     protected $casts = [
         'start_time' => 'datetime',
         'end_time' => 'datetime',
-    ];
-
-    protected $attributes = [
-        'price' => 'Free',
+        'price' => 'decimal:2',
     ];
 
     public function pavilion()
@@ -62,5 +59,13 @@ class Event extends Model
         return $this->attendees()
             ->whereIn('status', [EventAttendance::STATUS_GOING, EventAttendance::STATUS_CHECKED_IN])
             ->count();
+    }
+
+    /**
+     * Get price attribute - ensure it's always returned as float
+     */
+    public function getPriceAttribute($value)
+    {
+        return $value !== null ? (float) $value : -1.00;
     }
 }

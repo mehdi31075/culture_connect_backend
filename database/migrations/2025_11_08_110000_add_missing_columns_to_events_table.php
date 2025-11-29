@@ -26,7 +26,9 @@ return new class extends Migration
                 $table->string('stage', 160)->nullable()->after('description');
             }
             if (!Schema::hasColumn('events', 'price')) {
-                $table->string('price', 60)->default('Free')->after('stage');
+                $table->decimal('price', 10, 2)->nullable()->default(-1.00)->after('stage');
+            } else {
+                // If column exists as string, we need to alter it (handled in separate migration)
             }
             if (!Schema::hasColumn('events', 'start_time')) {
                 $table->timestamp('start_time')->after('price');

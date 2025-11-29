@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('title', 160);
             $table->text('description')->nullable();
             $table->string('stage', 160)->nullable();
-            $table->string('price', 60)->default('Free');
+            $table->decimal('price', 10, 2)->nullable()->default(-1.00);
             $table->timestamp('start_time');
             $table->timestamp('end_time');
             $table->timestamps();

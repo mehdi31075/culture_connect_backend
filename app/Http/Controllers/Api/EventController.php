@@ -54,7 +54,7 @@ class EventController extends Controller
      *                     @OA\Property(property="title", type="string", example="Cultural Festival"),
      *                     @OA\Property(property="description", type="string", nullable=true),
      *                     @OA\Property(property="stage", type="string", nullable=true),
-     *                     @OA\Property(property="price", type="string", example="Free"),
+                     *                     @OA\Property(property="price", type="number", format="float", example=-1.00, description="Event price in decimal format (-1.00 indicates free event)"),
      *                     @OA\Property(property="start_time", type="string", format="date-time"),
      *                     @OA\Property(property="end_time", type="string", format="date-time"),
      *                     @OA\Property(property="capacity", type="integer", nullable=true, example=500),
