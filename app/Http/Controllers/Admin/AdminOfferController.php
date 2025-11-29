@@ -20,7 +20,7 @@ class AdminOfferController extends Controller
             $search = $request->get('search');
             $shopId = $request->get('shop_id');
 
-            $query = Offer::with(['shop', 'product']);
+            $query = Offer::with(['shop', 'product', 'food']);
 
             if ($search) {
                 $query->where(function ($q) use ($search) {
@@ -60,6 +60,34 @@ class AdminOfferController extends Controller
     }
 
     /**
+     * Get a single offer
+     */
+    public function show(int $id): JsonResponse
+    {
+        try {
+            $offer = Offer::with(['shop', 'product', 'food'])->find($id);
+
+            if (!$offer) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Offer not found',
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $offer,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve offer',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Store a newly created offer
      */
     public function store(Request $request): JsonResponse
@@ -68,6 +96,7 @@ class AdminOfferController extends Controller
             $validator = Validator::make($request->all(), [
                 'shop_id' => 'required|exists:shops,id',
                 'product_id' => 'nullable|exists:products,id',
+                'food_id' => 'nullable|exists:foods,id',
                 'title' => 'required|string|max:255',
                 'description' => 'nullable|string',
                 'discount_type' => 'required|in:' . Offer::DISCOUNT_TYPE_PERCENT . ',' . Offer::DISCOUNT_TYPE_FIXED,
@@ -86,14 +115,14 @@ class AdminOfferController extends Controller
             }
 
             $offer = Offer::create($request->only([
-                'shop_id', 'product_id', 'title', 'description',
+                'shop_id', 'product_id', 'food_id', 'title', 'description',
                 'discount_type', 'value', 'is_bundle', 'start_at', 'end_at'
             ]));
 
             return response()->json([
                 'success' => true,
                 'message' => 'Offer created successfully',
-                'data' => $offer->load(['shop', 'product']),
+                'data' => $offer->load(['shop', 'product', 'food']),
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
@@ -122,6 +151,7 @@ class AdminOfferController extends Controller
             $validator = Validator::make($request->all(), [
                 'shop_id' => 'sometimes|exists:shops,id',
                 'product_id' => 'nullable|exists:products,id',
+                'food_id' => 'nullable|exists:foods,id',
                 'title' => 'sometimes|string|max:255',
                 'description' => 'nullable|string',
                 'discount_type' => 'sometimes|in:' . Offer::DISCOUNT_TYPE_PERCENT . ',' . Offer::DISCOUNT_TYPE_FIXED,
@@ -140,14 +170,14 @@ class AdminOfferController extends Controller
             }
 
             $offer->update($request->only([
-                'shop_id', 'product_id', 'title', 'description',
+                'shop_id', 'product_id', 'food_id', 'title', 'description',
                 'discount_type', 'value', 'is_bundle', 'start_at', 'end_at'
             ]));
 
             return response()->json([
                 'success' => true,
                 'message' => 'Offer updated successfully',
-                'data' => $offer->fresh()->load(['shop', 'product']),
+                'data' => $offer->fresh()->load(['shop', 'product', 'food']),
             ]);
         } catch (\Exception $e) {
             return response()->json([

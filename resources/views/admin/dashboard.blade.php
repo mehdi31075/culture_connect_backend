@@ -441,6 +441,7 @@
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Shop</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product/Food</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Value</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Start Date</th>
@@ -1074,6 +1075,12 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">Product (Optional)</label>
                         <select id="offer-product-select" name="product_id" class="w-full px-3 py-2 border rounded-lg">
                             <option value="">No specific product</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Food (Optional)</label>
+                        <select id="offer-food-select" name="food_id" class="w-full px-3 py-2 border rounded-lg">
+                            <option value="">No specific food</option>
                         </select>
                     </div>
                     <div>
@@ -2597,7 +2604,7 @@
             if (!offers.length) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="8" class="px-6 py-4 text-sm text-gray-500 text-center">No offers found. Add an offer to get started.</td>
+                        <td colspan="9" class="px-6 py-4 text-sm text-gray-500 text-center">No offers found. Add an offer to get started.</td>
                     </tr>
                 `;
                 return;
@@ -2607,6 +2614,11 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${offer.id}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${offer.title}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${offer.shop ? offer.shop.name : 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${offer.product ? '<span class="text-blue-600">Product: ' + offer.product.name + '</span>' : ''}
+                        ${offer.food ? '<span class="text-green-600">Food: ' + offer.food.name + '</span>' : ''}
+                        ${!offer.product && !offer.food ? 'N/A' : ''}
+                    </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${offer.discount_type === 'percent' ? 'Percent' : 'Fixed'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${offer.discount_type === 'percent' ? offer.value + '%' : '$' + parseFloat(offer.value).toFixed(2)}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${offer.start_at ? new Date(offer.start_at).toLocaleDateString() : 'N/A'}</td>
@@ -2641,9 +2653,57 @@
                         productSelect.innerHTML += `<option value="${product.id}">${product.name}</option>`;
                     });
                 }
+                const foodsData = await apiCall('/admin/foods?per_page=100');
+                if (foodsData && foodsData.success) {
+                    const foodSelect = document.getElementById('offer-food-select');
+                    foodSelect.innerHTML = '<option value="">No specific food</option>';
+                    foodsData.data.items.forEach(food => {
+                        foodSelect.innerHTML += `<option value="${food.id}">${food.name}</option>`;
+                    });
+                }
             } catch (error) {
                 console.error('Error loading data:', error);
             }
+
+            // Add event listener to filter foods when shop is selected
+            const shopSelect = document.getElementById('offer-shop-select');
+            const foodSelect = document.getElementById('offer-food-select');
+            if (shopSelect && foodSelect) {
+                // Remove existing listeners by cloning
+                const newShopSelect = shopSelect.cloneNode(true);
+                shopSelect.parentNode.replaceChild(newShopSelect, shopSelect);
+
+                newShopSelect.addEventListener('change', async function() {
+                    const shopId = this.value;
+                    if (shopId) {
+                        try {
+                            const foodData = await apiCall(`/admin/foods?shop_id=${shopId}&per_page=100`);
+                            if (foodData && foodData.success) {
+                                foodSelect.innerHTML = '<option value="">No specific food</option>';
+                                foodData.data.items.forEach(food => {
+                                    foodSelect.innerHTML += `<option value="${food.id}">${food.name}</option>`;
+                                });
+                            }
+                        } catch (error) {
+                            console.error('Error loading foods for shop:', error);
+                        }
+                    } else {
+                        // Reload all foods
+                        try {
+                            const foodsData = await apiCall('/admin/foods?per_page=100');
+                            if (foodsData && foodsData.success) {
+                                foodSelect.innerHTML = '<option value="">No specific food</option>';
+                                foodsData.data.items.forEach(food => {
+                                    foodSelect.innerHTML += `<option value="${food.id}">${food.name}</option>`;
+                                });
+                            }
+                        } catch (error) {
+                            console.error('Error loading foods:', error);
+                        }
+                    }
+                });
+            }
+
             document.getElementById('offer-modal-title').textContent = 'Add New Offer';
             document.getElementById('offer-id').value = '';
             document.getElementById('add-offer-form').reset();
@@ -2661,6 +2721,7 @@
             const data = {
                 shop_id: document.getElementById('offer-shop-select').value,
                 product_id: document.getElementById('offer-product-select').value || null,
+                food_id: document.getElementById('offer-food-select').value || null,
                 title: document.getElementById('offer-title').value,
                 description: document.getElementById('offer-description').value,
                 discount_type: document.getElementById('offer-discount-type').value,
@@ -2696,10 +2757,28 @@
                 if (data && data.success) {
                     const offer = data.data;
                     await showAddOfferModal();
+
+                    // Load foods for the selected shop
+                    if (offer.shop_id) {
+                        try {
+                            const foodData = await apiCall(`/admin/foods?shop_id=${offer.shop_id}&per_page=100`);
+                            if (foodData && foodData.success) {
+                                const foodSelect = document.getElementById('offer-food-select');
+                                foodSelect.innerHTML = '<option value="">No specific food</option>';
+                                foodData.data.items.forEach(food => {
+                                    foodSelect.innerHTML += `<option value="${food.id}" ${food.id === offer.food_id ? 'selected' : ''}>${food.name}</option>`;
+                                });
+                            }
+                        } catch (error) {
+                            console.error('Error loading foods for shop:', error);
+                        }
+                    }
+
                     document.getElementById('offer-modal-title').textContent = 'Edit Offer';
                     document.getElementById('offer-id').value = offer.id;
                     document.getElementById('offer-shop-select').value = offer.shop_id;
                     document.getElementById('offer-product-select').value = offer.product_id || '';
+                    document.getElementById('offer-food-select').value = offer.food_id || '';
                     document.getElementById('offer-title').value = offer.title || '';
                     document.getElementById('offer-description').value = offer.description || '';
                     document.getElementById('offer-discount-type').value = offer.discount_type || 'percent';

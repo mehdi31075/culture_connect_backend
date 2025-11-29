@@ -107,6 +107,7 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
 
     // Offer management
     Route::get('/offers', [AdminOfferController::class, 'index']);
+    Route::get('/offers/{id}', [AdminOfferController::class, 'show']);
     Route::post('/offers', [AdminOfferController::class, 'store']);
     Route::put('/offers/{id}', [AdminOfferController::class, 'update']);
     Route::delete('/offers/{id}', [AdminOfferController::class, 'destroy']);
