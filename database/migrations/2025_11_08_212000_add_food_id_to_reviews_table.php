@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('reviews', function (Blueprint $table) {
             if (!Schema::hasColumn('reviews', 'food_id')) {
-                $table->foreignId('food_id')->nullable()->after('product_id')->constrained()->onDelete('cascade');
+                $table->foreignId('food_id')->nullable()->after('product_id')->constrained('foods')->onDelete('cascade');
             }
         });
     }
