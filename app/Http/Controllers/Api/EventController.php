@@ -33,8 +33,8 @@ class EventController extends Controller
      *         name="tag",
      *         in="query",
      *         required=false,
-     *         description="Tag filter: 'all' or specific tag ID/name (Cultural, Food, Shows, etc.)",
-     *         @OA\Schema(type="string", default="all")
+     *         description="Tag filter: specific event tag ID (integer). If not provided, returns all events regardless of tag.",
+     *         @OA\Schema(type="integer", example=1)
      *     ),
      *     @OA\Response(
      *         response=401,
@@ -81,7 +81,7 @@ class EventController extends Controller
     {
         try {
             $dateFilter = $request->get('date_filter', 'all_time');
-            $tagFilter = $request->get('tag', 'all');
+            $tagFilter = $request->get('tag');
 
             $query = Event::with(['pavilion', 'tags'])
                 ->where('start_time', '>=', Carbon::now());
@@ -106,16 +106,13 @@ class EventController extends Controller
                     break;
             }
 
-            // Apply tag filter
-            if ($tagFilter !== 'all') {
-                // Try to find tag by ID or name
-                $tag = EventTag::where('id', $tagFilter)
-                    ->orWhere('name', $tagFilter)
-                    ->first();
-
-                if ($tag) {
-                    $query->whereHas('tags', function ($q) use ($tag) {
-                        $q->where('event_tags.id', $tag->id);
+            // Apply tag filter by ID (if tag parameter is provided)
+            // If tag parameter is not provided or is null/empty, show all events
+            if ($tagFilter !== null && $tagFilter !== '') {
+                $tagId = (int) $tagFilter;
+                if ($tagId > 0) {
+                    $query->whereHas('tags', function ($q) use ($tagId) {
+                        $q->where('event_tags.id', $tagId);
                     });
                 }
             }
