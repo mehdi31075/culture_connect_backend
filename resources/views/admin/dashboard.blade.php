@@ -407,6 +407,24 @@
                 </div>
             </div>
 
+            <!-- Event Features Section -->
+            <div id="event-features-section" class="section hidden">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-800">Event Features</h2>
+                            <span class="text-gray-600">Manage features used to describe events (e.g., outdoor, accessible)</span>
+                        </div>
+                        <button onclick="showAddEventFeatureModal()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                            <i class="fas fa-plus mr-2"></i>Add Feature
+                        </button>
+                    </div>
+                    <div id="event-features-table-container">
+                        <p class="text-gray-500">Loading event features...</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Events Section -->
             <div id="events-section" class="section hidden">
                 <h2 class="text-2xl font-bold mb-6">Event Management</h2>
@@ -814,24 +832,6 @@
                         </button>
                     </div>
                 </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Event Features Section -->
-    <div id="event-features-section" class="section hidden">
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex justify-between items-center mb-6">
-                <div>
-                    <h2 class="text-2xl font-bold text-gray-800">Event Features</h2>
-                    <span class="text-gray-600">Manage features used to describe events (e.g., outdoor, accessible)</span>
-                </div>
-                <button onclick="showAddEventFeatureModal()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-                    <i class="fas fa-plus mr-2"></i>Add Feature
-                </button>
-            </div>
-            <div id="event-features-table-container">
-                <p class="text-gray-500">Loading event features...</p>
             </div>
         </div>
     </div>
