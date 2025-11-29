@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BannerController;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\PavilionController;
+use App\Http\Controllers\Api\POIController;
 use App\Http\Controllers\Api\ShopController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -119,6 +120,10 @@ Route::get('shops/{shop}/products', [ShopController::class, 'products']);
 // Banner routes
 Route::get('banners', [BannerController::class, 'index']);
 Route::get('banners/{id}', [BannerController::class, 'show']);
+
+// POI routes
+Route::get('pois', [POIController::class, 'index']);
+Route::get('pois/{id}', [POIController::class, 'show']);
 
 // Event routes
 Route::get('event-tags', [EventController::class, 'getTags']);
