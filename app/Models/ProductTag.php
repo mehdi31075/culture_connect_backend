@@ -13,7 +13,12 @@ class ProductTag extends Model
 
     protected $fillable = [
         'name',
+        'tag_type',
     ];
+
+    const TYPE_PRODUCT = 'product';
+    const TYPE_FOOD = 'food';
+    const TYPE_BOTH = 'both';
 
     protected $hidden = [
         'pivot',
