@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Pavilion;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
@@ -86,6 +87,30 @@ class PavilionController extends Controller
      *                         @OA\Property(property="lng", type="number", format="float", example=55.2708),
      *                         @OA\Property(property="open_hours", type="string", example="9:00 AM - 10:00 PM"),
      *                         @OA\Property(property="shops_count", type="integer", example=15),
+     *                         @OA\Property(
+     *                             property="shops",
+     *                             type="array",
+     *                             @OA\Items(
+     *                                 @OA\Property(property="id", type="integer", example=1),
+     *                                 @OA\Property(property="name", type="string", example="Shop Name"),
+     *                                 @OA\Property(
+     *                                     property="offers",
+     *                                     type="array",
+     *                                     @OA\Items(
+     *                                         @OA\Property(property="id", type="integer", example=1),
+     *                                         @OA\Property(property="title", type="string", example="Special Offer"),
+     *                                         @OA\Property(property="description", type="string", nullable=true),
+     *                                         @OA\Property(property="discount_type", type="string", example="percent"),
+     *                                         @OA\Property(property="value", type="number", format="float", example=20.00),
+     *                                         @OA\Property(property="is_bundle", type="boolean", example=false),
+     *                                         @OA\Property(property="start_at", type="string", format="date-time"),
+     *                                         @OA\Property(property="end_at", type="string", format="date-time"),
+     *                                         @OA\Property(property="product", type="object", nullable=true),
+     *                                         @OA\Property(property="food", type="object", nullable=true)
+     *                                     )
+     *                                 )
+     *                             )
+     *                         ),
      *                         @OA\Property(property="created_at", type="string", format="date-time"),
      *                         @OA\Property(property="updated_at", type="string", format="date-time")
      *                     )
@@ -185,8 +210,13 @@ class PavilionController extends Controller
                     ->orderBy('distance');
             }
 
-            // Get paginated results
-            $pavilions = $query->paginate($perPage, ['*'], 'page', $page);
+            // Get paginated results with shops and their active offers
+            $now = Carbon::now();
+            $pavilions = $query->with(['shops.offers' => function ($query) use ($now) {
+                $query->where('start_at', '<=', $now)
+                      ->where('end_at', '>=', $now)
+                      ->with(['product', 'food']);
+            }])->paginate($perPage, ['*'], 'page', $page);
 
             // Load shops count and ensure lat/lng are numeric (not strings)
             $pavilions->getCollection()->transform(function ($pavilion) {
@@ -197,6 +227,15 @@ class PavilionController extends Controller
                 if ($pavilion->lng !== null) {
                     $pavilion->lng = (float) $pavilion->lng;
                 }
+
+                // Add offers array to each shop
+                if ($pavilion->shops) {
+                    $pavilion->shops->transform(function ($shop) {
+                        $shop->offers = $shop->offers ?? collect([]);
+                        return $shop;
+                    });
+                }
+
                 return $pavilion;
             });
 
@@ -260,6 +299,30 @@ class PavilionController extends Controller
      *                 @OA\Property(property="lng", type="number", format="float", example=55.2708),
      *                 @OA\Property(property="open_hours", type="string", example="9:00 AM - 10:00 PM"),
      *                 @OA\Property(property="shops_count", type="integer", example=15),
+     *                 @OA\Property(
+     *                     property="shops",
+     *                     type="array",
+     *                     @OA\Items(
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="name", type="string", example="Shop Name"),
+     *                         @OA\Property(
+     *                             property="offers",
+     *                             type="array",
+     *                             @OA\Items(
+     *                                 @OA\Property(property="id", type="integer", example=1),
+     *                                 @OA\Property(property="title", type="string", example="Special Offer"),
+     *                                 @OA\Property(property="description", type="string", nullable=true),
+     *                                 @OA\Property(property="discount_type", type="string", example="percent"),
+     *                                 @OA\Property(property="value", type="number", format="float", example=20.00),
+     *                                 @OA\Property(property="is_bundle", type="boolean", example=false),
+     *                                 @OA\Property(property="start_at", type="string", format="date-time"),
+     *                                 @OA\Property(property="end_at", type="string", format="date-time"),
+     *                                 @OA\Property(property="product", type="object", nullable=true),
+     *                                 @OA\Property(property="food", type="object", nullable=true)
+     *                             )
+     *                         )
+     *                     )
+     *                 ),
      *                 @OA\Property(property="created_at", type="string", format="date-time"),
      *                 @OA\Property(property="updated_at", type="string", format="date-time")
      *             )
@@ -286,7 +349,12 @@ class PavilionController extends Controller
     public function show(int $id): JsonResponse
     {
         try {
-            $pavilion = Pavilion::find($id);
+            $now = Carbon::now();
+            $pavilion = Pavilion::with(['shops.offers' => function ($query) use ($now) {
+                $query->where('start_at', '<=', $now)
+                      ->where('end_at', '>=', $now)
+                      ->with(['product', 'food']);
+            }])->find($id);
 
             if (!$pavilion) {
                 return response()->json([
@@ -302,6 +370,14 @@ class PavilionController extends Controller
             }
             if ($pavilion->lng !== null) {
                 $pavilion->lng = (float) $pavilion->lng;
+            }
+
+            // Ensure offers are loaded for each shop
+            if ($pavilion->shops) {
+                $pavilion->shops->transform(function ($shop) {
+                    $shop->offers = $shop->offers ?? collect([]);
+                    return $shop;
+                });
             }
 
             return response()->json([
