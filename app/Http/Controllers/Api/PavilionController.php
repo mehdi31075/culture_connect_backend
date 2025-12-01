@@ -88,27 +88,17 @@ class PavilionController extends Controller
      *                         @OA\Property(property="open_hours", type="string", example="9:00 AM - 10:00 PM"),
      *                         @OA\Property(property="shops_count", type="integer", example=15),
      *                         @OA\Property(
-     *                             property="shops",
+     *                             property="offers",
      *                             type="array",
+     *                             description="List of active offers from all shops in this pavilion",
      *                             @OA\Items(
      *                                 @OA\Property(property="id", type="integer", example=1),
-     *                                 @OA\Property(property="name", type="string", example="Shop Name"),
-     *                                 @OA\Property(
-     *                                     property="offers",
-     *                                     type="array",
-     *                                     @OA\Items(
-     *                                         @OA\Property(property="id", type="integer", example=1),
-     *                                         @OA\Property(property="title", type="string", example="Special Offer"),
-     *                                         @OA\Property(property="description", type="string", nullable=true),
-     *                                         @OA\Property(property="discount_type", type="string", example="percent"),
-     *                                         @OA\Property(property="value", type="number", format="float", example=20.00),
-     *                                         @OA\Property(property="is_bundle", type="boolean", example=false),
-     *                                         @OA\Property(property="start_at", type="string", format="date-time"),
-     *                                         @OA\Property(property="end_at", type="string", format="date-time"),
-     *                                         @OA\Property(property="product", type="object", nullable=true),
-     *                                         @OA\Property(property="food", type="object", nullable=true)
-     *                                     )
-     *                                 )
+     *                                 @OA\Property(property="title", type="string", example="Special Offer"),
+     *                                 @OA\Property(property="shop_name", type="string", example="Shop Name"),
+     *                                 @OA\Property(property="type", type="string", example="percent", description="Discount type: percent or fixed"),
+     *                                 @OA\Property(property="value", type="number", format="float", example=20.00),
+     *                                 @OA\Property(property="start_date", type="string", format="date-time", example="2025-11-01T00:00:00Z"),
+     *                                 @OA\Property(property="end_date", type="string", format="date-time", example="2025-12-31T23:59:59Z")
      *                             )
      *                         ),
      *                         @OA\Property(property="created_at", type="string", format="date-time"),
@@ -210,16 +200,12 @@ class PavilionController extends Controller
                     ->orderBy('distance');
             }
 
-            // Get paginated results with shops and their active offers
+            // Get paginated results
             $now = Carbon::now();
-            $pavilions = $query->with(['shops.offers' => function ($query) use ($now) {
-                $query->where('start_at', '<=', $now)
-                      ->where('end_at', '>=', $now)
-                      ->with(['product', 'food']);
-            }])->paginate($perPage, ['*'], 'page', $page);
+            $pavilions = $query->paginate($perPage, ['*'], 'page', $page);
 
-            // Load shops count and ensure lat/lng are numeric (not strings)
-            $pavilions->getCollection()->transform(function ($pavilion) {
+            // Load shops count, offers, and ensure lat/lng are numeric (not strings)
+            $pavilions->getCollection()->transform(function ($pavilion) use ($now) {
                 $pavilion->shops_count = $pavilion->shops()->count();
                 if ($pavilion->lat !== null) {
                     $pavilion->lat = (float) $pavilion->lat;
@@ -228,13 +214,27 @@ class PavilionController extends Controller
                     $pavilion->lng = (float) $pavilion->lng;
                 }
 
-                // Add offers array to each shop
-                if ($pavilion->shops) {
-                    $pavilion->shops->transform(function ($shop) {
-                        $shop->offers = $shop->offers ?? collect([]);
-                        return $shop;
-                    });
-                }
+                // Get all active offers for all shops in this pavilion
+                $offers = \App\Models\Offer::whereHas('shop', function ($q) use ($pavilion) {
+                    $q->where('pavilion_id', $pavilion->id);
+                })
+                ->where('start_at', '<=', $now)
+                ->where('end_at', '>=', $now)
+                ->with('shop')
+                ->get()
+                ->map(function ($offer) {
+                    return [
+                        'id' => $offer->id,
+                        'title' => $offer->title,
+                        'shop_name' => $offer->shop ? $offer->shop->name : null,
+                        'type' => $offer->discount_type,
+                        'value' => $offer->value,
+                        'start_date' => $offer->start_at ? $offer->start_at->toIso8601String() : null,
+                        'end_date' => $offer->end_at ? $offer->end_at->toIso8601String() : null,
+                    ];
+                });
+
+                $pavilion->offers = $offers;
 
                 return $pavilion;
             });
@@ -300,27 +300,17 @@ class PavilionController extends Controller
      *                 @OA\Property(property="open_hours", type="string", example="9:00 AM - 10:00 PM"),
      *                 @OA\Property(property="shops_count", type="integer", example=15),
      *                 @OA\Property(
-     *                     property="shops",
+     *                     property="offers",
      *                     type="array",
+     *                     description="List of active offers from all shops in this pavilion",
      *                     @OA\Items(
      *                         @OA\Property(property="id", type="integer", example=1),
-     *                         @OA\Property(property="name", type="string", example="Shop Name"),
-     *                         @OA\Property(
-     *                             property="offers",
-     *                             type="array",
-     *                             @OA\Items(
-     *                                 @OA\Property(property="id", type="integer", example=1),
-     *                                 @OA\Property(property="title", type="string", example="Special Offer"),
-     *                                 @OA\Property(property="description", type="string", nullable=true),
-     *                                 @OA\Property(property="discount_type", type="string", example="percent"),
-     *                                 @OA\Property(property="value", type="number", format="float", example=20.00),
-     *                                 @OA\Property(property="is_bundle", type="boolean", example=false),
-     *                                 @OA\Property(property="start_at", type="string", format="date-time"),
-     *                                 @OA\Property(property="end_at", type="string", format="date-time"),
-     *                                 @OA\Property(property="product", type="object", nullable=true),
-     *                                 @OA\Property(property="food", type="object", nullable=true)
-     *                             )
-     *                         )
+     *                         @OA\Property(property="title", type="string", example="Special Offer"),
+     *                         @OA\Property(property="shop_name", type="string", example="Shop Name"),
+     *                         @OA\Property(property="type", type="string", example="percent", description="Discount type: percent or fixed"),
+     *                         @OA\Property(property="value", type="number", format="float", example=20.00),
+     *                         @OA\Property(property="start_date", type="string", format="date-time", example="2025-11-01T00:00:00Z"),
+     *                         @OA\Property(property="end_date", type="string", format="date-time", example="2025-12-31T23:59:59Z")
      *                     )
      *                 ),
      *                 @OA\Property(property="created_at", type="string", format="date-time"),
@@ -349,12 +339,7 @@ class PavilionController extends Controller
     public function show(int $id): JsonResponse
     {
         try {
-            $now = Carbon::now();
-            $pavilion = Pavilion::with(['shops.offers' => function ($query) use ($now) {
-                $query->where('start_at', '<=', $now)
-                      ->where('end_at', '>=', $now)
-                      ->with(['product', 'food']);
-            }])->find($id);
+            $pavilion = Pavilion::find($id);
 
             if (!$pavilion) {
                 return response()->json([
@@ -362,6 +347,8 @@ class PavilionController extends Controller
                     'message' => 'Pavilion not found',
                 ], 404);
             }
+
+            $now = Carbon::now();
 
             // Add shops count and ensure numeric lat/lng
             $pavilion->shops_count = $pavilion->shops()->count();
@@ -372,13 +359,27 @@ class PavilionController extends Controller
                 $pavilion->lng = (float) $pavilion->lng;
             }
 
-            // Ensure offers are loaded for each shop
-            if ($pavilion->shops) {
-                $pavilion->shops->transform(function ($shop) {
-                    $shop->offers = $shop->offers ?? collect([]);
-                    return $shop;
-                });
-            }
+            // Get all active offers for all shops in this pavilion
+            $offers = \App\Models\Offer::whereHas('shop', function ($q) use ($pavilion) {
+                $q->where('pavilion_id', $pavilion->id);
+            })
+            ->where('start_at', '<=', $now)
+            ->where('end_at', '>=', $now)
+            ->with('shop')
+            ->get()
+            ->map(function ($offer) {
+                return [
+                    'id' => $offer->id,
+                    'title' => $offer->title,
+                    'shop_name' => $offer->shop ? $offer->shop->name : null,
+                    'type' => $offer->discount_type,
+                    'value' => $offer->value,
+                    'start_date' => $offer->start_at ? $offer->start_at->toIso8601String() : null,
+                    'end_date' => $offer->end_at ? $offer->end_at->toIso8601String() : null,
+                ];
+            });
+
+            $pavilion->offers = $offers;
 
             return response()->json([
                 'success' => true,
