@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Offer;
 use App\Models\Pavilion;
 use App\Models\Review;
 use App\Models\Shop;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -127,8 +129,23 @@ class ShopController extends Controller
      *                     @OA\Property(property="description", type="string", example="Traditional crafts and souvenirs"),
      *                     @OA\Property(property="type", type="string", example="shop"),
      *                     @OA\Property(property="pavilion_id", type="integer", example=1),
-     *                     @OA\Property(property="created_at", type="string", format="date-time"),
-     *                     @OA\Property(property="updated_at", type="string", format="date-time"),
+     *                     @OA\Property(property="average_rating", type="number", format="float", nullable=true, example=4.5),
+     *                     @OA\Property(property="rating_count", type="integer", example=10),
+     *                     @OA\Property(property="rating_distribution", type="object", example={"5": 6, "4": 3, "3": 1}),
+     *                     @OA\Property(
+     *                         property="offers",
+     *                         type="array",
+     *                         description="List of active offers for this shop",
+     *                         @OA\Items(
+     *                             @OA\Property(property="id", type="integer", example=1),
+     *                             @OA\Property(property="title", type="string", example="Special Offer"),
+     *                             @OA\Property(property="shop_name", type="string", example="Shop Name"),
+     *                             @OA\Property(property="type", type="string", example="percent", description="Discount type: percent or fixed"),
+     *                             @OA\Property(property="value", type="number", format="float", example=20.00),
+     *                             @OA\Property(property="start_date", type="string", format="date-time", example="2025-11-01T00:00:00Z"),
+     *                             @OA\Property(property="end_date", type="string", format="date-time", example="2025-12-31T23:59:59Z")
+     *                         )
+     *                     ),
      *                     @OA\Property(
      *                         property="reviews",
      *                         type="array",
@@ -190,6 +207,7 @@ class ShopController extends Controller
             $shops = $pavilion->shops()->get();
 
             $shopIds = $shops->pluck('id');
+            $now = Carbon::now();
 
             if ($shopIds->isNotEmpty()) {
                 $allReviews = Review::whereIn('shop_id', $shopIds)
@@ -201,7 +219,15 @@ class ShopController extends Controller
                         return $shopReviews->take(2)->values();
                     });
 
-                $shops->each(function ($shop) use ($allReviews) {
+                // Get all active offers for all shops
+                $allOffers = Offer::whereIn('shop_id', $shopIds)
+                    ->where('start_at', '<=', $now)
+                    ->where('end_at', '>=', $now)
+                    ->with('shop')
+                    ->get()
+                    ->groupBy('shop_id');
+
+                $shops->each(function ($shop) use ($allReviews, $allOffers) {
                     $reviews = $allReviews->get($shop->id, collect());
                     $shop->setRelation('reviews', $reviews);
                     $reviewCount = $reviews->count();
@@ -220,6 +246,19 @@ class ShopController extends Controller
                         $shop->rating_count = 0;
                         $shop->rating_distribution = (object)[];
                     }
+
+                    // Add offers for this shop
+                    $shopOffers = $allOffers->get($shop->id, collect())->map(function ($offer) use ($shop) {
+                        return [
+                            'id' => $offer->id,
+                            'title' => $offer->title,
+                            'type' => $offer->discount_type,
+                            'value' => $offer->value,
+                            'start_date' => $offer->start_at ? $offer->start_at->toIso8601String() : null,
+                            'end_date' => $offer->end_at ? $offer->end_at->toIso8601String() : null,
+                        ];
+                    });
+                    $shop->offers = $shopOffers;
                 });
             } else {
                 $shops->each(function ($shop) {
@@ -227,6 +266,7 @@ class ShopController extends Controller
                     $shop->average_rating = null;
                     $shop->rating_count = 0;
                     $shop->rating_distribution = (object)[];
+                    $shop->offers = collect([]);
                 });
             }
 
