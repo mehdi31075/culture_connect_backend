@@ -100,8 +100,8 @@ return [
     */
 
     'currency' => [
-        'symbol' => env('CURRENCY_SYMBOL', '$'),
-        'code' => env('CURRENCY_CODE', 'USD'),
+        'symbol' => env('CURRENCY_SYMBOL', 'د.إ'),
+        'code' => env('CURRENCY_CODE', 'AED'),
         'position' => env('CURRENCY_POSITION', 'before'), // 'before' or 'after'
     ],
 
