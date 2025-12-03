@@ -1433,15 +1433,32 @@
 
         // API helper function
         async function apiCall(endpoint, options = {}) {
+            // Check if body is FormData - if so, don't set Content-Type (browser will set it with boundary)
+            const isFormData = options.body instanceof FormData;
+
             const defaultOptions = {
                 headers: {
                     'Authorization': `Bearer ${authToken}`,
-                    'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 }
             };
 
-            const response = await fetch(`/api${endpoint}`, { ...defaultOptions, ...options });
+            // Only set Content-Type for non-FormData requests
+            if (!isFormData) {
+                defaultOptions.headers['Content-Type'] = 'application/json';
+            }
+
+            // Merge options, but don't override headers completely - merge them
+            const mergedOptions = {
+                ...defaultOptions,
+                ...options,
+                headers: {
+                    ...defaultOptions.headers,
+                    ...(options.headers || {})
+                }
+            };
+
+            const response = await fetch(`/api${endpoint}`, mergedOptions);
 
             if (response.status === 401) {
                 localStorage.removeItem('admin_token');
@@ -2662,11 +2679,10 @@
 
             try {
                 const url = foodId ? `/admin/foods/${foodId}` : '/admin/foods';
-                const method = foodId ? 'POST' : 'POST';
+                const method = foodId ? 'POST' : 'POST'; // Using POST for both create and update (match route)
                 const response = await apiCall(url, {
                     method: method,
-                    body: formData,
-                    headers: {}
+                    body: formData
                 });
                 if (response && response.success) {
                     closeAddFoodModal();
