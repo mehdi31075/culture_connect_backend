@@ -858,6 +858,13 @@
                                 <input type="number" name="lng" id="shop-lng" step="0.000001" min="-180" max="180" placeholder="e.g., 55.2708" class="w-full border rounded px-3 py-2">
                             </div>
                         </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Pick on Map (Optional)</label>
+                            <div class="mt-2">
+                                <div id="shop-map" class="w-full h-64 rounded border"></div>
+                                <p class="text-xs text-gray-500 mt-1">Click on the map to set latitude and longitude.</p>
+                            </div>
+                        </div>
                     </div>
                     <div class="flex justify-end space-x-3 mt-6">
                         <button type="button" onclick="closeAddShopModal()" class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50">
@@ -2296,6 +2303,10 @@
                 console.error('Error loading pavilions:', error);
             }
             document.getElementById('add-shop-modal').classList.remove('hidden');
+            // Initialize map after modal is shown
+            setTimeout(() => {
+                initShopMap();
+            }, 300);
         }
 
         function closeAddShopModal() {
@@ -2304,6 +2315,71 @@
             document.getElementById('shop-id').value = '';
             document.getElementById('shop-modal-title').textContent = 'Add New Shop';
             document.getElementById('shop-submit-btn').textContent = 'Add Shop';
+            // Reset map
+            if (shopMap) {
+                shopMap.remove();
+                shopMap = null;
+                shopMarker = null;
+            }
+        }
+
+        // Leaflet map for Shop location picker
+        let shopMap = null;
+        let shopMarker = null;
+
+        function initShopMap() {
+            const mapEl = document.getElementById('shop-map');
+            if (!mapEl) return;
+            // Avoid re-initializing
+            if (shopMap) {
+                setTimeout(() => { shopMap.invalidateSize(); }, 200);
+                return;
+            }
+
+            shopMap = L.map('shop-map').setView([25.2048, 55.2708], 11); // Default: Dubai
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(shopMap);
+
+            shopMap.on('click', function (e) {
+                setShopLatLng(e.latlng.lat, e.latlng.lng);
+            });
+
+            // If form has existing values, show marker
+            const latInput = document.getElementById('shop-lat');
+            const lngInput = document.getElementById('shop-lng');
+            if (latInput && lngInput) {
+                const lat = parseFloat(latInput.value);
+                const lng = parseFloat(lngInput.value);
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    setShopLatLng(lat, lng, true);
+                    shopMap.setView([lat, lng], 13);
+                }
+            }
+
+            setTimeout(() => { shopMap.invalidateSize(); }, 200);
+        }
+
+        function setShopLatLng(lat, lng, skipCenter) {
+            const latInput = document.getElementById('shop-lat');
+            const lngInput = document.getElementById('shop-lng');
+            if (latInput && lngInput) {
+                latInput.value = lat.toFixed(6);
+                lngInput.value = lng.toFixed(6);
+            }
+            if (!shopMarker) {
+                shopMarker = L.marker([lat, lng], { draggable: true }).addTo(shopMap);
+                shopMarker.on('dragend', function(e) {
+                    const pos = e.target.getLatLng();
+                    if (latInput && lngInput) {
+                        latInput.value = pos.lat.toFixed(6);
+                        lngInput.value = pos.lng.toFixed(6);
+                    }
+                });
+            } else {
+                shopMarker.setLatLng([lat, lng]);
+            }
+            if (!skipCenter && shopMap) shopMap.setView([lat, lng], shopMap.getZoom());
         }
 
         async function addShop(event) {
@@ -2372,6 +2448,28 @@
                     document.getElementById('shop-location-name').value = shop.location_name || '';
                     document.getElementById('shop-lat').value = shop.lat || '';
                     document.getElementById('shop-lng').value = shop.lng || '';
+
+                    // Initialize map with shop location
+                    setTimeout(() => {
+                        initShopMap();
+                        if (shop.lat && shop.lng) {
+                            setShopLatLng(parseFloat(shop.lat), parseFloat(shop.lng), true);
+                            if (shopMap) {
+                                shopMap.setView([parseFloat(shop.lat), parseFloat(shop.lng)], 13);
+                            }
+                        }
+                    }, 300);
+
+                    // Initialize map with shop location
+                    setTimeout(() => {
+                        initShopMap();
+                        if (shop.lat && shop.lng) {
+                            setShopLatLng(parseFloat(shop.lat), parseFloat(shop.lng), true);
+                            if (shopMap) {
+                                shopMap.setView([parseFloat(shop.lat), parseFloat(shop.lng)], 13);
+                            }
+                        }
+                    }, 300);
                 } else {
                     alert('Error loading shop');
                 }
