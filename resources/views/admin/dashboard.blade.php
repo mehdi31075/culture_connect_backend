@@ -2725,7 +2725,7 @@
                 const data = await apiCall(`/admin/foods/${foodId}`);
                 if (data && data.success) {
                     const food = data.data;
-                    
+
                     // Load shops first
                     try {
                         const shopData = await apiCall('/admin/shops?per_page=100');
@@ -2739,7 +2739,7 @@
                     } catch (error) {
                         console.error('Error loading shops:', error);
                     }
-                    
+
                     // Show modal and populate form
                     document.getElementById('add-food-modal').classList.remove('hidden');
                     document.getElementById('food-modal-title').textContent = 'Edit Food';
