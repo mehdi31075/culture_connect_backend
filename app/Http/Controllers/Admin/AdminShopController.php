@@ -62,8 +62,15 @@ class AdminShopController extends Controller
             }
 
             // Create shop - convert empty pavilion_id to null
+            $pavilionId = $request->pavilion_id;
+            if ($pavilionId === '' || $pavilionId === null) {
+                $pavilionId = null;
+            } else {
+                $pavilionId = (int) $pavilionId;
+            }
+
             $shop = Shop::create([
-                'pavilion_id' => $request->pavilion_id ?: null,
+                'pavilion_id' => $pavilionId,
                 'name' => $request->name,
                 'description' => $request->description,
                 'type' => $request->type ?? Shop::TYPE_SHOP,
@@ -120,8 +127,12 @@ class AdminShopController extends Controller
 
             // Update shop - convert empty pavilion_id to null
             $updateData = $request->only(['pavilion_id', 'name', 'description', 'type']);
-            if (isset($updateData['pavilion_id']) && empty($updateData['pavilion_id'])) {
-                $updateData['pavilion_id'] = null;
+            if (isset($updateData['pavilion_id'])) {
+                if ($updateData['pavilion_id'] === '' || $updateData['pavilion_id'] === null) {
+                    $updateData['pavilion_id'] = null;
+                } else {
+                    $updateData['pavilion_id'] = (int) $updateData['pavilion_id'];
+                }
             }
             $shop->update($updateData);
 
