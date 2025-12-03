@@ -314,6 +314,7 @@
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pavilion</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                                     </tr>
                                 </thead>
@@ -811,6 +812,20 @@
                                 <option value="food_truck">Food Truck</option>
                                 <option value="restaurant">Restaurant</option>
                             </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Location Name</label>
+                            <input type="text" name="location_name" id="shop-location-name" placeholder="e.g., Food Court A" class="w-full border rounded px-3 py-2" maxlength="160">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Latitude</label>
+                                <input type="number" name="lat" id="shop-lat" step="0.000001" min="-90" max="90" placeholder="e.g., 25.2048" class="w-full border rounded px-3 py-2">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Longitude</label>
+                                <input type="number" name="lng" id="shop-lng" step="0.000001" min="-180" max="180" placeholder="e.g., 55.2708" class="w-full border rounded px-3 py-2">
+                            </div>
                         </div>
                     </div>
                     <div class="flex justify-end space-x-3 mt-6">
@@ -2207,13 +2222,19 @@
 
         function displayShops(shops) {
             const tbody = document.getElementById('shops-table');
-            tbody.innerHTML = shops.map(shop => `
+            tbody.innerHTML = shops.map(shop => {
+                const locationInfo = shop.location_name
+                    ? `${shop.location_name}${shop.lat && shop.lng ? ` (${parseFloat(shop.lat).toFixed(6)}, ${parseFloat(shop.lng).toFixed(6)})` : ''}`
+                    : (shop.lat && shop.lng ? `(${parseFloat(shop.lat).toFixed(6)}, ${parseFloat(shop.lng).toFixed(6)})` : 'N/A');
+
+                return `
                 <tr class="border-b">
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${shop.id}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${shop.name}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${shop.pavilion ? shop.pavilion.name : 'N/A'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${shop.type || 'shop'}</td>
                     <td class="px-6 py-4 text-sm text-gray-900">${shop.description || 'N/A'}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900">${locationInfo}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm">
                         <button onclick="editShop(${shop.id})" class="text-blue-600 hover:text-blue-900 mr-2">
                             <i class="fas fa-edit"></i>
@@ -2223,7 +2244,8 @@
                         </button>
                     </td>
                 </tr>
-            `).join('');
+            `;
+            }).join('');
         }
 
         async function showAddShopModal() {
@@ -2314,6 +2336,9 @@
                     document.getElementById('shop-name').value = shop.name || '';
                     document.getElementById('shop-description').value = shop.description || '';
                     document.getElementById('shop-type').value = shop.type || 'shop';
+                    document.getElementById('shop-location-name').value = shop.location_name || '';
+                    document.getElementById('shop-lat').value = shop.lat || '';
+                    document.getElementById('shop-lng').value = shop.lng || '';
                 } else {
                     alert('Error loading shop');
                 }

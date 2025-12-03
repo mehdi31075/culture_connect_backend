@@ -51,6 +51,9 @@ class AdminShopController extends Controller
                 'name' => 'required|string|max:255',
                 'description' => 'nullable|string|max:1000',
                 'type' => 'nullable|string|in:shop,food_truck,restaurant',
+                'lat' => 'nullable|numeric|between:-90,90',
+                'lng' => 'nullable|numeric|between:-180,180',
+                'location_name' => 'nullable|string|max:160',
             ]);
 
             if ($validator->fails()) {
@@ -74,6 +77,9 @@ class AdminShopController extends Controller
                 'name' => $request->name,
                 'description' => $request->description,
                 'type' => $request->type ?? Shop::TYPE_SHOP,
+                'lat' => $request->lat ? (float) $request->lat : null,
+                'lng' => $request->lng ? (float) $request->lng : null,
+                'location_name' => $request->location_name,
             ]);
 
             // Load relationships
@@ -115,6 +121,9 @@ class AdminShopController extends Controller
                 'name' => 'sometimes|required|string|max:255',
                 'description' => 'nullable|string|max:1000',
                 'type' => 'nullable|string|in:shop,food_truck,restaurant',
+                'lat' => 'nullable|numeric|between:-90,90',
+                'lng' => 'nullable|numeric|between:-180,180',
+                'location_name' => 'nullable|string|max:160',
             ]);
 
             if ($validator->fails()) {
@@ -126,13 +135,20 @@ class AdminShopController extends Controller
             }
 
             // Update shop - convert empty pavilion_id to null
-            $updateData = $request->only(['pavilion_id', 'name', 'description', 'type']);
+            $updateData = $request->only(['pavilion_id', 'name', 'description', 'type', 'lat', 'lng', 'location_name']);
             if (isset($updateData['pavilion_id'])) {
                 if ($updateData['pavilion_id'] === '' || $updateData['pavilion_id'] === null) {
                     $updateData['pavilion_id'] = null;
                 } else {
                     $updateData['pavilion_id'] = (int) $updateData['pavilion_id'];
                 }
+            }
+            // Convert lat/lng to float or null
+            if (isset($updateData['lat'])) {
+                $updateData['lat'] = $updateData['lat'] === '' ? null : (float) $updateData['lat'];
+            }
+            if (isset($updateData['lng'])) {
+                $updateData['lng'] = $updateData['lng'] === '' ? null : (float) $updateData['lng'];
             }
             $shop->update($updateData);
 

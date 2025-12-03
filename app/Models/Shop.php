@@ -18,6 +18,14 @@ class Shop extends Model
         'name',
         'description',
         'type',
+        'lat',
+        'lng',
+        'location_name',
+    ];
+
+    protected $casts = [
+        'lat' => 'decimal:6',
+        'lng' => 'decimal:6',
     ];
 
     protected $attributes = [

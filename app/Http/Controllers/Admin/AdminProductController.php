@@ -280,7 +280,17 @@ class AdminProductController extends Controller
             ->map(fn ($tag) => trim($tag))
             ->filter()
             ->map(function (string $tagName) {
-                $tag = ProductTag::firstOrCreate(['name' => $tagName]);
+                // Create tag with type 'product' if it doesn't exist
+                $tag = ProductTag::firstOrCreate(
+                    ['name' => $tagName],
+                    ['tag_type' => ProductTag::TYPE_PRODUCT]
+                );
+
+                // If tag exists but type is 'food', update to 'both'
+                if ($tag->tag_type === ProductTag::TYPE_FOOD) {
+                    $tag->update(['tag_type' => ProductTag::TYPE_BOTH]);
+                }
+
                 return $tag->id;
             });
 
