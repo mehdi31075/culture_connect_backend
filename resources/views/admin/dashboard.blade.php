@@ -2636,10 +2636,14 @@
         function closeAddFoodModal() {
             document.getElementById('add-food-modal').classList.add('hidden');
             document.getElementById('add-food-form').reset();
+            document.getElementById('food-id').value = '';
+            document.getElementById('food-modal-title').textContent = 'Add New Food';
             document.getElementById('food-images-preview').innerHTML = '';
+            existingFoodImagesToRemove = [];
             selectedFoodTagIds = [];
             selectedFoodNewTags = [];
             renderSelectedFoodTags();
+            updateFoodTagHiddenInputs();
             const tagInput = document.getElementById('food-tag-input');
             if (tagInput) {
                 tagInput.value = '';
@@ -2648,6 +2652,18 @@
             const suggestions = document.getElementById('food-tag-suggestions');
             if (suggestions) {
                 suggestions.classList.add('hidden');
+            }
+        }
+
+        // Store existing images to remove
+        let existingFoodImagesToRemove = [];
+
+        function removeFoodImage(imageUrl) {
+            const preview = document.getElementById('food-images-preview');
+            const imgDiv = preview.querySelector(`[data-image-url="${imageUrl}"]`);
+            if (imgDiv) {
+                existingFoodImagesToRemove.push(imageUrl);
+                imgDiv.remove();
             }
         }
 
@@ -2674,6 +2690,13 @@
                 formData.append('images[]', images[i]);
             }
 
+            // Add images to remove if editing
+            if (foodId && existingFoodImagesToRemove.length > 0) {
+                existingFoodImagesToRemove.forEach(imageUrl => {
+                    formData.append('remove_images[]', imageUrl);
+                });
+            }
+
             selectedFoodTagIds.forEach(id => formData.append('tags[]', id));
             selectedFoodNewTags.forEach(name => formData.append('new_tags[]', name));
 
@@ -2687,7 +2710,7 @@
                 if (response && response.success) {
                     closeAddFoodModal();
                     loadFoods();
-                    alert('Food saved successfully');
+                    alert(foodId ? 'Food updated successfully' : 'Food saved successfully');
                 } else {
                     alert(response?.message || 'Failed to save food');
                 }
@@ -2702,22 +2725,65 @@
                 const data = await apiCall(`/admin/foods/${foodId}`);
                 if (data && data.success) {
                     const food = data.data;
-                    await showAddFoodModal();
+                    
+                    // Load shops first
+                    try {
+                        const shopData = await apiCall('/admin/shops?per_page=100');
+                        if (shopData && shopData.success) {
+                            const select = document.getElementById('food-shop-select');
+                            select.innerHTML = '<option value="">Select a shop...</option>';
+                            shopData.data.items.forEach(shop => {
+                                select.innerHTML += `<option value="${shop.id}">${shop.name}</option>`;
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error loading shops:', error);
+                    }
+                    
+                    // Show modal and populate form
+                    document.getElementById('add-food-modal').classList.remove('hidden');
                     document.getElementById('food-modal-title').textContent = 'Edit Food';
                     document.getElementById('food-id').value = food.id;
                     document.getElementById('food-shop-select').value = food.shop_id;
                     document.getElementById('food-name').value = food.name || '';
                     document.getElementById('food-description').value = food.description || '';
                     document.getElementById('food-price').value = food.price || '';
-                    // Note: views_count, likes_count, and comments_count are automatically calculated
+                    document.getElementById('food-discounted-price').value = food.discounted_price || '';
                     document.getElementById('food-is-trending').checked = food.is_trending || false;
                     document.getElementById('food-trending-position').value = food.trending_position || '';
                     document.getElementById('food-trending-score').value = food.trending_score || '';
                     document.getElementById('food-preparation-time').value = food.preparation_time || '';
                     document.getElementById('food-is-available').checked = food.is_available !== false;
 
+                    // Display existing images
+                    const imagesPreview = document.getElementById('food-images-preview');
+                    imagesPreview.innerHTML = '';
+                    existingFoodImagesToRemove = [];
+                    if (food.images && food.images.length > 0) {
+                        food.images.forEach((imageUrl, index) => {
+                            const imgDiv = document.createElement('div');
+                            imgDiv.className = 'relative';
+                            imgDiv.setAttribute('data-image-url', imageUrl);
+                            const escapedUrl = imageUrl.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                            imgDiv.innerHTML = `
+                                <img src="${imageUrl}" alt="Food image ${index + 1}" class="w-full h-24 object-cover rounded border">
+                                <button type="button" onclick="removeFoodImage('${escapedUrl}')" class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            `;
+                            imagesPreview.appendChild(imgDiv);
+                        });
+                    }
+
+                    // Load and set tags
                     const existingTagIds = food.tags ? food.tags.map(t => t.id) : [];
                     await loadFoodTagOptions(existingTagIds, []);
+                    selectedFoodTagIds = existingTagIds;
+                    selectedFoodNewTags = [];
+                    renderSelectedFoodTags();
+                    updateFoodTagHiddenInputs();
+                } else {
+                    alert('Error loading food');
                 }
             } catch (error) {
                 console.error('Error loading food:', error);

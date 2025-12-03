@@ -103,6 +103,7 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
 
     // Food management
     Route::get('/foods', [AdminFoodController::class, 'index']);
+    Route::get('/foods/{id}', [AdminFoodController::class, 'show']);
     Route::post('/foods', [AdminFoodController::class, 'store']);
     Route::match(['put', 'post'], '/foods/{id}', [AdminFoodController::class, 'update']);
     Route::delete('/foods/{id}', [AdminFoodController::class, 'destroy']);

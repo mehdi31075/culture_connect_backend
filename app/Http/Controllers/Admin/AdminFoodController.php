@@ -13,6 +13,34 @@ use Illuminate\Support\Facades\Validator;
 class AdminFoodController extends Controller
 {
     /**
+     * Get a single food
+     */
+    public function show(int $id): JsonResponse
+    {
+        try {
+            $food = Food::with(['shop', 'tags'])->find($id);
+
+            if (!$food) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Food not found',
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $food,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve food',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Get all foods with pagination
      */
     public function index(Request $request): JsonResponse
@@ -186,9 +214,33 @@ class AdminFoodController extends Controller
                 'preparation_time', 'is_available'
             ]);
 
+            // Handle image removal
+            if ($request->has('remove_images') && is_array($request->remove_images)) {
+                $currentImages = $food->images ?? [];
+                $imagesToRemove = $request->remove_images;
+                
+                // Filter out images to remove
+                $remainingImages = array_filter($currentImages, function($imageUrl) use ($imagesToRemove) {
+                    return !in_array($imageUrl, $imagesToRemove);
+                });
+                
+                // Delete removed images from storage
+                foreach ($imagesToRemove as $imageUrl) {
+                    $publicPrefix = url('storage/') . '/';
+                    $relative = str_starts_with($imageUrl, $publicPrefix)
+                        ? substr($imageUrl, strlen($publicPrefix))
+                        : null;
+                    if ($relative) {
+                        Storage::disk('public')->delete($relative);
+                    }
+                }
+                
+                $data['images'] = array_values($remainingImages);
+            }
+
             // Handle new image uploads
             if ($request->hasFile('images')) {
-                $imageUrls = $food->images ?? [];
+                $imageUrls = $data['images'] ?? ($food->images ?? []);
                 foreach ($request->file('images') as $image) {
                     $filename = 'food_' . time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
                     $path = $image->storeAs('foods', $filename, 'public');
