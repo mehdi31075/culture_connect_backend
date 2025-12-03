@@ -850,7 +850,7 @@
                             <textarea name="description" rows="3" class="w-full border rounded px-3 py-2"></textarea>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Price *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Price ({{ config('app.currency.symbol', '$') }}) *</label>
                             <input type="number" name="price" step="0.01" min="0" required class="w-full border rounded px-3 py-2">
                         </div>
                         <div>
@@ -1012,7 +1012,7 @@
                         <textarea id="food-description" name="description" rows="3" class="w-full px-3 py-2 border rounded-lg"></textarea>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Price *</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Price ({{ config('app.currency.symbol', '$') }}) *</label>
                         <input type="number" id="food-price" name="price" step="0.01" min="0" required class="w-full px-3 py-2 border rounded-lg">
                     </div>
                     <div>
@@ -1113,7 +1113,7 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Value *</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Value * <span id="offer-value-hint" class="text-gray-500 text-xs">(Percent or {{ config('app.currency.symbol', '$') }} for fixed)</span></label>
                         <input type="number" id="offer-value" name="value" step="0.01" min="0" required class="w-full px-3 py-2 border rounded-lg">
                     </div>
                     <div>
@@ -1182,7 +1182,7 @@
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Price</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Price ({{ config('app.currency.symbol', '$') }}) - Use -1 for Free</label>
                                 <input type="number" name="price" id="event-price" step="0.01" min="-1" value="-1.00" class="w-full border rounded px-3 py-2">
                             </div>
                             <div>
@@ -1399,6 +1399,26 @@
             // Food tag input handlers are now handled by inline oninput and onkeydown handlers
         });
 
+        // Currency configuration
+        const currencyConfig = {
+            symbol: '{{ config("app.currency.symbol", "$") }}',
+            code: '{{ config("app.currency.code", "USD") }}',
+            position: '{{ config("app.currency.position", "before") }}'
+        };
+
+        // Format price with currency
+        function formatPrice(price) {
+            if (price === null || price === undefined || price === '' || parseFloat(price) < 0) {
+                return 'Free';
+            }
+            const formattedPrice = parseFloat(price).toFixed(2);
+            if (currencyConfig.position === 'after') {
+                return `${formattedPrice} ${currencyConfig.symbol}`;
+            } else {
+                return `${currencyConfig.symbol}${formattedPrice}`;
+            }
+        }
+
         // API helper function
         async function apiCall(endpoint, options = {}) {
             const defaultOptions = {
@@ -1438,7 +1458,7 @@
             document.getElementById('total-users').textContent = stats.overview.total_users;
             document.getElementById('total-events').textContent = stats.overview.total_events;
             document.getElementById('total-orders').textContent = stats.overview.total_orders;
-            document.getElementById('total-revenue').textContent = `$${stats.revenue.total_revenue || 0}`;
+            document.getElementById('total-revenue').textContent = formatPrice(stats.revenue.total_revenue || 0);
         }
 
         // Create charts
@@ -2316,7 +2336,7 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${product.id}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${product.name}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${product.shop ? product.shop.name : 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$${parseFloat(product.price).toFixed(2)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatPrice(product.price)}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm">
                         <span class="px-2 py-1 text-xs rounded-full ${product.is_food ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
                             ${product.is_food ? 'Yes' : 'No'}
@@ -2511,7 +2531,7 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${food.id}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${food.name}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${food.shop ? food.shop.name : 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$${parseFloat(food.price).toFixed(2)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatPrice(food.price)}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm">
                         <span class="px-2 py-1 text-xs rounded-full ${food.is_trending ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}">
                             ${food.is_trending ? `#${food.trending_position || 'N/A'} (${food.trending_score || 0}%)` : 'No'}
@@ -2696,7 +2716,7 @@
                         ${!offer.product && !offer.food ? 'N/A' : ''}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${offer.discount_type === 'percent' ? 'Percent' : 'Fixed'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${offer.discount_type === 'percent' ? offer.value + '%' : '$' + parseFloat(offer.value).toFixed(2)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${offer.discount_type === 'percent' ? offer.value + '%' : formatPrice(offer.value)}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${offer.start_at ? new Date(offer.start_at).toLocaleDateString() : 'N/A'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${offer.end_at ? new Date(offer.end_at).toLocaleDateString() : 'N/A'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm">
@@ -2791,6 +2811,27 @@
             document.getElementById('add-offer-form').reset();
         }
 
+        // Update offer value hint based on discount type
+        function updateOfferValueHint() {
+            const discountType = document.getElementById('offer-discount-type').value;
+            const hintElement = document.getElementById('offer-value-hint');
+            if (hintElement) {
+                if (discountType === 'percent') {
+                    hintElement.textContent = '(Percentage, e.g., 20 for 20%)';
+                } else {
+                    hintElement.textContent = `(Fixed amount in ${currencyConfig.symbol})`;
+                }
+            }
+        }
+
+        // Add event listener for discount type change
+        document.addEventListener('DOMContentLoaded', function() {
+            const discountTypeSelect = document.getElementById('offer-discount-type');
+            if (discountTypeSelect) {
+                discountTypeSelect.addEventListener('change', updateOfferValueHint);
+            }
+        });
+
         document.getElementById('add-offer-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             const offerId = document.getElementById('offer-id').value;
@@ -2859,6 +2900,7 @@
                     document.getElementById('offer-description').value = offer.description || '';
                     document.getElementById('offer-discount-type').value = offer.discount_type || 'percent';
                     document.getElementById('offer-value').value = offer.value || '';
+                    updateOfferValueHint(); // Update hint based on discount type
                     document.getElementById('offer-is-bundle').checked = offer.is_bundle || false;
                     document.getElementById('offer-start-at').value = offer.start_at ? new Date(offer.start_at).toISOString().slice(0, 16) : '';
                     document.getElementById('offer-end-at').value = offer.end_at ? new Date(offer.end_at).toISOString().slice(0, 16) : '';
@@ -2919,7 +2961,7 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#${order.id}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${order.user ? (order.user.first_name + ' ' + order.user.last_name) : 'N/A'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${order.shop ? order.shop.name : 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$${parseFloat(order.total_amount).toFixed(2)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatPrice(order.total_amount)}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm">
                         <span class="px-2 py-1 text-xs rounded-full ${
                             order.status === 'paid' ? 'bg-green-100 text-green-800' :
@@ -4412,7 +4454,7 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${startTime}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${endTime}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${capacityDisplay}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${event.price !== null && event.price !== undefined ? parseFloat(event.price).toFixed(2) : '-1.00'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatPrice(event.price)}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm">
                         <button onclick="editEvent(${event.id})" class="text-blue-600 hover:text-blue-900 mr-2">
                             <i class="fas fa-edit"></i>

@@ -91,8 +91,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Encryption Key
+    | Currency Configuration
     |--------------------------------------------------------------------------
+    |
+    | This value determines the default currency symbol and code used
+    | throughout the application for displaying prices.
+    |
+    */
+
+    'currency' => [
+        'symbol' => env('CURRENCY_SYMBOL', '$'),
+        'code' => env('CURRENCY_CODE', 'USD'),
+        'position' => env('CURRENCY_POSITION', 'before'), // 'before' or 'after'
+    ],
+
+    /*
+     |--------------------------------------------------------------------------
+     | Encryption Key
+     |--------------------------------------------------------------------------
     |
     | This key is utilized by Laravel's encryption services and should be set
     | to a random, 32 character string to ensure that all encrypted values
