@@ -787,9 +787,9 @@
                     <input type="hidden" id="shop-id" name="id">
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Pavilion *</label>
-                            <select name="pavilion_id" id="shop-pavilion-select" required class="w-full border rounded px-3 py-2">
-                                <option value="">Loading...</option>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Pavilion (Optional)</label>
+                            <select name="pavilion_id" id="shop-pavilion-select" class="w-full border rounded px-3 py-2">
+                                <option value="">None - Standalone Shop</option>
                             </select>
                         </div>
                         <div>
@@ -2183,7 +2183,7 @@
                 const data = await apiCall('/admin/pavilions?per_page=100');
                 if (data && data.success) {
                     const select = document.getElementById('shop-pavilion-select');
-                    select.innerHTML = '<option value="">Select a pavilion...</option>';
+                    select.innerHTML = '<option value="">None - Standalone Shop</option>';
                     data.data.items.forEach(pavilion => {
                         select.innerHTML += `<option value="${pavilion.id}">${pavilion.name}</option>`;
                     });
@@ -2247,7 +2247,7 @@
                         const pavilionData = await apiCall('/admin/pavilions?per_page=100');
                         if (pavilionData && pavilionData.success) {
                             const select = document.getElementById('shop-pavilion-select');
-                            select.innerHTML = '<option value="">Select a pavilion...</option>';
+                            select.innerHTML = '<option value="">None - Standalone Shop</option>';
                             pavilionData.data.items.forEach(pavilion => {
                                 select.innerHTML += `<option value="${pavilion.id}">${pavilion.name}</option>`;
                             });
@@ -2261,7 +2261,7 @@
                     document.getElementById('shop-modal-title').textContent = 'Edit Shop';
                     document.getElementById('shop-submit-btn').textContent = 'Update Shop';
                     document.getElementById('shop-id').value = shop.id;
-                    document.getElementById('shop-pavilion-select').value = shop.pavilion_id;
+                    document.getElementById('shop-pavilion-select').value = shop.pavilion_id || '';
                     document.getElementById('shop-name').value = shop.name || '';
                     document.getElementById('shop-description').value = shop.description || '';
                     document.getElementById('shop-type').value = shop.type || 'shop';

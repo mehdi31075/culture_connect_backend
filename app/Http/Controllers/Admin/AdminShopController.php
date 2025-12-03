@@ -47,7 +47,7 @@ class AdminShopController extends Controller
         try {
             // Validate the request
             $validator = Validator::make($request->all(), [
-                'pavilion_id' => 'required|exists:pavilions,id',
+                'pavilion_id' => 'nullable|exists:pavilions,id',
                 'name' => 'required|string|max:255',
                 'description' => 'nullable|string|max:1000',
                 'type' => 'nullable|string|in:shop,food_truck,restaurant',
@@ -61,9 +61,9 @@ class AdminShopController extends Controller
                 ], 422);
             }
 
-            // Create shop
+            // Create shop - convert empty pavilion_id to null
             $shop = Shop::create([
-                'pavilion_id' => $request->pavilion_id,
+                'pavilion_id' => $request->pavilion_id ?: null,
                 'name' => $request->name,
                 'description' => $request->description,
                 'type' => $request->type ?? Shop::TYPE_SHOP,
@@ -104,7 +104,7 @@ class AdminShopController extends Controller
 
             // Validate the request
             $validator = Validator::make($request->all(), [
-                'pavilion_id' => 'sometimes|required|exists:pavilions,id',
+                'pavilion_id' => 'nullable|exists:pavilions,id',
                 'name' => 'sometimes|required|string|max:255',
                 'description' => 'nullable|string|max:1000',
                 'type' => 'nullable|string|in:shop,food_truck,restaurant',
@@ -118,8 +118,12 @@ class AdminShopController extends Controller
                 ], 422);
             }
 
-            // Update shop
-            $shop->update($request->only(['pavilion_id', 'name', 'description', 'type']));
+            // Update shop - convert empty pavilion_id to null
+            $updateData = $request->only(['pavilion_id', 'name', 'description', 'type']);
+            if (isset($updateData['pavilion_id']) && empty($updateData['pavilion_id'])) {
+                $updateData['pavilion_id'] = null;
+            }
+            $shop->update($updateData);
 
             // Load relationships
             $shop->load('pavilion');
