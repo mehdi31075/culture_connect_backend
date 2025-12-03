@@ -91,29 +91,51 @@ class Food extends Model
      */
     public function getImagesAttribute($value)
     {
-        if (!$value || !is_array($value)) {
+        // Access raw attribute from database (JSON string)
+        $rawValue = $this->attributes['images'] ?? null;
+
+        // If null or empty, return empty array
+        if ($rawValue === null || $rawValue === '') {
             return [];
         }
 
-        return array_map(function ($image) {
+        // Decode JSON string to array
+        $images = is_string($rawValue)
+            ? json_decode($rawValue, true)
+            : $rawValue;
+
+        // If decoding failed or not an array, return empty array
+        if (!is_array($images) || empty($images)) {
+            return [];
+        }
+
+        // Process each image URL to ensure full URLs
+        return array_values(array_filter(array_map(function ($image) {
+            if (empty($image) || !is_string($image)) {
+                return null;
+            }
+
+            // Already a full URL
             if (filter_var($image, FILTER_VALIDATE_URL)) {
                 return $image;
             }
 
+            // Handle relative paths
             if (str_starts_with($image, '/storage/')) {
                 return url($image);
             }
 
             if (str_starts_with($image, 'storage/')) {
-                return url($image);
+                return url('/' . $image);
             }
 
+            // Assume relative path, prepend storage
             if (!str_starts_with($image, 'http')) {
                 return url('storage/' . ltrim($image, '/'));
             }
 
             return $image;
-        }, $value);
+        }, $images)));
     }
 
     /**
