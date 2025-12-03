@@ -14,6 +14,7 @@ class Food extends Model
         'name',
         'description',
         'price',
+        'discounted_price',
         'images',
         'views_count', // Stored in DB, auto-incremented on fetch
         // likes_count and comments_count are calculated via accessors
@@ -26,6 +27,7 @@ class Food extends Model
 
     protected $casts = [
         'price' => 'decimal:2',
+        'discounted_price' => 'decimal:2',
         'images' => 'array',
         'views_count' => 'integer', // Stored in DB
         // likes_count and comments_count are calculated via accessors, not stored

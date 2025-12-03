@@ -345,6 +345,7 @@
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Shop</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">After Discount</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Is Food</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tags</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
@@ -410,6 +411,7 @@
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Shop</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">After Discount</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Trending</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tags</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
@@ -529,6 +531,7 @@
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">End Time</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Attendees/Capacity</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">After Discount</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                                     </tr>
                                 </thead>
@@ -630,6 +633,7 @@
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">End Time</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Attendees/Capacity</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">After Discount</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                                     </tr>
                                 </thead>
@@ -851,7 +855,11 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Price ({{ config('app.currency.symbol', '$') }}) *</label>
-                            <input type="number" name="price" step="0.01" min="0" required class="w-full border rounded px-3 py-2">
+                            <input type="number" name="price" id="product-price" step="0.01" min="0" required class="w-full border rounded px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">After Discount Price ({{ config('app.currency.symbol', '$') }}) - Optional</label>
+                            <input type="number" name="discounted_price" id="product-discounted-price" step="0.01" min="0" class="w-full border rounded px-3 py-2">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Tags</label>
@@ -1014,6 +1022,10 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Price ({{ config('app.currency.symbol', '$') }}) *</label>
                         <input type="number" id="food-price" name="price" step="0.01" min="0" required class="w-full px-3 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">After Discount Price ({{ config('app.currency.symbol', '$') }}) - Optional</label>
+                        <input type="number" id="food-discounted-price" name="discounted_price" step="0.01" min="0" class="w-full px-3 py-2 border rounded-lg">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Images</label>
@@ -2326,17 +2338,29 @@
             if (!products.length) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="7" class="px-6 py-4 text-sm text-gray-500 text-center">No products found. Add a product to get started.</td>
+                        <td colspan="8" class="px-6 py-4 text-sm text-gray-500 text-center">No products found. Add a product to get started.</td>
                     </tr>
                 `;
                 return;
             }
-            tbody.innerHTML = products.map(product => `
+            tbody.innerHTML = products.map(product => {
+                const hasDiscount = product.discounted_price && product.discounted_price < product.price;
+                const originalPrice = product.price;
+                const discountedPrice = product.discounted_price;
+
+                return `
                 <tr class="border-b">
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${product.id}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${product.name}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${product.shop ? product.shop.name : 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatPrice(product.price)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${hasDiscount ? `<span class="line-through text-gray-400">${formatPrice(originalPrice)}</span>` : formatPrice(originalPrice)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${hasDiscount
+                            ? `<span class="text-green-600 font-semibold">${formatPrice(discountedPrice)}</span>`
+                            : '<span class="text-gray-400">—</span>'}
+                    </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm">
                         <span class="px-2 py-1 text-xs rounded-full ${product.is_food ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
                             ${product.is_food ? 'Yes' : 'No'}
@@ -2358,7 +2382,8 @@
                         </button>
                     </td>
                 </tr>
-            `).join('');
+            `;
+            }).join('');
         }
 
         async function showAddProductModal() {
@@ -2423,6 +2448,7 @@
                 name: form.name.value,
                 description: form.description.value || null,
                 price: form.price.value,
+                discounted_price: document.getElementById('product-discounted-price').value || null,
                 image_url: form.image_url.value || null,
                 is_food: document.getElementById('product_is_food').checked ? 1 : 0,
                 tags: selectedTags,
@@ -2466,6 +2492,7 @@
                     document.getElementById('product-name').value = product.name || '';
                     document.getElementById('product-description').value = product.description || '';
                     document.getElementById('product-price').value = product.price || '';
+                    document.getElementById('product-discounted-price').value = product.discounted_price || '';
                     document.getElementById('product-image-url').value = product.image_url || '';
                     document.getElementById('product-is-food').checked = product.is_food || false;
 
@@ -2521,17 +2548,29 @@
             if (!foods.length) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="7" class="px-6 py-4 text-sm text-gray-500 text-center">No foods found. Add a food to get started.</td>
+                        <td colspan="8" class="px-6 py-4 text-sm text-gray-500 text-center">No foods found. Add a food to get started.</td>
                     </tr>
                 `;
                 return;
             }
-            tbody.innerHTML = foods.map(food => `
+            tbody.innerHTML = foods.map(food => {
+                const hasDiscount = food.discounted_price && food.discounted_price < food.price;
+                const originalPrice = food.price;
+                const discountedPrice = food.discounted_price;
+
+                return `
                 <tr class="border-b">
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${food.id}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${food.name}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${food.shop ? food.shop.name : 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatPrice(food.price)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${hasDiscount ? `<span class="line-through text-gray-400">${formatPrice(originalPrice)}</span>` : formatPrice(originalPrice)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${hasDiscount
+                            ? `<span class="text-green-600 font-semibold">${formatPrice(discountedPrice)}</span>`
+                            : '<span class="text-gray-400">—</span>'}
+                    </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm">
                         <span class="px-2 py-1 text-xs rounded-full ${food.is_trending ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}">
                             ${food.is_trending ? `#${food.trending_position || 'N/A'} (${food.trending_score || 0}%)` : 'No'}
@@ -2553,7 +2592,8 @@
                         </button>
                     </td>
                 </tr>
-            `).join('');
+            `;
+            }).join('');
         }
 
         async function showAddFoodModal() {
@@ -2603,6 +2643,7 @@
             formData.append('name', document.getElementById('food-name').value);
             formData.append('description', document.getElementById('food-description').value);
             formData.append('price', document.getElementById('food-price').value);
+            formData.append('discounted_price', document.getElementById('food-discounted-price').value || '');
             // Note: views_count, likes_count, and comments_count are automatically calculated
             formData.append('is_trending', document.getElementById('food-is-trending').checked ? 1 : 0);
             formData.append('trending_position', document.getElementById('food-trending-position').value || '');

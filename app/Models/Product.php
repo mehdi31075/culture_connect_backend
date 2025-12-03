@@ -14,12 +14,14 @@ class Product extends Model
         'name',
         'description',
         'price',
+        'discounted_price',
         'is_food',
         'image_url',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
+        'discounted_price' => 'decimal:2',
         'is_food' => 'boolean',
     ];
 

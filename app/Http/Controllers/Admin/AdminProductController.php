@@ -101,6 +101,7 @@ class AdminProductController extends Controller
                 'name' => 'required|string|max:255',
                 'description' => 'nullable|string|max:1000',
                 'price' => 'required|numeric|min:0',
+                'discounted_price' => 'nullable|numeric|min:0',
                 'is_food' => 'nullable|boolean',
                 'image_url' => 'nullable|url|max:500',
                 'tags' => 'nullable|array',
@@ -132,6 +133,7 @@ class AdminProductController extends Controller
                 'name' => $request->name,
                 'description' => $request->description,
                 'price' => $request->price,
+                'discounted_price' => $request->discounted_price,
                 'is_food' => $request->boolean('is_food', false),
                 'image_url' => $request->image_url,
             ]);
@@ -177,6 +179,7 @@ class AdminProductController extends Controller
                 'name' => 'sometimes|required|string|max:255',
                 'description' => 'nullable|string|max:1000',
                 'price' => 'sometimes|required|numeric|min:0',
+                'discounted_price' => 'nullable|numeric|min:0',
                 'is_food' => 'nullable|boolean',
                 'image_url' => 'nullable|url|max:500',
                 'tags' => 'nullable|array',
@@ -194,7 +197,7 @@ class AdminProductController extends Controller
             }
 
             // Update product
-            $updateData = $request->only(['shop_id', 'name', 'description', 'price', 'image_url']);
+            $updateData = $request->only(['shop_id', 'name', 'description', 'price', 'discounted_price', 'image_url']);
             if ($request->has('is_food')) {
                 $updateData['is_food'] = $request->boolean('is_food');
             }

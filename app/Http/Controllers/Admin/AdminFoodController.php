@@ -75,6 +75,7 @@ class AdminFoodController extends Controller
                 'name' => 'required|string|max:160',
                 'description' => 'nullable|string',
                 'price' => 'required|numeric|min:0',
+                'discounted_price' => 'nullable|numeric|min:0',
                 'images' => 'nullable|array',
                 'images.*' => 'file|mimes:jpeg,png,jpg,gif,svg|max:4096',
                 'is_trending' => 'nullable|boolean',
@@ -111,6 +112,7 @@ class AdminFoodController extends Controller
                 'name' => $request->name,
                 'description' => $request->description,
                 'price' => $request->price,
+                'discounted_price' => $request->discounted_price,
                 'images' => !empty($imageUrls) ? $imageUrls : null,
                 'is_trending' => $request->get('is_trending', false),
                 'trending_position' => $request->trending_position,
@@ -156,6 +158,7 @@ class AdminFoodController extends Controller
                 'name' => 'sometimes|string|max:160',
                 'description' => 'nullable|string',
                 'price' => 'sometimes|numeric|min:0',
+                'discounted_price' => 'nullable|numeric|min:0',
                 'images' => 'nullable|array',
                 'images.*' => 'file|mimes:jpeg,png,jpg,gif,svg|max:4096',
                 'is_trending' => 'nullable|boolean',
@@ -178,7 +181,7 @@ class AdminFoodController extends Controller
             }
 
             $data = $request->only([
-                'shop_id', 'name', 'description', 'price',
+                'shop_id', 'name', 'description', 'price', 'discounted_price',
                 'is_trending', 'trending_position', 'trending_score',
                 'preparation_time', 'is_available'
             ]);
