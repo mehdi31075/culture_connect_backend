@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\AdminEventTagController;
 use App\Http\Controllers\Admin\AdminEventFeatureController;
 use App\Http\Controllers\Admin\AdminFoodController;
 use App\Http\Controllers\Admin\AdminOfferController;
+use App\Http\Controllers\Admin\AdminMapController;
 
 /*
 |--------------------------------------------------------------------------
@@ -107,6 +108,9 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
     Route::post('/foods', [AdminFoodController::class, 'store']);
     Route::match(['put', 'post'], '/foods/{id}', [AdminFoodController::class, 'update']);
     Route::delete('/foods/{id}', [AdminFoodController::class, 'destroy']);
+
+    // Map POIs
+    Route::get('/map/pois', [AdminMapController::class, 'pois']);
 
     // Offer management
     Route::get('/offers', [AdminOfferController::class, 'index']);

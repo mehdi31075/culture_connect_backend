@@ -118,6 +118,12 @@
                         </a>
                     </li>
                     <li>
+                        <a href="#map" onclick="showSection('map', this)" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
+                            <i class="fas fa-map mr-3"></i>
+                            Map
+                        </a>
+                    </li>
+                    <li>
                         <a href="#notifications" onclick="showSection('notifications', this)" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
                             <i class="fas fa-bell mr-3"></i>
                             Notifications
@@ -645,6 +651,31 @@
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Map Section -->
+            <div id="map-section" class="section hidden">
+                <h2 class="text-2xl font-bold mb-6">Map View</h2>
+                <div class="bg-white rounded-lg shadow p-4 mb-4">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 bg-blue-500 rounded"></div>
+                            <span class="text-sm">Pavilions</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 bg-green-500 rounded"></div>
+                            <span class="text-sm">Shops</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 bg-red-500 rounded"></div>
+                            <span class="text-sm">Events</span>
+                        </div>
+                        <button onclick="refreshMap()" class="ml-auto px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                            <i class="fas fa-sync-alt mr-2"></i>Refresh Map
+                        </button>
+                    </div>
+                </div>
+                <div id="admin-map" class="w-full h-[calc(100vh-300px)] rounded-lg border shadow"></div>
             </div>
 
             <div id="notifications-section" class="section hidden">
@@ -1651,6 +1682,8 @@
                 loadOrders();
             } else if (sectionName === 'reviews') {
                 loadReviews();
+            } else if (sectionName === 'map') {
+                loadMap();
             }
         }
 
@@ -4967,6 +5000,138 @@
                     console.error('Error deleting review:', error);
                     alert('Error deleting review');
                 }
+            }
+        }
+
+        // Map Management Functions
+        let adminMap = null;
+        let mapMarkers = [];
+
+        async function loadMap() {
+            if (!adminMap) {
+                // Initialize map
+                adminMap = L.map('admin-map').setView([25.2048, 55.2708], 11); // Default: Dubai
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors'
+                }).addTo(adminMap);
+
+                // Fix map size after initialization
+                setTimeout(() => { adminMap.invalidateSize(); }, 200);
+            }
+            await refreshMap();
+        }
+
+        async function refreshMap() {
+            if (!adminMap) {
+                await loadMap();
+                return;
+            }
+
+            try {
+                const data = await apiCall('/admin/map/pois');
+                if (data && data.success) {
+                    // Clear existing markers
+                    mapMarkers.forEach(marker => marker.remove());
+                    mapMarkers = [];
+
+                    const pois = data.data;
+                    const bounds = [];
+
+                    // Add pavilion markers (blue)
+                    pois.pavilions.forEach(pavilion => {
+                        if (pavilion.lat && pavilion.lng) {
+                            const marker = L.marker([pavilion.lat, pavilion.lng], {
+                                icon: L.divIcon({
+                                    className: 'custom-marker',
+                                    html: `<div style="background-color: #3B82F6; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
+                                    iconSize: [20, 20],
+                                    iconAnchor: [10, 10]
+                                })
+                            }).addTo(adminMap);
+
+                            marker.bindPopup(`
+                                <div style="min-width: 200px;">
+                                    <h3 style="font-weight: bold; margin-bottom: 8px; color: #3B82F6;">🏛️ ${pavilion.name}</h3>
+                                    <p style="margin: 4px 0; color: #666;">${pavilion.description || 'No description'}</p>
+                                    <p style="margin: 4px 0; font-size: 12px; color: #999;">Type: Pavilion</p>
+                                </div>
+                            `);
+
+                            mapMarkers.push(marker);
+                            bounds.push([pavilion.lat, pavilion.lng]);
+                        }
+                    });
+
+                    // Add shop markers (green)
+                    pois.shops.forEach(shop => {
+                        if (shop.lat && shop.lng) {
+                            const marker = L.marker([shop.lat, shop.lng], {
+                                icon: L.divIcon({
+                                    className: 'custom-marker',
+                                    html: `<div style="background-color: #10B981; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
+                                    iconSize: [20, 20],
+                                    iconAnchor: [10, 10]
+                                })
+                            }).addTo(adminMap);
+
+                            const locationInfo = shop.location_name ? `<p style="margin: 4px 0; color: #666;">📍 ${shop.location_name}</p>` : '';
+                            const pavilionInfo = shop.pavilion_name ? `<p style="margin: 4px 0; font-size: 12px; color: #999;">Pavilion: ${shop.pavilion_name}</p>` : '';
+
+                            marker.bindPopup(`
+                                <div style="min-width: 200px;">
+                                    <h3 style="font-weight: bold; margin-bottom: 8px; color: #10B981;">🏪 ${shop.name}</h3>
+                                    ${locationInfo}
+                                    <p style="margin: 4px 0; color: #666;">${shop.description || 'No description'}</p>
+                                    <p style="margin: 4px 0; font-size: 12px; color: #999;">Type: ${shop.type_category || 'shop'}</p>
+                                    ${pavilionInfo}
+                                </div>
+                            `);
+
+                            mapMarkers.push(marker);
+                            bounds.push([shop.lat, shop.lng]);
+                        }
+                    });
+
+                    // Add event markers (red)
+                    pois.events.forEach(event => {
+                        if (event.lat && event.lng) {
+                            const marker = L.marker([event.lat, event.lng], {
+                                icon: L.divIcon({
+                                    className: 'custom-marker',
+                                    html: `<div style="background-color: #EF4444; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
+                                    iconSize: [20, 20],
+                                    iconAnchor: [10, 10]
+                                })
+                            }).addTo(adminMap);
+
+                            const startTime = event.start_time ? new Date(event.start_time).toLocaleString() : 'N/A';
+                            const endTime = event.end_time ? new Date(event.end_time).toLocaleString() : 'N/A';
+                            const stageInfo = event.stage ? `<p style="margin: 4px 0; font-size: 12px; color: #999;">Stage: ${event.stage}</p>` : '';
+
+                            marker.bindPopup(`
+                                <div style="min-width: 200px;">
+                                    <h3 style="font-weight: bold; margin-bottom: 8px; color: #EF4444;">🎭 ${event.name}</h3>
+                                    <p style="margin: 4px 0; color: #666;">${event.description || 'No description'}</p>
+                                    ${stageInfo}
+                                    <p style="margin: 4px 0; font-size: 12px; color: #999;">Start: ${startTime}</p>
+                                    <p style="margin: 4px 0; font-size: 12px; color: #999;">End: ${endTime}</p>
+                                    ${event.pavilion_name ? `<p style="margin: 4px 0; font-size: 12px; color: #999;">Pavilion: ${event.pavilion_name}</p>` : ''}
+                                </div>
+                            `);
+
+                            mapMarkers.push(marker);
+                            bounds.push([event.lat, event.lng]);
+                        }
+                    });
+
+                    // Fit map to show all markers
+                    if (bounds.length > 0) {
+                        adminMap.fitBounds(bounds, { padding: [50, 50] });
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading map POIs:', error);
+                alert('Error loading map data');
             }
         }
     </script>
