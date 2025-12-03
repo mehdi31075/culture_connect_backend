@@ -778,12 +778,13 @@
         <div class="flex items-center justify-center min-h-screen p-4">
             <div class="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[85vh] overflow-y-auto">
                 <div class="flex justify-between items-center p-6 border-b">
-                    <h3 class="text-lg font-semibold">Add New Shop</h3>
+                    <h3 id="shop-modal-title" class="text-lg font-semibold">Add New Shop</h3>
                     <button onclick="closeAddShopModal()" class="text-gray-400 hover:text-gray-600">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
                 <form id="add-shop-form" onsubmit="addShop(event)" class="p-6">
+                    <input type="hidden" id="shop-id" name="id">
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Pavilion *</label>
@@ -793,15 +794,15 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-                            <input type="text" name="name" required class="w-full border rounded px-3 py-2">
+                            <input type="text" name="name" id="shop-name" required class="w-full border rounded px-3 py-2">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                            <textarea name="description" rows="3" class="w-full border rounded px-3 py-2"></textarea>
+                            <textarea name="description" id="shop-description" rows="3" class="w-full border rounded px-3 py-2"></textarea>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                            <select name="type" class="w-full border rounded px-3 py-2">
+                            <select name="type" id="shop-type" class="w-full border rounded px-3 py-2">
                                 <option value="shop">Shop</option>
                                 <option value="food_truck">Food Truck</option>
                                 <option value="restaurant">Restaurant</option>
@@ -812,7 +813,7 @@
                         <button type="button" onclick="closeAddShopModal()" class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50">
                             Cancel
                         </button>
-                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                        <button type="submit" id="shop-submit-btn" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
                             Add Shop
                         </button>
                     </div>
@@ -2196,6 +2197,9 @@
         function closeAddShopModal() {
             document.getElementById('add-shop-modal').classList.add('hidden');
             document.getElementById('add-shop-form').reset();
+            document.getElementById('shop-id').value = '';
+            document.getElementById('shop-modal-title').textContent = 'Add New Shop';
+            document.getElementById('shop-submit-btn').textContent = 'Add Shop';
         }
 
         async function addShop(event) {
@@ -2203,24 +2207,71 @@
             const formData = new FormData(event.target);
             const data = Object.fromEntries(formData);
 
+            const shopId = document.getElementById('shop-id').value;
+            const isEdit = shopId !== '';
+
+            // Remove id from data if creating (not editing)
+            if (!isEdit) {
+                delete data.id;
+            }
+
             try {
-                const response = await apiCall('/admin/shops', {
-                    method: 'POST',
+                const url = isEdit ? `/admin/shops/${shopId}` : '/admin/shops';
+                const method = isEdit ? 'PUT' : 'POST';
+
+                const response = await apiCall(url, {
+                    method: method,
                     body: JSON.stringify(data),
                 });
                 if (response && response.success) {
                     closeAddShopModal();
                     loadShops();
-                    alert('Shop added successfully');
+                    alert(`Shop ${isEdit ? 'updated' : 'added'} successfully`);
+                } else if (response && response.errors) {
+                    alert(Object.values(response.errors).flat().join('\n'));
                 }
             } catch (error) {
-                console.error('Error adding shop:', error);
-                alert('Error adding shop');
+                console.error(`Error ${isEdit ? 'updating' : 'adding'} shop:`, error);
+                alert(`Error ${isEdit ? 'updating' : 'adding'} shop`);
             }
         }
 
-        function editShop(shopId) {
-            alert(`Edit shop ${shopId} - Feature coming soon!`);
+        async function editShop(shopId) {
+            try {
+                const data = await apiCall(`/admin/shops/${shopId}`);
+                if (data && data.success) {
+                    const shop = data.data;
+
+                    // Load pavilions first, then populate form
+                    try {
+                        const pavilionData = await apiCall('/admin/pavilions?per_page=100');
+                        if (pavilionData && pavilionData.success) {
+                            const select = document.getElementById('shop-pavilion-select');
+                            select.innerHTML = '<option value="">Select a pavilion...</option>';
+                            pavilionData.data.items.forEach(pavilion => {
+                                select.innerHTML += `<option value="${pavilion.id}">${pavilion.name}</option>`;
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error loading pavilions:', error);
+                    }
+
+                    // Show modal and populate form
+                    document.getElementById('add-shop-modal').classList.remove('hidden');
+                    document.getElementById('shop-modal-title').textContent = 'Edit Shop';
+                    document.getElementById('shop-submit-btn').textContent = 'Update Shop';
+                    document.getElementById('shop-id').value = shop.id;
+                    document.getElementById('shop-pavilion-select').value = shop.pavilion_id;
+                    document.getElementById('shop-name').value = shop.name || '';
+                    document.getElementById('shop-description').value = shop.description || '';
+                    document.getElementById('shop-type').value = shop.type || 'shop';
+                } else {
+                    alert('Error loading shop');
+                }
+            } catch (error) {
+                console.error('Error loading shop:', error);
+                alert('Error loading shop');
+            }
         }
 
         async function deleteShop(shopId) {

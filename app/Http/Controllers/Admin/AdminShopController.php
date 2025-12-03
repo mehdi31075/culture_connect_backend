@@ -12,6 +12,34 @@ use Illuminate\Support\Facades\Validator;
 class AdminShopController extends Controller
 {
     /**
+     * Get a single shop
+     */
+    public function show(int $id): JsonResponse
+    {
+        try {
+            $shop = Shop::with('pavilion')->find($id);
+
+            if (!$shop) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Shop not found',
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $shop,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve shop',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Store a newly created shop
      */
     public function store(Request $request): JsonResponse

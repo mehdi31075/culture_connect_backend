@@ -83,6 +83,7 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
 
     // Shop management
     Route::get('/shops', [AdminController::class, 'shops']);
+    Route::get('/shops/{id}', [AdminShopController::class, 'show']);
     Route::post('/shops', [AdminShopController::class, 'store']);
     Route::put('/shops/{id}', [AdminShopController::class, 'update']);
     Route::delete('/shops/{id}', [AdminShopController::class, 'destroy']);
