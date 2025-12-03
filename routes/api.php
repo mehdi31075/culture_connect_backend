@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\FoodController;
 use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\PavilionController;
 use App\Http\Controllers\Api\POIController;
+use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\ShopController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -123,9 +124,6 @@ Route::get('shops/{shop}/foods', [FoodController::class, 'shopFoods']);
 // Food routes
 Route::get('foods', [FoodController::class, 'index']);
 Route::get('foods/{id}', [FoodController::class, 'show']);
-Route::middleware('auth:api')->group(function () {
-    Route::post('foods/{id}/like', [FoodController::class, 'toggleLike']);
-});
 
 // Home/Stats routes
 Route::get('stats', [HomeController::class, 'stats']);
@@ -145,4 +143,13 @@ Route::middleware('auth:api')->group(function () {
     Route::post('events/{event}/mark-going', [EventController::class, 'markGoing']);
     Route::post('events/{event}/mark-interested', [EventController::class, 'markInterested']);
     Route::post('events/{event}/remind-me', [EventController::class, 'remindMe']);
+});
+
+// Review routes
+Route::get('reviews', [ReviewController::class, 'index']);
+Route::get('reviews/{id}', [ReviewController::class, 'show']);
+Route::middleware('auth:api')->group(function () {
+    Route::post('reviews', [ReviewController::class, 'store']);
+    Route::put('reviews/{id}', [ReviewController::class, 'update']);
+    Route::delete('reviews/{id}', [ReviewController::class, 'destroy']);
 });

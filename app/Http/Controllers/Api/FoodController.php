@@ -79,8 +79,6 @@ class FoodController extends Controller
      *                         @OA\Items(type="string", example="https://example.com/storage/foods/food1.jpg")
      *                     ),
      *                     @OA\Property(property="views_count", type="integer", example=89300),
-     *                     @OA\Property(property="likes_count", type="integer", example=15400),
-     *                     @OA\Property(property="comments_count", type="integer", example=1234),
      *                     @OA\Property(property="is_trending", type="boolean", example=true),
      *                     @OA\Property(property="trending_position", type="integer", nullable=true, example=1),
      *                     @OA\Property(property="trending_score", type="number", format="float", nullable=true, example=98.00),
@@ -152,9 +150,6 @@ class FoodController extends Controller
                 $food->incrementViews(); // Auto-increment views on fetch
                 $food->average_rating = $food->average_rating;
                 $food->reviews_count = $food->reviews_count;
-                $food->likes_count = $food->likes_count; // Calculated from food_likes
-                $food->comments_count = $food->comments_count; // Calculated from reviews
-                $food->is_liked = $food->is_liked; // Check if user liked this food
             });
 
             return response()->json([
@@ -206,8 +201,6 @@ class FoodController extends Controller
      *                         @OA\Items(type="string", example="https://example.com/storage/foods/food1.jpg")
      *                     ),
      *                     @OA\Property(property="views_count", type="integer", example=89300),
-     *                     @OA\Property(property="likes_count", type="integer", example=15400),
-     *                     @OA\Property(property="comments_count", type="integer", example=1234),
      *                     @OA\Property(property="is_trending", type="boolean", example=true),
      *                     @OA\Property(property="trending_position", type="integer", nullable=true, example=1),
      *                     @OA\Property(property="trending_score", type="number", format="float", nullable=true, example=98.00),
@@ -251,9 +244,6 @@ class FoodController extends Controller
                 $food->incrementViews(); // Auto-increment views on fetch
                 $food->average_rating = $food->average_rating;
                 $food->reviews_count = $food->reviews_count;
-                $food->likes_count = $food->likes_count; // Calculated from food_likes
-                $food->comments_count = $food->comments_count; // Calculated from reviews
-                $food->is_liked = $food->is_liked; // Check if user liked this food
             });
 
             return response()->json([
@@ -304,7 +294,6 @@ class FoodController extends Controller
      *                     @OA\Items(type="string", example="https://example.com/storage/foods/food1.jpg")
      *                 ),
      *                 @OA\Property(property="views_count", type="integer", example=89300),
-     *                 @OA\Property(property="likes_count", type="integer", example=15400),
      *                 @OA\Property(property="comments_count", type="integer", example=1234),
      *                 @OA\Property(property="is_trending", type="boolean", example=true),
      *                 @OA\Property(property="trending_position", type="integer", nullable=true, example=1),
@@ -340,9 +329,6 @@ class FoodController extends Controller
             $food->incrementViews(); // Auto-increment views on fetch
             $food->average_rating = $food->average_rating;
             $food->reviews_count = $food->reviews_count;
-            $food->likes_count = $food->likes_count; // Calculated from food_likes
-            $food->comments_count = $food->comments_count; // Calculated from reviews
-            $food->is_liked = $food->is_liked; // Check if user liked this food
 
             return response()->json([
                 'success' => true,
@@ -358,86 +344,5 @@ class FoodController extends Controller
         }
     }
 
-    /**
-     * @OA\Post(
-     *     path="/api/foods/{id}/like",
-     *     summary="Like or unlike a food",
-     *     description="Toggle like status for a food item. If already liked, it will be unliked.",
-     *     operationId="toggleFoodLike",
-     *     tags={"Food"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="Food ID",
-     *         required=true,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Like status toggled successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Food liked successfully"),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="is_liked", type="boolean", example=true),
-     *                 @OA\Property(property="likes_count", type="integer", example=15400)
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Food not found"
-     *     )
-     * )
-     */
-    public function toggleLike(Request $request, int $id): JsonResponse
-    {
-        try {
-            $food = Food::find($id);
-
-            if (!$food) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Food not found',
-                ], 404);
-            }
-
-            $user = auth()->user();
-            $like = \App\Models\FoodLike::where('user_id', $user->id)
-                ->where('food_id', $food->id)
-                ->first();
-
-            if ($like) {
-                // Unlike
-                $like->delete();
-                $isLiked = false;
-                $message = 'Food unliked successfully';
-            } else {
-                // Like
-                \App\Models\FoodLike::create([
-                    'user_id' => $user->id,
-                    'food_id' => $food->id,
-                ]);
-                $isLiked = true;
-                $message = 'Food liked successfully';
-            }
-
-            return response()->json([
-                'success' => true,
-                'message' => $message,
-                'data' => [
-                    'is_liked' => $isLiked,
-                    'likes_count' => $food->fresh()->likes_count,
-                ],
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to toggle like',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
-    }
 }
 
