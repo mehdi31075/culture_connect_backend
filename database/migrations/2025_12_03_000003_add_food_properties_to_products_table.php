@@ -48,7 +48,7 @@ return new class extends Migration
                         THEN json_build_array(image_url)::jsonb
                         ELSE NULL
                     END
-                    WHERE is_food = true AND (images IS NULL OR images = '[]'::jsonb)
+                    WHERE is_food = true AND (images IS NULL OR images::jsonb = '[]'::jsonb)
                 ");
             }
         }
