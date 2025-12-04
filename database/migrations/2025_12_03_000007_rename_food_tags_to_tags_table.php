@@ -17,19 +17,26 @@ return new class extends Migration
             Schema::rename('food_tags', 'tags');
         }
 
-        // Update foreign key constraints in product_tags pivot table
-        if (Schema::hasTable('product_tags')) {
+        // Update foreign key constraints in product_tag_maps pivot table (if it exists)
+        if (Schema::hasTable('product_tag_maps')) {
             try {
-                // Drop existing foreign key if it exists
-                DB::statement('ALTER TABLE product_tags DROP CONSTRAINT IF EXISTS product_tags_tag_id_foreign');
+                // Drop existing foreign key if it exists (may reference 'food_tags')
+                DB::statement('ALTER TABLE product_tag_maps DROP CONSTRAINT IF EXISTS product_tag_maps_tag_id_foreign');
             } catch (\Exception $e) {
-                // Ignore if constraint doesn't exist
+                // Try alternative constraint names
+                try {
+                    DB::statement('ALTER TABLE product_tag_maps DROP CONSTRAINT IF EXISTS product_tag_maps_tag_id_fkey');
+                } catch (\Exception $e2) {
+                    // Ignore if constraint doesn't exist
+                }
             }
 
-            // Re-add foreign key pointing to the renamed table
-            Schema::table('product_tags', function (Blueprint $table) {
-                $table->foreign('tag_id')->references('id')->on('tags')->onDelete('cascade');
-            });
+            // Re-add foreign key pointing to the renamed table (tags)
+            if (Schema::hasTable('tags')) {
+                Schema::table('product_tag_maps', function (Blueprint $table) {
+                    $table->foreign('tag_id')->references('id')->on('tags')->onDelete('cascade');
+                });
+            }
         }
     }
 
@@ -39,16 +46,23 @@ return new class extends Migration
     public function down(): void
     {
         // Update foreign key constraints back
-        if (Schema::hasTable('product_tags')) {
+        if (Schema::hasTable('product_tag_maps')) {
             try {
-                DB::statement('ALTER TABLE product_tags DROP CONSTRAINT IF EXISTS product_tags_tag_id_foreign');
+                DB::statement('ALTER TABLE product_tag_maps DROP CONSTRAINT IF EXISTS product_tag_maps_tag_id_foreign');
             } catch (\Exception $e) {
-                // Ignore if constraint doesn't exist
+                // Try alternative constraint names
+                try {
+                    DB::statement('ALTER TABLE product_tag_maps DROP CONSTRAINT IF EXISTS product_tag_maps_tag_id_fkey');
+                } catch (\Exception $e2) {
+                    // Ignore if constraint doesn't exist
+                }
             }
 
-            Schema::table('product_tags', function (Blueprint $table) {
-                $table->foreign('tag_id')->references('id')->on('food_tags')->onDelete('cascade');
-            });
+            if (Schema::hasTable('food_tags')) {
+                Schema::table('product_tag_maps', function (Blueprint $table) {
+                    $table->foreign('tag_id')->references('id')->on('food_tags')->onDelete('cascade');
+                });
+            }
         }
 
         // Rename the table back
