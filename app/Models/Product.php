@@ -15,7 +15,6 @@ class Product extends Model
         'description',
         'price',
         'discounted_price',
-        'is_food',
         'images',
         'views_count',
         'is_trending',
@@ -28,7 +27,6 @@ class Product extends Model
     protected $casts = [
         'price' => 'decimal:2',
         'discounted_price' => 'decimal:2',
-        'is_food' => 'boolean',
         'images' => 'array',
         'views_count' => 'integer',
         'is_trending' => 'boolean',
@@ -39,7 +37,6 @@ class Product extends Model
     ];
 
     protected $attributes = [
-        'is_food' => false,
         'views_count' => 0,
         'is_trending' => false,
         'is_available' => true,

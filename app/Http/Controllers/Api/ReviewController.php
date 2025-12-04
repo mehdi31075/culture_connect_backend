@@ -22,7 +22,7 @@ class ReviewController extends Controller
      * @OA\Post(
      *     path="/api/reviews",
      *     summary="Create a new review",
-     *     description="Create a review for a shop or product (use product_id for food items with is_food=true)",
+     *     description="Create a review for a shop or product",
      *     operationId="createReview",
      *     tags={"Reviews"},
      *     security={{"bearerAuth":{}}},

@@ -38,7 +38,7 @@ return new class extends Migration
                 }
             });
 
-            // Migrate existing image_url to images array for food products
+            // Migrate existing image_url to images array for all products
             // Only for PostgreSQL
             if (DB::getDriverName() === 'pgsql') {
                 DB::statement("
@@ -48,7 +48,8 @@ return new class extends Migration
                         THEN json_build_array(image_url)::jsonb
                         ELSE NULL
                     END
-                    WHERE is_food = true AND (images IS NULL OR images::jsonb = '[]'::jsonb)
+                    WHERE (images IS NULL OR images::jsonb = '[]'::jsonb)
+                    AND image_url IS NOT NULL AND image_url != ''
                 ");
             }
         }

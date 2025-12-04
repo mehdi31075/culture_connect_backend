@@ -20,7 +20,7 @@ class ProductController extends Controller
      * @OA\Get(
      *     path="/api/products",
      *     summary="Get all products",
-     *     description="Retrieve a list of all products with optional filtering. Use is_food=true to get food items.",
+     *     description="Retrieve a list of all products with optional filtering.",
      *     operationId="getProducts",
      *     tags={"Product"},
      *     @OA\Parameter(
@@ -29,13 +29,6 @@ class ProductController extends Controller
      *         description="Filter by shop ID",
      *         required=false,
      *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Parameter(
-     *         name="is_food",
-     *         in="query",
-     *         description="Filter by food items (true) or non-food items (false)",
-     *         required=false,
-     *         @OA\Schema(type="boolean")
      *     ),
      *     @OA\Parameter(
      *         name="tag",
@@ -47,14 +40,14 @@ class ProductController extends Controller
      *     @OA\Parameter(
      *         name="trending",
      *         in="query",
-     *         description="Filter trending items only (for food items)",
+     *         description="Filter trending items only",
      *         required=false,
      *         @OA\Schema(type="boolean")
      *     ),
      *     @OA\Parameter(
      *         name="available",
      *         in="query",
-     *         description="Filter available items only (for food items)",
+     *         description="Filter available items only",
      *         required=false,
      *         @OA\Schema(type="boolean")
      *     ),
@@ -81,7 +74,6 @@ class ProductController extends Controller
      *                     @OA\Property(property="description", type="string", example="The shawarma that broke the internet!"),
      *                     @OA\Property(property="price", type="number", format="float", example=18.00),
      *                     @OA\Property(property="discounted_price", type="number", format="float", nullable=true, example=15.00),
-     *                     @OA\Property(property="is_food", type="boolean", example=true),
      *                     @OA\Property(
      *                         property="images",
      *                         type="array",
@@ -107,7 +99,6 @@ class ProductController extends Controller
     {
         try {
             $shopId = $request->get('shop_id');
-            $isFood = $request->get('is_food');
             $tagId = $request->get('tag');
             $trending = $request->get('trending');
             $available = $request->get('available');
@@ -120,11 +111,6 @@ class ProductController extends Controller
                 $query->where('shop_id', $shopId);
             }
 
-            // Filter by is_food
-            if ($isFood !== null) {
-                $query->where('is_food', filter_var($isFood, FILTER_VALIDATE_BOOLEAN));
-            }
-
             // Filter by tag
             if ($tagId) {
                 $query->whereHas('tags', function ($q) use ($tagId) {
@@ -132,12 +118,12 @@ class ProductController extends Controller
                 });
             }
 
-            // Filter trending (only for food items)
+            // Filter trending
             if ($trending !== null) {
                 $query->where('is_trending', filter_var($trending, FILTER_VALIDATE_BOOLEAN));
             }
 
-            // Filter available (only for food items)
+            // Filter available
             if ($available !== null) {
                 $query->where('is_available', filter_var($available, FILTER_VALIDATE_BOOLEAN));
             }
@@ -160,13 +146,11 @@ class ProductController extends Controller
 
             $products = $query->get();
 
-            // Increment views for food items and add calculated fields
+            // Increment views and add calculated fields for all products
             $products->each(function ($product) {
-                if ($product->is_food) {
-                    $product->incrementViews(); // Auto-increment views on fetch
-                    $product->average_rating = $product->average_rating;
-                    $product->reviews_count = $product->reviews_count;
-                }
+                $product->incrementViews(); // Auto-increment views on fetch
+                $product->average_rating = $product->average_rating;
+                $product->reviews_count = $product->reviews_count;
             });
 
             return response()->json([
@@ -187,7 +171,7 @@ class ProductController extends Controller
      * @OA\Get(
      *     path="/api/shops/{shop}/products",
      *     summary="Get all products for a shop",
-     *     description="Retrieve all products for a specific shop. Use is_food=true query parameter to get food items only.",
+     *     description="Retrieve all products for a specific shop.",
      *     operationId="getShopProducts",
      *     tags={"Product"},
      *     @OA\Parameter(
@@ -196,13 +180,6 @@ class ProductController extends Controller
      *         description="Shop ID",
      *         required=true,
      *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Parameter(
-     *         name="is_food",
-     *         in="query",
-     *         description="Filter by food items (true) or non-food items (false)",
-     *         required=false,
-     *         @OA\Schema(type="boolean")
      *     ),
      *     @OA\Response(
      *         response=200,
@@ -257,27 +234,18 @@ class ProductController extends Controller
                 ], 404);
             }
 
-            $isFood = $request->get('is_food');
-            $query = Product::where('shop_id', $shopId);
-
-            // Filter by is_food if provided
-            if ($isFood !== null) {
-                $query->where('is_food', filter_var($isFood, FILTER_VALIDATE_BOOLEAN));
-            }
-
-            $products = $query->with(['tags'])
+            $products = Product::where('shop_id', $shopId)
+                ->with(['tags'])
                 ->orderBy('is_trending', 'desc')
                 ->orderBy('trending_position', 'asc')
                 ->orderBy('name', 'asc')
                 ->get();
 
-            // Increment views for food items and add calculated fields
+            // Increment views and add calculated fields for all products
             $products->each(function ($product) {
-                if ($product->is_food) {
-                    $product->incrementViews(); // Auto-increment views on fetch
-                    $product->average_rating = $product->average_rating;
-                    $product->reviews_count = $product->reviews_count;
-                }
+                $product->incrementViews(); // Auto-increment views on fetch
+                $product->average_rating = $product->average_rating;
+                $product->reviews_count = $product->reviews_count;
             });
 
             return response()->json([
@@ -323,7 +291,6 @@ class ProductController extends Controller
      *                 @OA\Property(property="description", type="string", example="The shawarma that broke the internet!"),
      *                 @OA\Property(property="price", type="number", format="float", example=18.00),
      *                 @OA\Property(property="discounted_price", type="number", format="float", nullable=true, example=15.00),
-     *                 @OA\Property(property="is_food", type="boolean", example=true),
      *                 @OA\Property(
      *                     property="images",
      *                     type="array",
@@ -360,12 +327,10 @@ class ProductController extends Controller
                 ], 404);
             }
 
-            // Increment views and add calculated fields for food items
-            if ($product->is_food) {
-                $product->incrementViews(); // Auto-increment views on fetch
-                $product->average_rating = $product->average_rating;
-                $product->reviews_count = $product->reviews_count;
-            }
+            // Increment views and add calculated fields
+            $product->incrementViews(); // Auto-increment views on fetch
+            $product->average_rating = $product->average_rating;
+            $product->reviews_count = $product->reviews_count;
 
             return response()->json([
                 'success' => true,

@@ -40,7 +40,6 @@ $migrations = [
             \$table->string('name', 160);
             \$table->text('description')->nullable();
             \$table->decimal('price', 10, 2);
-            \$table->boolean('is_food')->default(false);
             \$table->string('image_url')->nullable();
             \$table->timestamps();
         "

@@ -353,7 +353,6 @@
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Shop</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">After Discount</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Is Food</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tags</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                                     </tr>
@@ -929,10 +928,6 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
                             <input type="url" name="image_url" class="w-full border rounded px-3 py-2">
-                        </div>
-                        <div class="flex items-center">
-                            <input type="checkbox" name="is_food" id="product_is_food" class="mr-2">
-                            <label for="product_is_food" class="text-sm text-gray-700">Is Food</label>
                         </div>
                     </div>
                     <div class="flex justify-end space-x-3 mt-6">
@@ -2511,7 +2506,7 @@
             if (!products.length) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="8" class="px-6 py-4 text-sm text-gray-500 text-center">No products found. Add a product to get started.</td>
+                        <td colspan="7" class="px-6 py-4 text-sm text-gray-500 text-center">No products found. Add a product to get started.</td>
                     </tr>
                 `;
                 return;
@@ -2533,11 +2528,6 @@
                         ${hasDiscount
                             ? `<span class="text-green-600 font-semibold">${formatPrice(discountedPrice)}</span>`
                             : '<span class="text-gray-400">—</span>'}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm">
-                        <span class="px-2 py-1 text-xs rounded-full ${product.is_food ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
-                            ${product.is_food ? 'Yes' : 'No'}
-                        </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         ${
@@ -2623,7 +2613,6 @@
                 price: form.price.value,
                 discounted_price: document.getElementById('product-discounted-price').value || null,
                 image_url: form.image_url.value || null,
-                is_food: document.getElementById('product_is_food').checked ? 1 : 0,
                 tags: selectedTags,
                 new_tags: newTags,
             };
@@ -2667,7 +2656,6 @@
                     document.getElementById('product-price').value = product.price || '';
                     document.getElementById('product-discounted-price').value = product.discounted_price || '';
                     document.getElementById('product-image-url').value = product.image_url || '';
-                    document.getElementById('product-is-food').checked = product.is_food || false;
 
                     // Load and set tags
                     const existingTagIds = product.tags ? product.tags.map(t => t.id) : [];

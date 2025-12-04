@@ -119,7 +119,7 @@ Route::get('pavilions/{id}', [PavilionController::class, 'show']);
 // Shop routes
 Route::get('pavilions/{pavilion}/shops', [ShopController::class, 'pavilionShops']);
 
-// Product routes (use is_food=true to get food items)
+// Product routes
 Route::get('products', [ProductController::class, 'index']);
 Route::get('products/{id}', [ProductController::class, 'show']);
 Route::get('shops/{shop}/products', [ProductController::class, 'shopProducts']);

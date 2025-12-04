@@ -102,7 +102,6 @@ class AdminProductController extends Controller
                 'description' => 'nullable|string|max:1000',
                 'price' => 'required|numeric|min:0',
                 'discounted_price' => 'nullable|numeric|min:0',
-                'is_food' => 'nullable|boolean',
                 'tags' => 'nullable|array',
                 'tags.*' => 'integer|exists:food_tags,id',
                 'new_tags' => 'nullable|array',
@@ -124,7 +123,6 @@ class AdminProductController extends Controller
                 'description' => $request->description,
                 'price' => $request->price,
                 'discounted_price' => $request->discounted_price,
-                'is_food' => $request->boolean('is_food', false),
             ]);
 
             $this->syncProductTags($product, $request->input('tags', []), $request->input('new_tags', []));
@@ -169,7 +167,6 @@ class AdminProductController extends Controller
                 'description' => 'nullable|string|max:1000',
                 'price' => 'sometimes|required|numeric|min:0',
                 'discounted_price' => 'nullable|numeric|min:0',
-                'is_food' => 'nullable|boolean',
                 'tags' => 'nullable|array',
                 'tags.*' => 'integer|exists:food_tags,id',
                 'new_tags' => 'nullable|array',
@@ -186,9 +183,6 @@ class AdminProductController extends Controller
 
             // Update product
             $updateData = $request->only(['shop_id', 'name', 'description', 'price', 'discounted_price']);
-            if ($request->has('is_food')) {
-                $updateData['is_food'] = $request->boolean('is_food');
-            }
             $product->update($updateData);
 
             $this->syncProductTags($product, $request->input('tags', []), $request->input('new_tags', []));

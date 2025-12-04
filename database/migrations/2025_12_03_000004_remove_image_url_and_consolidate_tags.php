@@ -42,7 +42,7 @@ return new class extends Migration
         // Re-add image_url column
         if (Schema::hasTable('products') && !Schema::hasColumn('products', 'image_url')) {
             Schema::table('products', function (Blueprint $table) {
-                $table->string('image_url')->nullable()->after('is_food');
+                $table->string('image_url')->nullable()->after('discounted_price');
             });
         }
 
