@@ -103,7 +103,6 @@ class AdminProductController extends Controller
                 'price' => 'required|numeric|min:0',
                 'discounted_price' => 'nullable|numeric|min:0',
                 'is_food' => 'nullable|boolean',
-                'image_url' => 'nullable|url|max:500',
                 'tags' => 'nullable|array',
                 'tags.*' => 'integer|exists:food_tags,id',
                 'new_tags' => 'nullable|array',
@@ -118,15 +117,6 @@ class AdminProductController extends Controller
                 ], 422);
             }
 
-            // Handle image upload if provided
-            // $imageUrl = $request->image_url;
-            // if ($request->hasFile('image')) {
-            //     $image = $request->file('image');
-            //     $imageName = 'product_' . time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
-            //     $imagePath = $image->storeAs('products', $imageName, 'public');
-            //     $imageUrl = url('storage/' . $imagePath);
-            // }
-
             // Create product
             $product = Product::create([
                 'shop_id' => $request->shop_id,
@@ -135,7 +125,6 @@ class AdminProductController extends Controller
                 'price' => $request->price,
                 'discounted_price' => $request->discounted_price,
                 'is_food' => $request->boolean('is_food', false),
-                'image_url' => $request->image_url,
             ]);
 
             $this->syncProductTags($product, $request->input('tags', []), $request->input('new_tags', []));
@@ -181,7 +170,6 @@ class AdminProductController extends Controller
                 'price' => 'sometimes|required|numeric|min:0',
                 'discounted_price' => 'nullable|numeric|min:0',
                 'is_food' => 'nullable|boolean',
-                'image_url' => 'nullable|url|max:500',
                 'tags' => 'nullable|array',
                 'tags.*' => 'integer|exists:food_tags,id',
                 'new_tags' => 'nullable|array',
@@ -197,7 +185,7 @@ class AdminProductController extends Controller
             }
 
             // Update product
-            $updateData = $request->only(['shop_id', 'name', 'description', 'price', 'discounted_price', 'image_url']);
+            $updateData = $request->only(['shop_id', 'name', 'description', 'price', 'discounted_price']);
             if ($request->has('is_food')) {
                 $updateData['is_food'] = $request->boolean('is_food');
             }

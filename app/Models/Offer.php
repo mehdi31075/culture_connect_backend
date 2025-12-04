@@ -15,7 +15,6 @@ class Offer extends Model
     protected $fillable = [
         'shop_id',
         'product_id',
-        'food_id',
         'title',
         'description',
         'discount_type',
@@ -44,11 +43,6 @@ class Offer extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
-    }
-
-    public function food()
-    {
-        return $this->belongsTo(Food::class);
     }
 
     public function redemptions()

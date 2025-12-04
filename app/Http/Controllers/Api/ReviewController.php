@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Review;
 use App\Models\Shop;
 use App\Models\Product;
-use App\Models\Food;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
@@ -23,7 +22,7 @@ class ReviewController extends Controller
      * @OA\Post(
      *     path="/api/reviews",
      *     summary="Create a new review",
-     *     description="Create a review for a shop, product, or food item",
+     *     description="Create a review for a shop or product (use product_id for food items with is_food=true)",
      *     operationId="createReview",
      *     tags={"Reviews"},
      *     security={{"bearerAuth":{}}},
@@ -31,9 +30,8 @@ class ReviewController extends Controller
      *         required=true,
      *         @OA\JsonContent(
      *             required={"rating"},
-     *             @OA\Property(property="shop_id", type="integer", nullable=true, example=1, description="Shop ID (required if product_id and food_id are not provided)"),
-     *             @OA\Property(property="product_id", type="integer", nullable=true, example=null, description="Product ID (optional)"),
-     *             @OA\Property(property="food_id", type="integer", nullable=true, example=null, description="Food ID (optional)"),
+     *             @OA\Property(property="shop_id", type="integer", nullable=true, example=1, description="Shop ID (required if product_id is not provided)"),
+     *             @OA\Property(property="product_id", type="integer", nullable=true, example=null, description="Product ID (optional, use for both products and food items)"),
      *             @OA\Property(property="rating", type="integer", minimum=1, maximum=5, example=5, description="Rating from 1 to 5"),
      *             @OA\Property(property="comment", type="string", nullable=true, maxLength=1000, example="Great food! Highly recommended.")
      *         )
@@ -51,15 +49,13 @@ class ReviewController extends Controller
      *                 @OA\Property(property="user_id", type="integer", example=1),
      *                 @OA\Property(property="shop_id", type="integer", nullable=true, example=1),
      *                 @OA\Property(property="product_id", type="integer", nullable=true, example=null),
-     *                 @OA\Property(property="food_id", type="integer", nullable=true, example=null),
      *                 @OA\Property(property="rating", type="integer", example=5),
      *                 @OA\Property(property="comment", type="string", nullable=true, example="Great food! Highly recommended."),
      *                 @OA\Property(property="created_at", type="string", format="date-time"),
      *                 @OA\Property(property="updated_at", type="string", format="date-time"),
      *                 @OA\Property(property="user", type="object"),
      *                 @OA\Property(property="shop", type="object", nullable=true),
-     *                 @OA\Property(property="product", type="object", nullable=true),
-     *                 @OA\Property(property="food", type="object", nullable=true)
+     *                 @OA\Property(property="product", type="object", nullable=true)
      *             )
      *         )
      *     ),
@@ -85,9 +81,8 @@ class ReviewController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'shop_id' => 'required_without_all:product_id,food_id|nullable|exists:shops,id',
+                'shop_id' => 'required_without:product_id|nullable|exists:shops,id',
                 'product_id' => 'nullable|exists:products,id',
-                'food_id' => 'nullable|exists:foods,id',
                 'rating' => 'required|integer|min:1|max:5',
                 'comment' => 'nullable|string|max:1000',
             ]);
@@ -107,13 +102,12 @@ class ReviewController extends Controller
                 'user_id' => $user->id,
                 'shop_id' => $request->shop_id,
                 'product_id' => $request->product_id,
-                'food_id' => $request->food_id,
                 'rating' => $request->rating,
                 'comment' => $request->comment,
             ]);
 
             // Load relationships
-            $review->load(['user', 'shop', 'product', 'food']);
+            $review->load(['user', 'shop', 'product']);
 
             return response()->json([
                 'success' => true,
@@ -148,13 +142,6 @@ class ReviewController extends Controller
      *         name="product_id",
      *         in="query",
      *         description="Filter by product ID",
-     *         required=false,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Parameter(
-     *         name="food_id",
-     *         in="query",
-     *         description="Filter by food ID",
      *         required=false,
      *         @OA\Schema(type="integer")
      *     ),
@@ -212,10 +199,9 @@ class ReviewController extends Controller
             $perPage = $request->get('per_page', 15);
             $shopId = $request->get('shop_id');
             $productId = $request->get('product_id');
-            $foodId = $request->get('food_id');
             $rating = $request->get('rating');
 
-            $query = Review::with(['user', 'shop', 'product', 'food']);
+            $query = Review::with(['user', 'shop', 'product']);
 
             if ($shopId) {
                 $query->where('shop_id', $shopId);
@@ -223,10 +209,6 @@ class ReviewController extends Controller
 
             if ($productId) {
                 $query->where('product_id', $productId);
-            }
-
-            if ($foodId) {
-                $query->where('food_id', $foodId);
             }
 
             if ($rating) {
@@ -287,15 +269,13 @@ class ReviewController extends Controller
      *                 @OA\Property(property="user_id", type="integer", example=1),
      *                 @OA\Property(property="shop_id", type="integer", nullable=true, example=1),
      *                 @OA\Property(property="product_id", type="integer", nullable=true, example=null),
-     *                 @OA\Property(property="food_id", type="integer", nullable=true, example=null),
      *                 @OA\Property(property="rating", type="integer", example=5),
      *                 @OA\Property(property="comment", type="string", nullable=true, example="Great food!"),
      *                 @OA\Property(property="created_at", type="string", format="date-time"),
      *                 @OA\Property(property="updated_at", type="string", format="date-time"),
      *                 @OA\Property(property="user", type="object"),
      *                 @OA\Property(property="shop", type="object", nullable=true),
-     *                 @OA\Property(property="product", type="object", nullable=true),
-     *                 @OA\Property(property="food", type="object", nullable=true)
+     *                 @OA\Property(property="product", type="object", nullable=true)
      *             )
      *         )
      *     ),
@@ -312,7 +292,7 @@ class ReviewController extends Controller
     public function show(int $id): JsonResponse
     {
         try {
-            $review = Review::with(['user', 'shop', 'product', 'food'])->find($id);
+            $review = Review::with(['user', 'shop', 'product'])->find($id);
 
             if (!$review) {
                 return response()->json([
@@ -416,7 +396,7 @@ class ReviewController extends Controller
             }
 
             $review->update($request->only(['rating', 'comment']));
-            $review->load(['user', 'shop', 'product', 'food']);
+            $review->load(['user', 'shop', 'product']);
 
             return response()->json([
                 'success' => true,

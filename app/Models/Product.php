@@ -16,17 +16,33 @@ class Product extends Model
         'price',
         'discounted_price',
         'is_food',
-        'image_url',
+        'images',
+        'views_count',
+        'is_trending',
+        'trending_position',
+        'trending_score',
+        'preparation_time',
+        'is_available',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
         'discounted_price' => 'decimal:2',
         'is_food' => 'boolean',
+        'images' => 'array',
+        'views_count' => 'integer',
+        'is_trending' => 'boolean',
+        'trending_position' => 'integer',
+        'trending_score' => 'decimal:2',
+        'preparation_time' => 'string',
+        'is_available' => 'boolean',
     ];
 
     protected $attributes = [
         'is_food' => false,
+        'views_count' => 0,
+        'is_trending' => false,
+        'is_available' => true,
     ];
 
     public function shop()
@@ -52,34 +68,6 @@ class Product extends Model
         return $value !== null ? (float) number_format((float) $value, 2, '.', '') : null;
     }
 
-    /**
-     * Ensure image_url is returned as a complete URL when available
-     */
-    public function getImageUrlAttribute($value)
-    {
-        if (!$value) {
-            return null;
-        }
-
-        if (filter_var($value, FILTER_VALIDATE_URL)) {
-            return $value;
-        }
-
-        if (str_starts_with($value, '/storage/')) {
-            return url($value);
-        }
-
-        if (str_starts_with($value, 'storage/')) {
-            return url($value);
-        }
-
-        if (!str_starts_with($value, 'http')) {
-            return url('storage/' . ltrim($value, '/'));
-        }
-
-        return $value;
-    }
-
     public function orderItems()
     {
         return $this->hasMany(OrderItem::class);
@@ -88,5 +76,81 @@ class Product extends Model
     public function reviews()
     {
         return $this->hasMany(Review::class);
+    }
+
+    /**
+     * Ensure images array contains complete URLs
+     */
+    public function getImagesAttribute($value)
+    {
+        // Access raw attribute from database (JSON string)
+        $rawValue = $this->attributes['images'] ?? null;
+
+        // If null or empty, return empty array
+        if ($rawValue === null || $rawValue === '') {
+            return [];
+        }
+
+        // Decode JSON string to array
+        $images = is_string($rawValue)
+            ? json_decode($rawValue, true)
+            : $rawValue;
+
+        // If decoding failed or not an array, return empty array
+        if (!is_array($images) || empty($images)) {
+            return [];
+        }
+
+        // Process each image URL to ensure full URLs
+        return array_values(array_filter(array_map(function ($image) {
+            if (empty($image) || !is_string($image)) {
+                return null;
+            }
+
+            // Already a full URL
+            if (filter_var($image, FILTER_VALIDATE_URL)) {
+                return $image;
+            }
+
+            // Handle relative paths
+            if (str_starts_with($image, '/storage/')) {
+                return url($image);
+            }
+
+            if (str_starts_with($image, 'storage/')) {
+                return url('/' . $image);
+            }
+
+            // Assume relative path, prepend storage
+            if (!str_starts_with($image, 'http')) {
+                return url('storage/' . ltrim($image, '/'));
+            }
+
+            return $image;
+        }, $images)));
+    }
+
+    /**
+     * Get average rating from reviews
+     */
+    public function getAverageRatingAttribute()
+    {
+        return $this->reviews()->avg('rating') ?? 0;
+    }
+
+    /**
+     * Get total reviews count
+     */
+    public function getReviewsCountAttribute()
+    {
+        return $this->reviews()->count();
+    }
+
+    /**
+     * Increment views count
+     */
+    public function incrementViews()
+    {
+        $this->increment('views_count');
     }
 }

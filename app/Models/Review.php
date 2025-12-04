@@ -13,7 +13,6 @@ class Review extends Model
         'user_id',
         'shop_id',
         'product_id',
-        'food_id',
         'rating',
         'comment',
     ];
@@ -35,10 +34,5 @@ class Review extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
-    }
-
-    public function food()
-    {
-        return $this->belongsTo(Food::class);
     }
 }

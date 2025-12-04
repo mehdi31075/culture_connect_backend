@@ -42,7 +42,11 @@ class ShopController extends Controller
      *                     @OA\Property(property="description", type="string", nullable=true, example="Freshly brewed coffee"),
      *                     @OA\Property(property="price", type="number", format="float", example=4.99),
      *                     @OA\Property(property="is_food", type="boolean", example=true),
-     *                     @OA\Property(property="image_url", type="string", nullable=true, example="https://example.com/storage/products/coffee.png"),
+     *                     @OA\Property(
+     *                         property="images",
+     *                         type="array",
+     *                         @OA\Items(type="string", example="https://example.com/storage/products/coffee.png")
+     *                     ),
      *                     @OA\Property(
      *                         property="tags",
      *                         type="array",

@@ -3,7 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BannerController;
 use App\Http\Controllers\Api\EventController;
-use App\Http\Controllers\Api\FoodController;
+use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\PavilionController;
 use App\Http\Controllers\Api\POIController;
@@ -118,12 +118,11 @@ Route::get('pavilions', [PavilionController::class, 'index']);
 Route::get('pavilions/{id}', [PavilionController::class, 'show']);
 // Shop routes
 Route::get('pavilions/{pavilion}/shops', [ShopController::class, 'pavilionShops']);
-Route::get('shops/{shop}/products', [ShopController::class, 'products']);
-Route::get('shops/{shop}/foods', [FoodController::class, 'shopFoods']);
 
-// Food routes
-Route::get('foods', [FoodController::class, 'index']);
-Route::get('foods/{id}', [FoodController::class, 'show']);
+// Product routes (use is_food=true to get food items)
+Route::get('products', [ProductController::class, 'index']);
+Route::get('products/{id}', [ProductController::class, 'show']);
+Route::get('shops/{shop}/products', [ProductController::class, 'shopProducts']);
 
 // Home/Stats routes
 Route::get('stats', [HomeController::class, 'stats']);

@@ -3,32 +3,39 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Food;
+use App\Models\Product;
 use App\Models\Shop;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 /**
  * @OA\Tag(
- *     name="Food",
- *     description="Food items management endpoints"
+ *     name="Product",
+ *     description="Product items management endpoints"
  * )
  */
-class FoodController extends Controller
+class ProductController extends Controller
 {
     /**
      * @OA\Get(
-     *     path="/api/foods",
-     *     summary="Get all foods",
-     *     description="Retrieve a list of all food items with optional filtering",
-     *     operationId="getFoods",
-     *     tags={"Food"},
+     *     path="/api/products",
+     *     summary="Get all products",
+     *     description="Retrieve a list of all products with optional filtering. Use is_food=true to get food items.",
+     *     operationId="getProducts",
+     *     tags={"Product"},
      *     @OA\Parameter(
      *         name="shop_id",
      *         in="query",
      *         description="Filter by shop ID",
      *         required=false,
      *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Parameter(
+     *         name="is_food",
+     *         in="query",
+     *         description="Filter by food items (true) or non-food items (false)",
+     *         required=false,
+     *         @OA\Schema(type="boolean")
      *     ),
      *     @OA\Parameter(
      *         name="tag",
@@ -40,14 +47,14 @@ class FoodController extends Controller
      *     @OA\Parameter(
      *         name="trending",
      *         in="query",
-     *         description="Filter trending foods only",
+     *         description="Filter trending items only (for food items)",
      *         required=false,
      *         @OA\Schema(type="boolean")
      *     ),
      *     @OA\Parameter(
      *         name="available",
      *         in="query",
-     *         description="Filter available foods only",
+     *         description="Filter available items only (for food items)",
      *         required=false,
      *         @OA\Schema(type="boolean")
      *     ),
@@ -60,10 +67,10 @@ class FoodController extends Controller
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Foods retrieved successfully",
+     *         description="Products retrieved successfully",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Foods retrieved successfully"),
+     *             @OA\Property(property="message", type="string", example="Products retrieved successfully"),
      *             @OA\Property(
      *                 property="data",
      *                 type="array",
@@ -73,16 +80,18 @@ class FoodController extends Controller
      *                     @OA\Property(property="name", type="string", example="Viral TikTok Shawarma"),
      *                     @OA\Property(property="description", type="string", example="The shawarma that broke the internet!"),
      *                     @OA\Property(property="price", type="number", format="float", example=18.00),
+     *                     @OA\Property(property="discounted_price", type="number", format="float", nullable=true, example=15.00),
+     *                     @OA\Property(property="is_food", type="boolean", example=true),
      *                     @OA\Property(
      *                         property="images",
      *                         type="array",
-     *                         @OA\Items(type="string", example="https://example.com/storage/foods/food1.jpg")
+     *                         @OA\Items(type="string", example="https://example.com/storage/products/product1.jpg")
      *                     ),
      *                     @OA\Property(property="views_count", type="integer", example=89300),
      *                     @OA\Property(property="is_trending", type="boolean", example=true),
      *                     @OA\Property(property="trending_position", type="integer", nullable=true, example=1),
      *                     @OA\Property(property="trending_score", type="number", format="float", nullable=true, example=98.00),
-     *                     @OA\Property(property="preparation_time", type="integer", nullable=true, example=8),
+     *                     @OA\Property(property="preparation_time", type="string", nullable=true, example="5-8 mins"),
      *                     @OA\Property(property="is_available", type="boolean", example=true),
      *                     @OA\Property(property="average_rating", type="number", format="float", example=4.5),
      *                     @OA\Property(property="reviews_count", type="integer", example=2847),
@@ -98,31 +107,37 @@ class FoodController extends Controller
     {
         try {
             $shopId = $request->get('shop_id');
+            $isFood = $request->get('is_food');
             $tagId = $request->get('tag');
             $trending = $request->get('trending');
             $available = $request->get('available');
             $search = $request->get('search');
 
-            $query = Food::with(['shop', 'tags']);
+            $query = Product::with(['shop', 'tags']);
 
             // Filter by shop
             if ($shopId) {
                 $query->where('shop_id', $shopId);
             }
 
+            // Filter by is_food
+            if ($isFood !== null) {
+                $query->where('is_food', filter_var($isFood, FILTER_VALIDATE_BOOLEAN));
+            }
+
             // Filter by tag
             if ($tagId) {
                 $query->whereHas('tags', function ($q) use ($tagId) {
-                    $q->where('food_tags.id', $tagId);
+                    $q->where('product_tags.tag_id', $tagId);
                 });
             }
 
-            // Filter trending
+            // Filter trending (only for food items)
             if ($trending !== null) {
                 $query->where('is_trending', filter_var($trending, FILTER_VALIDATE_BOOLEAN));
             }
 
-            // Filter available
+            // Filter available (only for food items)
             if ($available !== null) {
                 $query->where('is_available', filter_var($available, FILTER_VALIDATE_BOOLEAN));
             }
@@ -143,24 +158,26 @@ class FoodController extends Controller
                 $query->orderBy('name', 'asc');
             }
 
-            $foods = $query->get();
+            $products = $query->get();
 
-            // Increment views for each food and add calculated fields
-            $foods->each(function ($food) {
-                $food->incrementViews(); // Auto-increment views on fetch
-                $food->average_rating = $food->average_rating;
-                $food->reviews_count = $food->reviews_count;
+            // Increment views for food items and add calculated fields
+            $products->each(function ($product) {
+                if ($product->is_food) {
+                    $product->incrementViews(); // Auto-increment views on fetch
+                    $product->average_rating = $product->average_rating;
+                    $product->reviews_count = $product->reviews_count;
+                }
             });
 
             return response()->json([
                 'success' => true,
-                'message' => 'Foods retrieved successfully',
-                'data' => $foods,
+                'message' => 'Products retrieved successfully',
+                'data' => $products,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to retrieve foods',
+                'message' => 'Failed to retrieve products',
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -168,11 +185,11 @@ class FoodController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/shops/{shop}/foods",
-     *     summary="Get all foods for a shop",
-     *     description="Retrieve all food items for a specific shop",
-     *     operationId="getShopFoods",
-     *     tags={"Food"},
+     *     path="/api/shops/{shop}/products",
+     *     summary="Get all products for a shop",
+     *     description="Retrieve all products for a specific shop. Use is_food=true query parameter to get food items only.",
+     *     operationId="getShopProducts",
+     *     tags={"Product"},
      *     @OA\Parameter(
      *         name="shop",
      *         in="path",
@@ -180,12 +197,19 @@ class FoodController extends Controller
      *         required=true,
      *         @OA\Schema(type="integer")
      *     ),
+     *     @OA\Parameter(
+     *         name="is_food",
+     *         in="query",
+     *         description="Filter by food items (true) or non-food items (false)",
+     *         required=false,
+     *         @OA\Schema(type="boolean")
+     *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Foods retrieved successfully",
+     *         description="Products retrieved successfully",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Foods retrieved successfully"),
+     *             @OA\Property(property="message", type="string", example="Products retrieved successfully"),
      *             @OA\Property(
      *                 property="data",
      *                 type="array",
@@ -195,16 +219,17 @@ class FoodController extends Controller
      *                     @OA\Property(property="name", type="string", example="Viral TikTok Shawarma"),
      *                     @OA\Property(property="description", type="string", example="The shawarma that broke the internet!"),
      *                     @OA\Property(property="price", type="number", format="float", example=18.00),
+     *                     @OA\Property(property="is_food", type="boolean", example=true),
      *                     @OA\Property(
      *                         property="images",
      *                         type="array",
-     *                         @OA\Items(type="string", example="https://example.com/storage/foods/food1.jpg")
+     *                         @OA\Items(type="string", example="https://example.com/storage/products/product1.jpg")
      *                     ),
      *                     @OA\Property(property="views_count", type="integer", example=89300),
      *                     @OA\Property(property="is_trending", type="boolean", example=true),
      *                     @OA\Property(property="trending_position", type="integer", nullable=true, example=1),
      *                     @OA\Property(property="trending_score", type="number", format="float", nullable=true, example=98.00),
-     *                     @OA\Property(property="preparation_time", type="integer", nullable=true, example=8),
+     *                     @OA\Property(property="preparation_time", type="string", nullable=true, example="5-8 mins"),
      *                     @OA\Property(property="is_available", type="boolean", example=true),
      *                     @OA\Property(property="average_rating", type="number", format="float", example=4.5),
      *                     @OA\Property(property="reviews_count", type="integer", example=2847),
@@ -220,7 +245,7 @@ class FoodController extends Controller
      *     )
      * )
      */
-    public function shopFoods(Request $request, int $shopId): JsonResponse
+    public function shopProducts(Request $request, int $shopId): JsonResponse
     {
         try {
             $shop = Shop::find($shopId);
@@ -232,29 +257,38 @@ class FoodController extends Controller
                 ], 404);
             }
 
-            $foods = Food::where('shop_id', $shopId)
-                ->with(['tags'])
+            $isFood = $request->get('is_food');
+            $query = Product::where('shop_id', $shopId);
+
+            // Filter by is_food if provided
+            if ($isFood !== null) {
+                $query->where('is_food', filter_var($isFood, FILTER_VALIDATE_BOOLEAN));
+            }
+
+            $products = $query->with(['tags'])
                 ->orderBy('is_trending', 'desc')
                 ->orderBy('trending_position', 'asc')
                 ->orderBy('name', 'asc')
                 ->get();
 
-            // Increment views for each food and add calculated fields
-            $foods->each(function ($food) {
-                $food->incrementViews(); // Auto-increment views on fetch
-                $food->average_rating = $food->average_rating;
-                $food->reviews_count = $food->reviews_count;
+            // Increment views for food items and add calculated fields
+            $products->each(function ($product) {
+                if ($product->is_food) {
+                    $product->incrementViews(); // Auto-increment views on fetch
+                    $product->average_rating = $product->average_rating;
+                    $product->reviews_count = $product->reviews_count;
+                }
             });
 
             return response()->json([
                 'success' => true,
-                'message' => 'Foods retrieved successfully',
-                'data' => $foods,
+                'message' => 'Products retrieved successfully',
+                'data' => $products,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to retrieve foods',
+                'message' => 'Failed to retrieve products',
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -262,24 +296,24 @@ class FoodController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/foods/{id}",
-     *     summary="Get food by ID",
-     *     description="Retrieve a specific food item by its ID",
-     *     operationId="getFoodById",
-     *     tags={"Food"},
+     *     path="/api/products/{id}",
+     *     summary="Get product by ID",
+     *     description="Retrieve a specific product item by its ID",
+     *     operationId="getProductById",
+     *     tags={"Product"},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
-     *         description="Food ID",
+     *         description="Product ID",
      *         required=true,
      *         @OA\Schema(type="integer")
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Food retrieved successfully",
+     *         description="Product retrieved successfully",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Food retrieved successfully"),
+     *             @OA\Property(property="message", type="string", example="Product retrieved successfully"),
      *             @OA\Property(
      *                 property="data",
      *                 type="object",
@@ -288,17 +322,18 @@ class FoodController extends Controller
      *                 @OA\Property(property="name", type="string", example="Viral TikTok Shawarma"),
      *                 @OA\Property(property="description", type="string", example="The shawarma that broke the internet!"),
      *                 @OA\Property(property="price", type="number", format="float", example=18.00),
+     *                 @OA\Property(property="discounted_price", type="number", format="float", nullable=true, example=15.00),
+     *                 @OA\Property(property="is_food", type="boolean", example=true),
      *                 @OA\Property(
      *                     property="images",
      *                     type="array",
-     *                     @OA\Items(type="string", example="https://example.com/storage/foods/food1.jpg")
+     *                     @OA\Items(type="string", example="https://example.com/storage/products/product1.jpg")
      *                 ),
      *                 @OA\Property(property="views_count", type="integer", example=89300),
-     *                 @OA\Property(property="comments_count", type="integer", example=1234),
      *                 @OA\Property(property="is_trending", type="boolean", example=true),
      *                 @OA\Property(property="trending_position", type="integer", nullable=true, example=1),
      *                 @OA\Property(property="trending_score", type="number", format="float", nullable=true, example=98.00),
-     *                 @OA\Property(property="preparation_time", type="integer", nullable=true, example=8),
+     *                 @OA\Property(property="preparation_time", type="string", nullable=true, example="5-8 mins"),
      *                 @OA\Property(property="is_available", type="boolean", example=true),
      *                 @OA\Property(property="average_rating", type="number", format="float", example=4.5),
      *                 @OA\Property(property="reviews_count", type="integer", example=2847),
@@ -309,40 +344,41 @@ class FoodController extends Controller
      *     ),
      *     @OA\Response(
      *         response=404,
-     *         description="Food not found"
+     *         description="Product not found"
      *     )
      * )
      */
     public function show(int $id): JsonResponse
     {
         try {
-            $food = Food::with(['shop', 'tags'])->find($id);
+            $product = Product::with(['shop', 'tags'])->find($id);
 
-            if (!$food) {
+            if (!$product) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Food not found',
+                    'message' => 'Product not found',
                 ], 404);
             }
 
-            // Increment views and add calculated fields
-            $food->incrementViews(); // Auto-increment views on fetch
-            $food->average_rating = $food->average_rating;
-            $food->reviews_count = $food->reviews_count;
+            // Increment views and add calculated fields for food items
+            if ($product->is_food) {
+                $product->incrementViews(); // Auto-increment views on fetch
+                $product->average_rating = $product->average_rating;
+                $product->reviews_count = $product->reviews_count;
+            }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Food retrieved successfully',
-                'data' => $food,
+                'message' => 'Product retrieved successfully',
+                'data' => $product,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to retrieve food',
+                'message' => 'Failed to retrieve product',
                 'error' => $e->getMessage(),
             ], 500);
         }
     }
-
 }
 
