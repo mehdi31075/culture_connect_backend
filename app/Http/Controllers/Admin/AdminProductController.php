@@ -8,6 +8,7 @@ use App\Models\ProductTag;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 
 class AdminProductController extends Controller
 {
@@ -102,6 +103,8 @@ class AdminProductController extends Controller
                 'description' => 'nullable|string|max:1000',
                 'price' => 'required|numeric|min:0',
                 'discounted_price' => 'nullable|numeric|min:0',
+                'images' => 'nullable|array',
+                'images.*' => 'file|mimes:jpeg,png,jpg,gif,svg|max:4096',
                 'tags' => 'nullable|array',
                 'tags.*' => 'integer|exists:product_tags,id',
                 'new_tags' => 'nullable|array',
@@ -116,6 +119,16 @@ class AdminProductController extends Controller
                 ], 422);
             }
 
+            // Handle image uploads
+            $imageUrls = [];
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $image) {
+                    $filename = 'product_' . time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+                    $path = $image->storeAs('products', $filename, 'public');
+                    $imageUrls[] = url('storage/' . $path);
+                }
+            }
+
             // Create product
             $product = Product::create([
                 'shop_id' => $request->shop_id,
@@ -123,6 +136,7 @@ class AdminProductController extends Controller
                 'description' => $request->description,
                 'price' => $request->price,
                 'discounted_price' => $request->discounted_price,
+                'images' => !empty($imageUrls) ? $imageUrls : null,
             ]);
 
             $this->syncProductTags($product, $request->input('tags', []), $request->input('new_tags', []));
@@ -167,6 +181,8 @@ class AdminProductController extends Controller
                 'description' => 'nullable|string|max:1000',
                 'price' => 'sometimes|required|numeric|min:0',
                 'discounted_price' => 'nullable|numeric|min:0',
+                'images' => 'nullable|array',
+                'images.*' => 'file|mimes:jpeg,png,jpg,gif,svg|max:4096',
                 'tags' => 'nullable|array',
                 'tags.*' => 'integer|exists:product_tags,id',
                 'new_tags' => 'nullable|array',
@@ -181,8 +197,44 @@ class AdminProductController extends Controller
                 ], 422);
             }
 
-            // Update product
             $updateData = $request->only(['shop_id', 'name', 'description', 'price', 'discounted_price']);
+
+            // Handle image removal
+            if ($request->has('remove_images') && is_array($request->remove_images)) {
+                $currentImages = $product->images ?? [];
+                $imagesToRemove = $request->remove_images;
+
+                // Filter out images to remove
+                $remainingImages = array_filter($currentImages, function($imageUrl) use ($imagesToRemove) {
+                    return !in_array($imageUrl, $imagesToRemove);
+                });
+
+                // Delete removed images from storage
+                foreach ($imagesToRemove as $imageUrl) {
+                    $publicPrefix = url('storage/') . '/';
+                    $relative = str_starts_with($imageUrl, $publicPrefix)
+                        ? substr($imageUrl, strlen($publicPrefix))
+                        : null;
+                    if ($relative) {
+                        Storage::disk('public')->delete($relative);
+                    }
+                }
+
+                $updateData['images'] = array_values($remainingImages);
+            }
+
+            // Handle new image uploads
+            if ($request->hasFile('images')) {
+                $imageUrls = $updateData['images'] ?? ($product->images ?? []);
+                foreach ($request->file('images') as $image) {
+                    $filename = 'product_' . time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+                    $path = $image->storeAs('products', $filename, 'public');
+                    $imageUrls[] = url('storage/' . $path);
+                }
+                $updateData['images'] = $imageUrls;
+            }
+
+            // Update product
             $product->update($updateData);
 
             $this->syncProductTags($product, $request->input('tags', []), $request->input('new_tags', []));

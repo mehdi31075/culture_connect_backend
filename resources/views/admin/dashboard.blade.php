@@ -855,11 +855,11 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-                            <input type="text" name="name" required class="w-full border rounded px-3 py-2">
+                            <input type="text" name="name" id="product-name" required class="w-full border rounded px-3 py-2">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                            <textarea name="description" rows="3" class="w-full border rounded px-3 py-2"></textarea>
+                            <textarea name="description" id="product-description" rows="3" class="w-full border rounded px-3 py-2"></textarea>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Price ({{ config('app.currency.symbol', '$') }}) *</label>
@@ -882,8 +882,9 @@
                             <p class="text-xs text-gray-500 mt-1">Type to search for an existing tag. If it doesn’t exist, press Enter to create it.</p>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
-                            <input type="url" name="image_url" class="w-full border rounded px-3 py-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Images</label>
+                            <input type="file" id="product-images" name="images[]" multiple accept="image/*" class="w-full border rounded px-3 py-2">
+                            <div id="product-images-preview" class="mt-2 grid grid-cols-3 gap-2"></div>
                         </div>
                     </div>
                     <div class="flex justify-end space-x-3 mt-6">
@@ -2412,6 +2413,8 @@
             document.getElementById('product-modal-title').textContent = 'Add New Product';
             document.getElementById('product-id').value = '';
             document.getElementById('add-product-form').reset();
+            document.getElementById('product-images-preview').innerHTML = '';
+            existingProductImagesToRemove = [];
             selectedProductTagIds = [];
             selectedProductNewTags = [];
             await loadProductTagOptions([], []);
@@ -2421,7 +2424,43 @@
             }
             updateProductTagSuggestions('');
 
+            // Add image preview handler
+            const imageInput = document.getElementById('product-images');
+            if (imageInput) {
+                imageInput.onchange = function(e) {
+                    const preview = document.getElementById('product-images-preview');
+                    preview.innerHTML = '';
+                    Array.from(e.target.files).forEach((file, index) => {
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            const imgDiv = document.createElement('div');
+                            imgDiv.className = 'relative';
+                            imgDiv.innerHTML = `
+                                <img src="${event.target.result}" alt="Preview ${index + 1}" class="w-full h-24 object-cover rounded border">
+                                <button type="button" onclick="this.parentElement.remove()" class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            `;
+                            preview.appendChild(imgDiv);
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                };
+            }
+
             document.getElementById('add-product-modal').classList.remove('hidden');
+        }
+
+        // Store existing images to remove
+        let existingProductImagesToRemove = [];
+
+        function removeProductImage(imageUrl) {
+            const preview = document.getElementById('product-images-preview');
+            const imgDiv = preview.querySelector(`[data-image-url="${imageUrl}"]`);
+            if (imgDiv) {
+                existingProductImagesToRemove.push(imageUrl);
+                imgDiv.remove();
+            }
         }
 
         function closeAddProductModal() {
@@ -2429,6 +2468,8 @@
             document.getElementById('add-product-form').reset();
             document.getElementById('product-id').value = '';
             document.getElementById('product-modal-title').textContent = 'Add New Product';
+            document.getElementById('product-images-preview').innerHTML = '';
+            existingProductImagesToRemove = [];
             selectedProductTagIds = [];
             selectedProductNewTags = [];
             const tagInput = document.getElementById('product-tag-input');
@@ -2450,39 +2491,94 @@
             const selectedTags = Array.from(form.querySelectorAll('input[name="tags[]"]')).map(input => Number(input.value));
             const newTags = Array.from(form.querySelectorAll('input[name="new_tags[]"]')).map(input => input.value);
 
-            const data = {
-                shop_id: form.shop_id.value,
-                name: form.name.value,
-                description: form.description.value || null,
-                price: form.price.value,
-                discounted_price: document.getElementById('product-discounted-price').value || null,
-                image_url: form.image_url.value || null,
-                tags: selectedTags,
-                new_tags: newTags,
-            };
+            // Check if there are image files to upload
+            const imageFiles = document.getElementById('product-images').files;
+            const hasImages = imageFiles.length > 0;
+            const hasImagesToRemove = existingProductImagesToRemove.length > 0;
 
-            try {
-                const url = productId ? `/admin/products/${productId}` : '/admin/products';
-                const method = productId ? 'PUT' : 'POST';
-                const response = await apiCall(url, {
-                    method: method,
-                    body: JSON.stringify(data),
-                });
-                if (response && response.success) {
-                    closeAddProductModal();
-                    loadProducts();
-                    await ensureProductTagsCache(true);
-                    await loadProductTagOptions([], []);
-                    alert(productId ? 'Product updated successfully' : 'Product added successfully');
-                } else if (response && response.errors) {
-                    const messages = Object.values(response.errors).flat().join('\n');
-                    alert(messages);
-                } else {
-                    alert(response?.message || (productId ? 'Failed to update product' : 'Failed to add product'));
+            // Use FormData if there are images to upload or images to remove
+            if (hasImages || hasImagesToRemove || productId) {
+                const formData = new FormData();
+                formData.append('shop_id', form.shop_id.value);
+                formData.append('name', form.name.value);
+                formData.append('description', form.description.value || '');
+                formData.append('price', form.price.value);
+                formData.append('discounted_price', document.getElementById('product-discounted-price').value || '');
+
+                // Add image files
+                for (let i = 0; i < imageFiles.length; i++) {
+                    formData.append('images[]', imageFiles[i]);
                 }
-            } catch (error) {
-                console.error('Error saving product:', error);
-                alert('Error saving product');
+
+                // Add images to remove if editing
+                if (productId && existingProductImagesToRemove.length > 0) {
+                    existingProductImagesToRemove.forEach(imageUrl => {
+                        formData.append('remove_images[]', imageUrl);
+                    });
+                }
+
+                // Add tags
+                selectedTags.forEach(id => formData.append('tags[]', id));
+                newTags.forEach(name => formData.append('new_tags[]', name));
+
+                try {
+                    const url = productId ? `/admin/products/${productId}` : '/admin/products';
+                    const method = productId ? 'POST' : 'POST'; // Use POST for FormData (route accepts both PUT and POST)
+                    const response = await apiCall(url, {
+                        method: method,
+                        body: formData
+                    });
+                    if (response && response.success) {
+                        closeAddProductModal();
+                        loadProducts();
+                        await ensureProductTagsCache(true);
+                        await loadProductTagOptions([], []);
+                        alert(productId ? 'Product updated successfully' : 'Product added successfully');
+                    } else if (response && response.errors) {
+                        const messages = Object.values(response.errors).flat().join('\n');
+                        alert(messages);
+                    } else {
+                        alert(response?.message || (productId ? 'Failed to update product' : 'Failed to add product'));
+                    }
+                } catch (error) {
+                    console.error('Error saving product:', error);
+                    alert('Error saving product');
+                }
+            } else {
+                // Use JSON for simple updates without images
+                const data = {
+                    shop_id: form.shop_id.value,
+                    name: form.name.value,
+                    description: form.description.value || null,
+                    price: form.price.value,
+                    discounted_price: document.getElementById('product-discounted-price').value || null,
+                    tags: selectedTags,
+                    new_tags: newTags,
+                };
+
+                try {
+                    const url = productId ? `/admin/products/${productId}` : '/admin/products';
+                    const method = productId ? 'PUT' : 'POST';
+                    const response = await apiCall(url, {
+                        method: method,
+                        body: JSON.stringify(data),
+                    });
+                    if (response && response.success) {
+                        closeAddProductModal();
+                        loadProducts();
+                        await ensureProductTagsCache(true);
+                        await loadProductTagOptions([], []);
+                        alert(productId ? 'Product updated successfully' : 'Product added successfully');
+                    } else if (response && response.errors) {
+                        const messages = Object.values(response.errors).flat().join('\n');
+                        alert(messages);
+                    } else {
+                        alert(response?.message || (productId ? 'Failed to update product' : 'Failed to add product'));
+                    }
+                } catch (error) {
+                    console.error('Error saving product:', error);
+                    alert('Error saving product');
+                }
             }
         }
 
@@ -2499,7 +2595,26 @@
                     document.getElementById('product-description').value = product.description || '';
                     document.getElementById('product-price').value = product.price || '';
                     document.getElementById('product-discounted-price').value = product.discounted_price || '';
-                    document.getElementById('product-image-url').value = product.image_url || '';
+
+                    // Display existing images
+                    const imagesPreview = document.getElementById('product-images-preview');
+                    imagesPreview.innerHTML = '';
+                    existingProductImagesToRemove = [];
+                    if (product.images && product.images.length > 0) {
+                        product.images.forEach((imageUrl, index) => {
+                            const imgDiv = document.createElement('div');
+                            imgDiv.className = 'relative';
+                            imgDiv.setAttribute('data-image-url', imageUrl);
+                            const escapedUrl = imageUrl.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                            imgDiv.innerHTML = `
+                                <img src="${imageUrl}" alt="Product image ${index + 1}" class="w-full h-24 object-cover rounded border">
+                                <button type="button" onclick="removeProductImage('${escapedUrl}')" class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            `;
+                            imagesPreview.appendChild(imgDiv);
+                        });
+                    }
 
                     // Load and set tags
                     const existingTagIds = product.tags ? product.tags.map(t => t.id) : [];
