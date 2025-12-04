@@ -332,16 +332,10 @@ class AdminFoodController extends Controller
         foreach ($newTagNames as $tagName) {
             $tagName = trim($tagName);
             if (!empty($tagName)) {
-                // Create tag with type 'food' if it doesn't exist
+                // Create tag if it doesn't exist
                 $tag = ProductTag::firstOrCreate(
-                    ['name' => $tagName],
-                    ['tag_type' => ProductTag::TYPE_FOOD]
+                    ['name' => $tagName]
                 );
-                
-                // If tag exists but type is 'product', update to 'both'
-                if ($tag->tag_type === ProductTag::TYPE_PRODUCT) {
-                    $tag->update(['tag_type' => ProductTag::TYPE_BOTH]);
-                }
                 
                 $tagsToAttach[] = $tag->id;
             }

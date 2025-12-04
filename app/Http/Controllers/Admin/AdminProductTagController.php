@@ -19,18 +19,12 @@ class AdminProductTagController extends Controller
             // Try to get counts, but handle gracefully if relationships fail
             $tags = ProductTag::orderBy('name')->get();
 
-            // Manually count products and foods for each tag to avoid relationship issues
+            // Manually count products for each tag
             foreach ($tags as $tag) {
                 try {
                     $tag->products_count = $tag->products()->count();
                 } catch (\Exception $e) {
                     $tag->products_count = 0;
-                }
-
-                try {
-                    $tag->foods_count = $tag->foods()->count();
-                } catch (\Exception $e) {
-                    $tag->foods_count = 0;
                 }
             }
 
@@ -56,7 +50,6 @@ class AdminProductTagController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:160|unique:food_tags,name',
-            'tag_type' => 'nullable|in:product,food,both',
         ]);
 
         if ($validator->fails()) {
@@ -69,7 +62,6 @@ class AdminProductTagController extends Controller
 
         $tag = ProductTag::create([
             'name' => $request->name,
-            'tag_type' => $request->input('tag_type', ProductTag::TYPE_BOTH),
         ]);
 
         // Manually set counts
@@ -77,12 +69,6 @@ class AdminProductTagController extends Controller
             $tag->products_count = $tag->products()->count();
         } catch (\Exception $e) {
             $tag->products_count = 0;
-        }
-
-        try {
-            $tag->foods_count = $tag->foods()->count();
-        } catch (\Exception $e) {
-            $tag->foods_count = 0;
         }
 
         return response()->json([
@@ -108,7 +94,6 @@ class AdminProductTagController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:160|unique:food_tags,name,' . $tag->id,
-            'tag_type' => 'nullable|in:product,food,both',
         ]);
 
         if ($validator->fails()) {
@@ -119,23 +104,13 @@ class AdminProductTagController extends Controller
             ], 422);
         }
 
-        $updateData = ['name' => $request->name];
-        if ($request->has('tag_type')) {
-            $updateData['tag_type'] = $request->tag_type;
-        }
-        $tag->update($updateData);
+        $tag->update(['name' => $request->name]);
 
         // Manually set counts
         try {
             $tag->products_count = $tag->products()->count();
         } catch (\Exception $e) {
             $tag->products_count = 0;
-        }
-
-        try {
-            $tag->foods_count = $tag->foods()->count();
-        } catch (\Exception $e) {
-            $tag->foods_count = 0;
         }
 
         return response()->json([
@@ -159,9 +134,8 @@ class AdminProductTagController extends Controller
             ], 404);
         }
 
-        // Detach tag from products and foods before deleting
+        // Detach tag from products before deleting
         $tag->products()->detach();
-        $tag->foods()->detach();
         $tag->delete();
 
         return response()->json([

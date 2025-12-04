@@ -383,9 +383,7 @@
                                     <tr class="bg-gray-50">
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Products</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Foods</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                                     </tr>
                                 </thead>
@@ -959,14 +957,6 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
                             <input type="text" id="product-tag-name" required class="w-full border rounded px-3 py-2">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Tag Type *</label>
-                            <select id="product-tag-type" required class="w-full border rounded px-3 py-2">
-                                <option value="both">Both (Product & Food)</option>
-                                <option value="product">Product Only</option>
-                                <option value="food">Food Only</option>
-                            </select>
                         </div>
                     </div>
                     <div class="flex justify-end space-x-3 mt-6">
@@ -3338,7 +3328,7 @@
                 if (tbody) {
                     tbody.innerHTML = `
                         <tr>
-                            <td colspan="5" class="px-6 py-4 text-sm text-red-500 text-center">Error loading tags. Please refresh the page.</td>
+                            <td colspan="4" class="px-6 py-4 text-sm text-red-500 text-center">Error loading tags. Please refresh the page.</td>
                         </tr>
                     `;
                 }
@@ -3350,28 +3340,17 @@
             if (!tags.length) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="6" class="px-6 py-4 text-sm text-gray-500 text-center">No tags found. Create the first tag to get started.</td>
+                        <td colspan="4" class="px-6 py-4 text-sm text-gray-500 text-center">No tags found. Create the first tag to get started.</td>
                     </tr>
                 `;
                 return;
             }
 
-            const getTypeLabel = (type) => {
-                switch(type) {
-                    case 'product': return '<span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">Product</span>';
-                    case 'food': return '<span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Food</span>';
-                    case 'both': return '<span class="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">Both</span>';
-                    default: return '<span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">Both</span>';
-                }
-            };
-
             tbody.innerHTML = tags.map(tag => `
                 <tr class="border-b">
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${tag.id}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${tag.name}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${getTypeLabel(tag.tag_type || 'both')}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${tag.products_count || 0}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${tag.foods_count || 0}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm">
                         <button onclick="showEditProductTagModal(${tag.id})" class="text-blue-600 hover:text-blue-900 mr-2">
                             <i class="fas fa-edit"></i>
@@ -3584,7 +3563,6 @@
             document.getElementById('product-tag-modal-title').textContent = 'Edit Tag';
             document.getElementById('product-tag-id').value = tag.id;
             document.getElementById('product-tag-name').value = tag.name;
-            document.getElementById('product-tag-type').value = tag.tag_type || 'both';
             document.getElementById('product-tag-modal').classList.remove('hidden');
         }
 
@@ -3598,13 +3576,12 @@
         async function saveProductTag(event) {
             event.preventDefault();
             const name = document.getElementById('product-tag-name').value.trim();
-            const tagType = document.getElementById('product-tag-type').value;
             if (!name) {
                 alert('Please enter a tag name');
                 return;
             }
 
-            const payload = { name, tag_type: tagType };
+            const payload = { name };
             const isEdit = currentEditingProductTagId !== null;
             const url = isEdit ? `/admin/product-tags/${currentEditingProductTagId}` : '/admin/product-tags';
             const currentExistingIds = [...selectedProductTagIds];
