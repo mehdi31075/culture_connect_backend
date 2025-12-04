@@ -14,68 +14,9 @@ use Illuminate\Http\Request;
 class ShopController extends Controller
 {
     /**
-     * @OA\Get(
-     *     path="/api/shops/{shop}/products",
-     *     summary="Get products for a shop",
-     *     description="Retrieve all products belonging to a specific shop",
-     *     operationId="getShopProducts",
-     *     tags={"Shop"},
-     *     @OA\Parameter(
-     *         name="shop",
-     *         in="path",
-     *         required=true,
-     *         description="Shop ID",
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Products retrieved successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Products retrieved successfully"),
-     *             @OA\Property(
-     *                 property="data",
-     *                 type="array",
-     *                 @OA\Items(
-     *                     @OA\Property(property="id", type="integer", example=1),
-     *                     @OA\Property(property="name", type="string", example="Traditional Coffee"),
-     *                     @OA\Property(property="description", type="string", nullable=true, example="Freshly brewed coffee"),
-     *                     @OA\Property(property="price", type="number", format="float", example=4.99),
-     *                     @OA\Property(property="is_food", type="boolean", example=true),
-     *                     @OA\Property(
-     *                         property="images",
-     *                         type="array",
-     *                         @OA\Items(type="string", example="https://example.com/storage/products/coffee.png")
-     *                     ),
-     *                     @OA\Property(
-     *                         property="tags",
-     *                         type="array",
-     *                         @OA\Items(
-     *                             @OA\Property(property="id", type="integer", example=1),
-     *                             @OA\Property(property="name", type="string", example="Hot Drinks")
-     *                         )
-     *                     )
-     *                 )
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Shop not found",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Shop not found")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=500,
-     *         description="Server error",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Failed to retrieve products")
-     *         )
-     *     )
-     * )
+     * Get products for a shop
+     * Note: This method is deprecated. Use ProductController::shopProducts() instead.
+     * The route /api/shops/{shop}/products is now handled by ProductController.
      */
     public function products(Request $request, int $shopId): JsonResponse
     {
