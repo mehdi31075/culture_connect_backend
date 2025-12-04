@@ -103,7 +103,7 @@ class AdminProductController extends Controller
                 'price' => 'required|numeric|min:0',
                 'discounted_price' => 'nullable|numeric|min:0',
                 'tags' => 'nullable|array',
-                'tags.*' => 'integer|exists:food_tags,id',
+                'tags.*' => 'integer|exists:product_tags,id',
                 'new_tags' => 'nullable|array',
                 'new_tags.*' => 'string|max:160',
             ]);
@@ -168,7 +168,7 @@ class AdminProductController extends Controller
                 'price' => 'sometimes|required|numeric|min:0',
                 'discounted_price' => 'nullable|numeric|min:0',
                 'tags' => 'nullable|array',
-                'tags.*' => 'integer|exists:food_tags,id',
+                'tags.*' => 'integer|exists:product_tags,id',
                 'new_tags' => 'nullable|array',
                 'new_tags.*' => 'string|max:160',
             ]);

@@ -31,9 +31,9 @@ class ReviewController extends Controller
      *         @OA\JsonContent(
      *             required={"rating"},
      *             @OA\Property(property="shop_id", type="integer", nullable=true, example=1, description="Shop ID (required if product_id is not provided)"),
-     *             @OA\Property(property="product_id", type="integer", nullable=true, example=null, description="Product ID (optional, use for both products and food items)"),
+     *             @OA\Property(property="product_id", type="integer", nullable=true, example=null, description="Product ID (optional)"),
      *             @OA\Property(property="rating", type="integer", minimum=1, maximum=5, example=5, description="Rating from 1 to 5"),
-     *             @OA\Property(property="comment", type="string", nullable=true, maxLength=1000, example="Great food! Highly recommended.")
+     *             @OA\Property(property="comment", type="string", nullable=true, maxLength=1000, example="Great product! Highly recommended.")
      *         )
      *     ),
      *     @OA\Response(
@@ -50,7 +50,7 @@ class ReviewController extends Controller
      *                 @OA\Property(property="shop_id", type="integer", nullable=true, example=1),
      *                 @OA\Property(property="product_id", type="integer", nullable=true, example=null),
      *                 @OA\Property(property="rating", type="integer", example=5),
-     *                 @OA\Property(property="comment", type="string", nullable=true, example="Great food! Highly recommended."),
+     *                 @OA\Property(property="comment", type="string", nullable=true, example="Great product! Highly recommended."),
      *                 @OA\Property(property="created_at", type="string", format="date-time"),
      *                 @OA\Property(property="updated_at", type="string", format="date-time"),
      *                 @OA\Property(property="user", type="object"),
@@ -176,15 +176,13 @@ class ReviewController extends Controller
      *                         @OA\Property(property="user_id", type="integer", example=1),
      *                         @OA\Property(property="shop_id", type="integer", nullable=true, example=1),
      *                         @OA\Property(property="product_id", type="integer", nullable=true, example=null),
-     *                         @OA\Property(property="food_id", type="integer", nullable=true, example=null),
      *                         @OA\Property(property="rating", type="integer", example=5),
-     *                         @OA\Property(property="comment", type="string", nullable=true, example="Great food!"),
+     *                         @OA\Property(property="comment", type="string", nullable=true, example="Great product!"),
      *                         @OA\Property(property="created_at", type="string", format="date-time"),
      *                         @OA\Property(property="updated_at", type="string", format="date-time"),
      *                         @OA\Property(property="user", type="object"),
      *                         @OA\Property(property="shop", type="object", nullable=true),
-     *                         @OA\Property(property="product", type="object", nullable=true),
-     *                         @OA\Property(property="food", type="object", nullable=true)
+     *                         @OA\Property(property="product", type="object", nullable=true)
      *                     )
      *                 ),
      *                 @OA\Property(property="pagination", type="object")
@@ -270,7 +268,7 @@ class ReviewController extends Controller
      *                 @OA\Property(property="shop_id", type="integer", nullable=true, example=1),
      *                 @OA\Property(property="product_id", type="integer", nullable=true, example=null),
      *                 @OA\Property(property="rating", type="integer", example=5),
-     *                 @OA\Property(property="comment", type="string", nullable=true, example="Great food!"),
+     *                 @OA\Property(property="comment", type="string", nullable=true, example="Great product!"),
      *                 @OA\Property(property="created_at", type="string", format="date-time"),
      *                 @OA\Property(property="updated_at", type="string", format="date-time"),
      *                 @OA\Property(property="user", type="object"),

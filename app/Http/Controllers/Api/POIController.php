@@ -34,7 +34,7 @@ class POIController extends Controller
      *         in="query",
      *         description="Filter by POI type",
      *         required=false,
-     *         @OA\Schema(type="string", enum={"pavilion", "stage", "food_truck", "photo_spot", "restroom", "other"})
+     *         @OA\Schema(type="string", enum={"pavilion", "stage", "photo_spot", "restroom", "other"})
      *     ),
      *     @OA\Parameter(
      *         name="pavilion_id",

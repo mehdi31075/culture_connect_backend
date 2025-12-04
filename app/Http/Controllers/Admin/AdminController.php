@@ -318,7 +318,7 @@ class AdminController extends Controller
         $status = $request->get('status');
         $search = $request->get('search');
 
-        $query = Order::with(['user', 'shop', 'items.product', 'items.food']);
+        $query = Order::with(['user', 'shop', 'items.product']);
 
         if ($status) {
             $query->where('status', $status);
@@ -378,7 +378,7 @@ class AdminController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Order status updated successfully',
-            'data' => $order->load(['user', 'shop', 'items.product', 'items.food'])
+            'data' => $order->load(['user', 'shop', 'items.product'])
         ]);
     }
 
@@ -415,7 +415,7 @@ class AdminController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Order updated successfully',
-                'data' => $order->fresh()->load(['user', 'shop', 'items.product', 'items.food']),
+                'data' => $order->fresh()->load(['user', 'shop', 'items.product']),
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -466,7 +466,7 @@ class AdminController extends Controller
         $perPage = $request->get('per_page', 15);
         $rating = $request->get('rating');
 
-        $query = Review::with(['user', 'shop', 'product', 'food']);
+        $query = Review::with(['user', 'shop', 'product']);
 
         if ($rating) {
             $query->where('rating', $rating);

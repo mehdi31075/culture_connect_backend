@@ -44,18 +44,18 @@ $migrations = [
             \$table->timestamps();
         "
     ],
-    'food_tags' => [
+    'product_tags' => [
         'schema' => "
             \$table->id();
             \$table->string('name', 60)->unique();
             \$table->timestamps();
         "
     ],
-    'product_tags' => [
+    'product_tag_maps' => [
         'schema' => "
             \$table->id();
             \$table->foreignId('product_id')->constrained()->onDelete('cascade');
-            \$table->foreignId('tag_id')->constrained('food_tags')->onDelete('cascade');
+            \$table->foreignId('tag_id')->constrained('product_tags')->onDelete('cascade');
             \$table->timestamps();
 
             \$table->unique(['product_id', 'tag_id']);

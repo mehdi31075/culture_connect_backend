@@ -72,13 +72,7 @@
                     <li>
                         <a href="#product-tags" onclick="showSection('product-tags', this)" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
                             <i class="fas fa-tags mr-3"></i>
-                            Product & Food Tags
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#foods" onclick="showSection('foods', this)" class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100">
-                            <i class="fas fa-utensils mr-3"></i>
-                            Foods
+                            Product Tags
                         </a>
                     </li>
                     <li>
@@ -366,13 +360,13 @@
                 </div>
             </div>
 
-            <!-- Product Tags Section (also used for Food Tags) -->
+            <!-- Product Tags Section -->
             <div id="product-tags-section" class="section hidden">
-                <h2 class="text-2xl font-bold mb-6">Product & Food Tag Management</h2>
+                <h2 class="text-2xl font-bold mb-6">Product Tag Management</h2>
                 <div class="bg-white rounded-lg shadow">
                     <div class="p-6">
                         <div class="flex justify-between items-center mb-4">
-                            <span class="text-gray-600">Manage tags used to categorize products and foods (shared tags)</span>
+                            <span class="text-gray-600">Manage tags used to categorize products</span>
                             <button onclick="showAddProductTagModal()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
                                 <i class="fas fa-plus"></i> Add Tag
                             </button>
@@ -396,39 +390,6 @@
                 </div>
             </div>
 
-            <!-- Foods Section -->
-            <div id="foods-section" class="section hidden">
-                <h2 class="text-2xl font-bold mb-6">Food Management</h2>
-                <div class="bg-white rounded-lg shadow">
-                    <div class="p-6">
-                        <div class="flex justify-between items-center mb-4">
-                            <span class="text-gray-600">Manage food items</span>
-                            <button onclick="showAddFoodModal()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-                                <i class="fas fa-plus"></i> Add Food
-                            </button>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full table-auto">
-                                <thead>
-                                    <tr class="bg-gray-50">
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Shop</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">After Discount</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Trending</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tags</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="foods-table">
-                                    <!-- Foods will be loaded here -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
             <!-- Offers Section -->
             <div id="offers-section" class="section hidden">
@@ -448,7 +409,7 @@
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Shop</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product/Food</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Value</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Start Date</th>
@@ -601,7 +562,6 @@
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Shop</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Food</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rating</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Comment</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
@@ -837,13 +797,11 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
                             <select name="type" id="shop-type" class="w-full border rounded px-3 py-2">
                                 <option value="shop">Shop</option>
-                                <option value="food_truck">Food Truck</option>
-                                <option value="restaurant">Restaurant</option>
                             </select>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Location Name</label>
-                            <input type="text" name="location_name" id="shop-location-name" placeholder="e.g., Food Court A" class="w-full border rounded px-3 py-2" maxlength="160">
+                            <input type="text" name="location_name" id="shop-location-name" placeholder="e.g., Salon A" class="w-full border rounded px-3 py-2" maxlength="160">
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
@@ -1031,91 +989,6 @@
         </div>
     </div>
 
-    <!-- Add/Edit Food Modal -->
-    <div id="add-food-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 overflow-y-auto">
-        <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[85vh] overflow-y-auto">
-                <div class="flex justify-between items-center p-6 border-b">
-                    <h3 id="food-modal-title" class="text-lg font-semibold">Add New Food</h3>
-                    <button onclick="closeAddFoodModal()" class="text-gray-400 hover:text-gray-600">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <form id="add-food-form" class="p-6 space-y-4">
-                    <input type="hidden" id="food-id" name="id">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Shop *</label>
-                        <select id="food-shop-select" name="shop_id" required class="w-full px-3 py-2 border rounded-lg">
-                            <option value="">Select a shop...</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-                        <input type="text" id="food-name" name="name" required class="w-full px-3 py-2 border rounded-lg" maxlength="160">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                        <textarea id="food-description" name="description" rows="3" class="w-full px-3 py-2 border rounded-lg"></textarea>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Price ({{ config('app.currency.symbol', '$') }}) *</label>
-                        <input type="number" id="food-price" name="price" step="0.01" min="0" required class="w-full px-3 py-2 border rounded-lg">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">After Discount Price ({{ config('app.currency.symbol', '$') }}) - Optional</label>
-                        <input type="number" id="food-discounted-price" name="discounted_price" step="0.01" min="0" class="w-full px-3 py-2 border rounded-lg">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Images</label>
-                        <input type="file" id="food-images" name="images[]" multiple accept="image/*" class="w-full px-3 py-2 border rounded-lg">
-                        <div id="food-images-preview" class="mt-2 grid grid-cols-3 gap-2"></div>
-                    </div>
-                    <div class="grid grid-cols-3 gap-4">
-                        <div>
-                            <label class="flex items-center">
-                                <input type="checkbox" id="food-is-trending" name="is_trending" class="mr-2">
-                                <span class="text-sm font-medium text-gray-700">Is Trending</span>
-                            </label>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Trending Position</label>
-                            <input type="number" id="food-trending-position" name="trending_position" min="1" class="w-full px-3 py-2 border rounded-lg">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Trending Score (%)</label>
-                            <input type="number" id="food-trending-score" name="trending_score" step="0.01" min="0" max="100" class="w-full px-3 py-2 border rounded-lg">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Preparation Time</label>
-                        <input type="text" id="food-preparation-time" name="preparation_time" placeholder="e.g., 15 minutes, 30-45 min" class="w-full px-3 py-2 border rounded-lg">
-                    </div>
-                    <div>
-                        <label class="flex items-center">
-                            <input type="checkbox" id="food-is-available" name="is_available" checked class="mr-2">
-                            <span class="text-sm font-medium text-gray-700">Is Available</span>
-                        </label>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Tags</label>
-                        <div class="relative">
-                            <div id="food-tags-field" class="flex flex-wrap items-center gap-2 border rounded px-3 py-2 bg-white cursor-text" onclick="focusFoodTagInput()">
-                                <div id="food-selected-tags" class="flex flex-wrap gap-2"></div>
-                                <input id="food-tag-input" type="text" class="flex-1 min-w-[120px] border-0 focus:outline-none focus:ring-0 text-sm py-1" placeholder="Type to add tags..." autocomplete="off" oninput="updateFoodTagSuggestions(this.value)" onkeydown="handleFoodTagInput(event)">
-                            </div>
-                            <div id="food-tag-suggestions" class="absolute left-0 right-0 mt-1 bg-white border rounded shadow hidden z-10 max-h-48 overflow-y-auto"></div>
-                        </div>
-                        <div id="food-tags-hidden-inputs"></div>
-                        <p class="text-xs text-gray-500 mt-1">Type to search for an existing tag. If it doesn't exist, press Enter to create it.</p>
-                    </div>
-                    <div class="flex justify-end space-x-3 pt-4">
-                        <button type="button" onclick="closeAddFoodModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">Cancel</button>
-                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Save</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
 
     <!-- Add/Edit Offer Modal -->
     <div id="add-offer-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 overflow-y-auto">
@@ -1139,12 +1012,6 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">Product (Optional)</label>
                         <select id="offer-product-select" name="product_id" class="w-full px-3 py-2 border rounded-lg">
                             <option value="">No specific product</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Food (Optional)</label>
-                        <select id="offer-food-select" name="food_id" class="w-full px-3 py-2 border rounded-lg">
-                            <option value="">No specific food</option>
                         </select>
                     </div>
                     <div>
@@ -1310,7 +1177,7 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Shop (Required if no product or food)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Shop (Required if no product)</label>
                             <select name="shop_id" id="review-shop-select" class="w-full border rounded px-3 py-2">
                                 <option value="">Select a shop...</option>
                             </select>
@@ -1319,12 +1186,6 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">Product (Optional)</label>
                             <select name="product_id" id="review-product-select" class="w-full border rounded px-3 py-2">
                                 <option value="">Select a product...</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Food (Optional)</label>
-                            <select name="food_id" id="review-food-select" class="w-full border rounded px-3 py-2">
-                                <option value="">Select a food...</option>
                             </select>
                         </div>
                         <div>
@@ -1363,9 +1224,6 @@
         let currentEditingProductTagId = null;
         let selectedProductTagIds = [];
         let selectedProductNewTags = [];
-        // Food tag management (separate from product tags)
-        let selectedFoodTagIds = [];
-        let selectedFoodNewTags = [];
         let currentEditingEventId = null;
         let eventTagsCache = [];
         let currentEditingEventTagId = null;
@@ -1446,7 +1304,6 @@
                 });
             }
 
-            // Food tag input handlers are now handled by inline oninput and onkeydown handlers
         });
 
         // Currency configuration
@@ -1665,9 +1522,6 @@
                 loadEventFeatures();
             } else if (sectionName === 'events') {
                 loadEvents();
-            } else if (sectionName === 'foods') {
-                loadFoods();
-                ensureProductTagsCache();
             } else if (sectionName === 'offers') {
                 loadOffers();
             } else if (sectionName === 'orders') {
@@ -2682,263 +2536,6 @@
             }
         }
 
-        // Food Management Functions
-        async function loadFoods() {
-            try {
-                const data = await apiCall('/admin/foods');
-                if (data && data.success) {
-                    displayFoods(data.data.items || []);
-                }
-            } catch (error) {
-                console.error('Error loading foods:', error);
-            }
-        }
-
-        function displayFoods(foods) {
-            const tbody = document.getElementById('foods-table');
-            if (!foods.length) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="8" class="px-6 py-4 text-sm text-gray-500 text-center">No foods found. Add a food to get started.</td>
-                    </tr>
-                `;
-                return;
-            }
-            tbody.innerHTML = foods.map(food => {
-                const hasDiscount = food.discounted_price && food.discounted_price < food.price;
-                const originalPrice = food.price;
-                const discountedPrice = food.discounted_price;
-
-                return `
-                <tr class="border-b">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${food.id}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${food.name}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${food.shop ? food.shop.name : 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${hasDiscount ? `<span class="line-through text-gray-400">${formatPrice(originalPrice)}</span>` : formatPrice(originalPrice)}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${hasDiscount
-                            ? `<span class="text-green-600 font-semibold">${formatPrice(discountedPrice)}</span>`
-                            : '<span class="text-gray-400">—</span>'}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm">
-                        <span class="px-2 py-1 text-xs rounded-full ${food.is_trending ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}">
-                            ${food.is_trending ? `#${food.trending_position || 'N/A'} (${food.trending_score || 0}%)` : 'No'}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${
-                            food.tags && food.tags.length
-                                ? `<div class="flex flex-wrap gap-1">${food.tags.map(tag => `<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">${tag.name}</span>`).join('')}</div>`
-                                : '—'
-                        }
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm">
-                        <button onclick="editFood(${food.id})" class="text-blue-600 hover:text-blue-900 mr-2">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button onclick="deleteFood(${food.id})" class="text-red-600 hover:text-red-900">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `;
-            }).join('');
-        }
-
-        async function showAddFoodModal() {
-            try {
-                const data = await apiCall('/admin/shops?per_page=100');
-                if (data && data.success) {
-                    const select = document.getElementById('food-shop-select');
-                    select.innerHTML = '<option value="">Select a shop...</option>';
-                    data.data.items.forEach(shop => {
-                        select.innerHTML += `<option value="${shop.id}">${shop.name}</option>`;
-                    });
-                }
-            } catch (error) {
-                console.error('Error loading shops:', error);
-            }
-            await loadFoodTagOptions([], []);
-            document.getElementById('food-modal-title').textContent = 'Add New Food';
-            document.getElementById('food-id').value = '';
-            document.getElementById('add-food-form').reset();
-            document.getElementById('add-food-modal').classList.remove('hidden');
-        }
-
-        function closeAddFoodModal() {
-            document.getElementById('add-food-modal').classList.add('hidden');
-            document.getElementById('add-food-form').reset();
-            document.getElementById('food-id').value = '';
-            document.getElementById('food-modal-title').textContent = 'Add New Food';
-            document.getElementById('food-images-preview').innerHTML = '';
-            existingFoodImagesToRemove = [];
-            selectedFoodTagIds = [];
-            selectedFoodNewTags = [];
-            renderSelectedFoodTags();
-            updateFoodTagHiddenInputs();
-            const tagInput = document.getElementById('food-tag-input');
-            if (tagInput) {
-                tagInput.value = '';
-            }
-            updateFoodTagSuggestions('');
-            const suggestions = document.getElementById('food-tag-suggestions');
-            if (suggestions) {
-                suggestions.classList.add('hidden');
-            }
-        }
-
-        // Store existing images to remove
-        let existingFoodImagesToRemove = [];
-
-        function removeFoodImage(imageUrl) {
-            const preview = document.getElementById('food-images-preview');
-            const imgDiv = preview.querySelector(`[data-image-url="${imageUrl}"]`);
-            if (imgDiv) {
-                existingFoodImagesToRemove.push(imageUrl);
-                imgDiv.remove();
-            }
-        }
-
-        document.getElementById('add-food-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const formData = new FormData();
-            const foodId = document.getElementById('food-id').value;
-
-            formData.append('shop_id', document.getElementById('food-shop-select').value);
-            formData.append('name', document.getElementById('food-name').value);
-            formData.append('description', document.getElementById('food-description').value);
-            formData.append('price', document.getElementById('food-price').value);
-            formData.append('discounted_price', document.getElementById('food-discounted-price').value || '');
-            // Note: views_count, likes_count, and comments_count are automatically calculated
-            formData.append('is_trending', document.getElementById('food-is-trending').checked ? 1 : 0);
-            formData.append('trending_position', document.getElementById('food-trending-position').value || '');
-            formData.append('trending_score', document.getElementById('food-trending-score').value || '');
-            formData.append('preparation_time', document.getElementById('food-preparation-time').value || '');
-            formData.append('is_available', document.getElementById('food-is-available').checked ? 1 : 0);
-            // Note: views_count, likes_count, and comments_count are automatically calculated
-
-            const images = document.getElementById('food-images').files;
-            for (let i = 0; i < images.length; i++) {
-                formData.append('images[]', images[i]);
-            }
-
-            // Add images to remove if editing
-            if (foodId && existingFoodImagesToRemove.length > 0) {
-                existingFoodImagesToRemove.forEach(imageUrl => {
-                    formData.append('remove_images[]', imageUrl);
-                });
-            }
-
-            selectedFoodTagIds.forEach(id => formData.append('tags[]', id));
-            selectedFoodNewTags.forEach(name => formData.append('new_tags[]', name));
-
-            try {
-                const url = foodId ? `/admin/foods/${foodId}` : '/admin/foods';
-                const method = foodId ? 'POST' : 'POST'; // Using POST for both create and update (match route)
-                const response = await apiCall(url, {
-                    method: method,
-                    body: formData
-                });
-                if (response && response.success) {
-                    closeAddFoodModal();
-                    loadFoods();
-                    alert(foodId ? 'Food updated successfully' : 'Food saved successfully');
-                } else {
-                    alert(response?.message || 'Failed to save food');
-                }
-            } catch (error) {
-                console.error('Error saving food:', error);
-                alert('Error saving food');
-            }
-        });
-
-        async function editFood(foodId) {
-            try {
-                const data = await apiCall(`/admin/foods/${foodId}`);
-                if (data && data.success) {
-                    const food = data.data;
-
-                    // Load shops first
-                    try {
-                        const shopData = await apiCall('/admin/shops?per_page=100');
-                        if (shopData && shopData.success) {
-                            const select = document.getElementById('food-shop-select');
-                            select.innerHTML = '<option value="">Select a shop...</option>';
-                            shopData.data.items.forEach(shop => {
-                                select.innerHTML += `<option value="${shop.id}">${shop.name}</option>`;
-                            });
-                        }
-                    } catch (error) {
-                        console.error('Error loading shops:', error);
-                    }
-
-                    // Show modal and populate form
-                    document.getElementById('add-food-modal').classList.remove('hidden');
-                    document.getElementById('food-modal-title').textContent = 'Edit Food';
-                    document.getElementById('food-id').value = food.id;
-                    document.getElementById('food-shop-select').value = food.shop_id;
-                    document.getElementById('food-name').value = food.name || '';
-                    document.getElementById('food-description').value = food.description || '';
-                    document.getElementById('food-price').value = food.price || '';
-                    document.getElementById('food-discounted-price').value = food.discounted_price || '';
-                    document.getElementById('food-is-trending').checked = food.is_trending || false;
-                    document.getElementById('food-trending-position').value = food.trending_position || '';
-                    document.getElementById('food-trending-score').value = food.trending_score || '';
-                    document.getElementById('food-preparation-time').value = food.preparation_time || '';
-                    document.getElementById('food-is-available').checked = food.is_available !== false;
-
-                    // Display existing images
-                    const imagesPreview = document.getElementById('food-images-preview');
-                    imagesPreview.innerHTML = '';
-                    existingFoodImagesToRemove = [];
-                    if (food.images && food.images.length > 0) {
-                        food.images.forEach((imageUrl, index) => {
-                            const imgDiv = document.createElement('div');
-                            imgDiv.className = 'relative';
-                            imgDiv.setAttribute('data-image-url', imageUrl);
-                            const escapedUrl = imageUrl.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                            imgDiv.innerHTML = `
-                                <img src="${imageUrl}" alt="Food image ${index + 1}" class="w-full h-24 object-cover rounded border">
-                                <button type="button" onclick="removeFoodImage('${escapedUrl}')" class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            `;
-                            imagesPreview.appendChild(imgDiv);
-                        });
-                    }
-
-                    // Load and set tags
-                    const existingTagIds = food.tags ? food.tags.map(t => t.id) : [];
-                    await loadFoodTagOptions(existingTagIds, []);
-                    selectedFoodTagIds = existingTagIds;
-                    selectedFoodNewTags = [];
-                    renderSelectedFoodTags();
-                    updateFoodTagHiddenInputs();
-                } else {
-                    alert('Error loading food');
-                }
-            } catch (error) {
-                console.error('Error loading food:', error);
-                alert('Error loading food');
-            }
-        }
-
-        async function deleteFood(foodId) {
-            if (confirm('Are you sure you want to delete this food?')) {
-                try {
-                    const data = await apiCall(`/admin/foods/${foodId}`, { method: 'DELETE' });
-                    if (data && data.success) {
-                        loadFoods();
-                        alert('Food deleted successfully');
-                    }
-                } catch (error) {
-                    console.error('Error deleting food:', error);
-                    alert('Error deleting food');
-                }
-            }
-        }
 
         // Offer Management Functions
         async function loadOffers() {
@@ -2957,7 +2554,7 @@
             if (!offers.length) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="9" class="px-6 py-4 text-sm text-gray-500 text-center">No offers found. Add an offer to get started.</td>
+                        <td colspan="8" class="px-6 py-4 text-sm text-gray-500 text-center">No offers found. Add an offer to get started.</td>
                     </tr>
                 `;
                 return;
@@ -2968,9 +2565,7 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${offer.title}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${offer.shop ? offer.shop.name : 'N/A'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${offer.product ? '<span class="text-blue-600">Product: ' + offer.product.name + '</span>' : ''}
-                        ${offer.food ? '<span class="text-green-600">Food: ' + offer.food.name + '</span>' : ''}
-                        ${!offer.product && !offer.food ? 'N/A' : ''}
+                        ${offer.product ? '<span class="text-blue-600">' + offer.product.name + '</span>' : 'N/A'}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${offer.discount_type === 'percent' ? 'Percent' : 'Fixed'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${offer.discount_type === 'percent' ? offer.value + '%' : formatPrice(offer.value)}</td>
@@ -3006,55 +2601,8 @@
                         productSelect.innerHTML += `<option value="${product.id}">${product.name}</option>`;
                     });
                 }
-                const foodsData = await apiCall('/admin/foods?per_page=100');
-                if (foodsData && foodsData.success) {
-                    const foodSelect = document.getElementById('offer-food-select');
-                    foodSelect.innerHTML = '<option value="">No specific food</option>';
-                    foodsData.data.items.forEach(food => {
-                        foodSelect.innerHTML += `<option value="${food.id}">${food.name}</option>`;
-                    });
-                }
             } catch (error) {
                 console.error('Error loading data:', error);
-            }
-
-            // Add event listener to filter foods when shop is selected
-            const shopSelect = document.getElementById('offer-shop-select');
-            const foodSelect = document.getElementById('offer-food-select');
-            if (shopSelect && foodSelect) {
-                // Remove existing listeners by cloning
-                const newShopSelect = shopSelect.cloneNode(true);
-                shopSelect.parentNode.replaceChild(newShopSelect, shopSelect);
-
-                newShopSelect.addEventListener('change', async function() {
-                    const shopId = this.value;
-                    if (shopId) {
-                        try {
-                            const foodData = await apiCall(`/admin/foods?shop_id=${shopId}&per_page=100`);
-                            if (foodData && foodData.success) {
-                                foodSelect.innerHTML = '<option value="">No specific food</option>';
-                                foodData.data.items.forEach(food => {
-                                    foodSelect.innerHTML += `<option value="${food.id}">${food.name}</option>`;
-                                });
-                            }
-                        } catch (error) {
-                            console.error('Error loading foods for shop:', error);
-                        }
-                    } else {
-                        // Reload all foods
-                        try {
-                            const foodsData = await apiCall('/admin/foods?per_page=100');
-                            if (foodsData && foodsData.success) {
-                                foodSelect.innerHTML = '<option value="">No specific food</option>';
-                                foodsData.data.items.forEach(food => {
-                                    foodSelect.innerHTML += `<option value="${food.id}">${food.name}</option>`;
-                                });
-                            }
-                        } catch (error) {
-                            console.error('Error loading foods:', error);
-                        }
-                    }
-                });
             }
 
             document.getElementById('offer-modal-title').textContent = 'Add New Offer';
@@ -3095,7 +2643,6 @@
             const data = {
                 shop_id: document.getElementById('offer-shop-select').value,
                 product_id: document.getElementById('offer-product-select').value || null,
-                food_id: document.getElementById('offer-food-select').value || null,
                 title: document.getElementById('offer-title').value,
                 description: document.getElementById('offer-description').value,
                 discount_type: document.getElementById('offer-discount-type').value,
@@ -3132,27 +2679,10 @@
                     const offer = data.data;
                     await showAddOfferModal();
 
-                    // Load foods for the selected shop
-                    if (offer.shop_id) {
-                        try {
-                            const foodData = await apiCall(`/admin/foods?shop_id=${offer.shop_id}&per_page=100`);
-                            if (foodData && foodData.success) {
-                                const foodSelect = document.getElementById('offer-food-select');
-                                foodSelect.innerHTML = '<option value="">No specific food</option>';
-                                foodData.data.items.forEach(food => {
-                                    foodSelect.innerHTML += `<option value="${food.id}" ${food.id === offer.food_id ? 'selected' : ''}>${food.name}</option>`;
-                                });
-                            }
-                        } catch (error) {
-                            console.error('Error loading foods for shop:', error);
-                        }
-                    }
-
                     document.getElementById('offer-modal-title').textContent = 'Edit Offer';
                     document.getElementById('offer-id').value = offer.id;
                     document.getElementById('offer-shop-select').value = offer.shop_id;
                     document.getElementById('offer-product-select').value = offer.product_id || '';
-                    document.getElementById('offer-food-select').value = offer.food_id || '';
                     document.getElementById('offer-title').value = offer.title || '';
                     document.getElementById('offer-description').value = offer.description || '';
                     document.getElementById('offer-discount-type').value = offer.discount_type || 'percent';
@@ -3382,12 +2912,9 @@
 
         function renderSelectedProductTags() {
             const wrapper = document.getElementById('product-selected-tags');
-            const foodWrapper = document.getElementById('food-selected-tags');
-            const targetWrapper = wrapper || foodWrapper;
-            if (!targetWrapper) return;
+            if (!wrapper) return;
 
-            if (wrapper) wrapper.innerHTML = '';
-            if (foodWrapper) foodWrapper.innerHTML = '';
+            wrapper.innerHTML = '';
 
             selectedProductTagIds.forEach(id => {
                 const tag = productTagsCache.find(item => Number(item.id) === Number(id));
@@ -3993,232 +3520,6 @@
             }
         }
 
-        // Food Tag Chip Management Functions (similar to Event tags)
-        async function loadFoodTagOptions(selectedIds = [], newTagNames = []) {
-            await ensureProductTagsCache();
-            selectedFoodTagIds = (selectedIds || []).map(id => Number(id));
-            selectedFoodNewTags = (newTagNames || []).filter(name => !!name);
-            renderSelectedFoodTags();
-
-            const tagInput = document.getElementById('food-tag-input');
-            updateFoodTagSuggestions(tagInput ? tagInput.value : '');
-        }
-
-        function focusFoodTagInput() {
-            const input = document.getElementById('food-tag-input');
-            if (input) {
-                input.focus();
-            }
-        }
-
-        function renderSelectedFoodTags() {
-            const wrapper = document.getElementById('food-selected-tags');
-            if (!wrapper) return;
-
-            wrapper.innerHTML = '';
-
-            selectedFoodTagIds.forEach(id => {
-                const tag = productTagsCache.find(item => Number(item.id) === Number(id));
-                if (!tag) return;
-                const chip = document.createElement('span');
-                chip.className = 'inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-medium';
-                chip.innerHTML = `
-                    <span>${tag.name}</span>
-                    <button type="button" class="text-blue-600 hover:text-blue-900 focus:outline-none" data-remove-existing="${id}" aria-label="Remove tag">&times;</button>
-                `;
-                wrapper.appendChild(chip);
-            });
-
-            selectedFoodNewTags.forEach(name => {
-                const chip = document.createElement('span');
-                chip.className = 'inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gray-200 text-gray-700 text-xs font-medium';
-                chip.innerHTML = `
-                    <span>${name}</span>
-                    <button type="button" class="text-gray-600 hover:text-gray-900 focus:outline-none" data-remove-new="${name}" aria-label="Remove new tag">&times;</button>
-                `;
-                wrapper.appendChild(chip);
-            });
-
-            updateFoodTagHiddenInputs();
-
-            // Add click handlers for remove buttons
-            wrapper.querySelectorAll('[data-remove-existing]').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    removeExistingFoodTag(btn.getAttribute('data-remove-existing'));
-                });
-            });
-
-            wrapper.querySelectorAll('[data-remove-new]').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    removeNewFoodTag(btn.getAttribute('data-remove-new'));
-                });
-            });
-        }
-
-        function updateFoodTagHiddenInputs() {
-            const hiddenContainer = document.getElementById('food-tags-hidden-inputs');
-            if (!hiddenContainer) return;
-
-            hiddenContainer.innerHTML = '';
-
-            selectedFoodTagIds.forEach(id => {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'tags[]';
-                input.value = id;
-                hiddenContainer.appendChild(input);
-            });
-
-            selectedFoodNewTags.forEach(name => {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'new_tags[]';
-                input.value = name;
-                hiddenContainer.appendChild(input);
-            });
-        }
-
-        function addExistingFoodTag(id) {
-            const numericId = Number(id);
-            if (selectedFoodTagIds.includes(numericId)) {
-                return;
-            }
-
-            const tag = productTagsCache.find(item => Number(item.id) === numericId);
-            if (!tag) return;
-
-            selectedFoodTagIds.push(numericId);
-            selectedFoodNewTags = selectedFoodNewTags.filter(name => name.toLowerCase() !== tag.name.toLowerCase());
-            renderSelectedFoodTags();
-            updateFoodTagSuggestions('');
-            clearFoodTagInput();
-            const suggestions = document.getElementById('food-tag-suggestions');
-            if (suggestions) {
-                suggestions.classList.add('hidden');
-            }
-        }
-
-        function addNewFoodTag(name) {
-            const trimmed = name.trim();
-            if (!trimmed) return;
-
-            const existing = productTagsCache.find(tag => tag.name.toLowerCase() === trimmed.toLowerCase());
-            if (existing) {
-                addExistingFoodTag(existing.id);
-                return;
-            }
-
-            if (selectedFoodNewTags.some(tagName => tagName.toLowerCase() === trimmed.toLowerCase())) {
-                clearFoodTagInput();
-                return;
-            }
-
-            selectedFoodNewTags.push(trimmed);
-            renderSelectedFoodTags();
-            updateFoodTagSuggestions('');
-            clearFoodTagInput();
-            const suggestions = document.getElementById('food-tag-suggestions');
-            if (suggestions) {
-                suggestions.classList.add('hidden');
-            }
-        }
-
-        function removeExistingFoodTag(id) {
-            const numericId = Number(id);
-            selectedFoodTagIds = selectedFoodTagIds.filter(tagId => tagId !== numericId);
-            renderSelectedFoodTags();
-            updateFoodTagSuggestions(document.getElementById('food-tag-input')?.value || '');
-        }
-
-        function removeNewFoodTag(name) {
-            selectedFoodNewTags = selectedFoodNewTags.filter(tagName => tagName !== name);
-            renderSelectedFoodTags();
-            updateFoodTagSuggestions(document.getElementById('food-tag-input')?.value || '');
-        }
-
-        function clearFoodTagInput() {
-            const input = document.getElementById('food-tag-input');
-            if (input) {
-                input.value = '';
-            }
-        }
-
-        function handleFoodTagInputCommit() {
-            const input = document.getElementById('food-tag-input');
-            if (!input) return;
-
-            const value = input.value.trim();
-            if (!value) {
-                input.value = '';
-                return;
-            }
-
-            addNewFoodTag(value);
-        }
-
-        function updateFoodTagSuggestions(searchTerm = '') {
-            const suggestions = document.getElementById('food-tag-suggestions');
-            if (!suggestions) return;
-
-            const normalized = searchTerm.trim().toLowerCase();
-            if (!normalized.length) {
-                suggestions.innerHTML = '';
-                suggestions.classList.add('hidden');
-                return;
-            }
-
-            const availableTags = productTagsCache.filter(tag => !selectedFoodTagIds.includes(Number(tag.id)));
-
-            let matches = [];
-            if (normalized.length) {
-                matches = availableTags.filter(tag =>
-                    tag.name.toLowerCase().includes(normalized)
-                ).slice(0, 10);
-            }
-
-            if (matches.length === 0) {
-                const createBtn = document.createElement('button');
-                createBtn.type = 'button';
-                createBtn.className = 'w-full text-left px-3 py-2 text-sm hover:bg-blue-50 text-gray-600';
-                createBtn.textContent = `Create "${normalized}"`;
-                createBtn.addEventListener('click', () => {
-                    addNewFoodTag(normalized);
-                });
-                suggestions.innerHTML = '';
-                suggestions.appendChild(createBtn);
-            } else {
-                suggestions.innerHTML = matches.map(tag => `
-                    <button type="button" class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50" data-tag-id="${tag.id}">
-                        ${tag.name}
-                    </button>
-                `).join('');
-            }
-            suggestions.classList.remove('hidden');
-
-            // Add click handlers
-            suggestions.querySelectorAll('[data-tag-id]').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    addExistingFoodTag(btn.getAttribute('data-tag-id'));
-                });
-            });
-        }
-
-        function handleFoodTagInput(event) {
-            if (event.key === 'Enter' || event.key === ',') {
-                event.preventDefault();
-                handleFoodTagInputCommit();
-            } else if (event.key === 'Backspace' && !event.target.value) {
-                if (selectedFoodNewTags.length) {
-                    selectedFoodNewTags.pop();
-                    renderSelectedFoodTags();
-                } else if (selectedFoodTagIds.length) {
-                    selectedFoodTagIds.pop();
-                    renderSelectedFoodTags();
-                }
-            }
-        }
 
         // Event Banner Management Functions
         async function handleEventBannerUpload(event) {
@@ -4893,7 +4194,6 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${review.user ? (((review.user.first_name || '') + ' ' + (review.user.last_name || '')).trim() || 'N/A') : 'N/A'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${review.shop ? review.shop.name : 'N/A'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${review.product ? review.product.name : 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${review.food ? review.food.name : 'N/A'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${'⭐'.repeat(review.rating)}</td>
                     <td class="px-6 py-4 text-sm text-gray-900">${review.comment || 'N/A'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm">
@@ -4952,54 +4252,6 @@
                 console.error('Error loading products:', error);
             }
 
-            // Load foods for dropdown
-            try {
-                const foodData = await apiCall('/admin/foods?per_page=100');
-                if (foodData && foodData.success) {
-                    const foodSelect = document.getElementById('review-food-select');
-                    foodSelect.innerHTML = '<option value="">Select a food...</option>';
-                    foodData.data.items.forEach(food => {
-                        foodSelect.innerHTML += `<option value="${food.id}">${food.name}</option>`;
-                    });
-                }
-            } catch (error) {
-                console.error('Error loading foods:', error);
-            }
-
-            // Add event listener to load foods when shop is selected
-            const shopSelect = document.getElementById('review-shop-select');
-            const foodSelect = document.getElementById('review-food-select');
-            if (shopSelect && foodSelect) {
-                shopSelect.addEventListener('change', async function() {
-                    const shopId = this.value;
-                    if (shopId) {
-                        try {
-                            const foodData = await apiCall(`/admin/foods?shop_id=${shopId}&per_page=100`);
-                            if (foodData && foodData.success) {
-                                foodSelect.innerHTML = '<option value="">Select a food...</option>';
-                                foodData.data.items.forEach(food => {
-                                    foodSelect.innerHTML += `<option value="${food.id}">${food.name}</option>`;
-                                });
-                            }
-                        } catch (error) {
-                            console.error('Error loading foods for shop:', error);
-                        }
-                    } else {
-                        // Reload all foods
-                        try {
-                            const foodData = await apiCall('/admin/foods?per_page=100');
-                            if (foodData && foodData.success) {
-                                foodSelect.innerHTML = '<option value="">Select a food...</option>';
-                                foodData.data.items.forEach(food => {
-                                    foodSelect.innerHTML += `<option value="${food.id}">${food.name}</option>`;
-                                });
-                            }
-                        } catch (error) {
-                            console.error('Error loading foods:', error);
-                        }
-                    }
-                });
-            }
 
             document.getElementById('add-review-modal').classList.remove('hidden');
         }
@@ -5018,16 +4270,13 @@
             if (!data.product_id || data.product_id === '') {
                 data.product_id = null;
             }
-            if (!data.food_id || data.food_id === '') {
-                data.food_id = null;
-            }
             if (!data.shop_id || data.shop_id === '') {
                 data.shop_id = null;
             }
 
             // Ensure at least one is provided
-            if (!data.shop_id && !data.product_id && !data.food_id) {
-                alert('Please select either a shop, product, or food');
+            if (!data.shop_id && !data.product_id) {
+                alert('Please select either a shop or product');
                 return;
             }
 

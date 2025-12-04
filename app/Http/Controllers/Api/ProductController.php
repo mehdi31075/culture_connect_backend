@@ -114,7 +114,7 @@ class ProductController extends Controller
             // Filter by tag
             if ($tagId) {
                 $query->whereHas('tags', function ($q) use ($tagId) {
-                    $q->where('product_tags.tag_id', $tagId);
+                    $q->where('product_tag_maps.tag_id', $tagId);
                 });
             }
 
@@ -196,7 +196,6 @@ class ProductController extends Controller
      *                     @OA\Property(property="name", type="string", example="Viral TikTok Shawarma"),
      *                     @OA\Property(property="description", type="string", example="The shawarma that broke the internet!"),
      *                     @OA\Property(property="price", type="number", format="float", example=18.00),
-     *                     @OA\Property(property="is_food", type="boolean", example=true),
      *                     @OA\Property(
      *                         property="images",
      *                         type="array",

@@ -13,7 +13,6 @@ use App\Http\Controllers\Admin\AdminReviewController;
 use App\Http\Controllers\Admin\AdminEventController;
 use App\Http\Controllers\Admin\AdminEventTagController;
 use App\Http\Controllers\Admin\AdminEventFeatureController;
-use App\Http\Controllers\Admin\AdminFoodController;
 use App\Http\Controllers\Admin\AdminOfferController;
 use App\Http\Controllers\Admin\AdminMapController;
 
@@ -96,18 +95,11 @@ Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
     Route::put('/products/{id}', [AdminProductController::class, 'update']);
     Route::delete('/products/{id}', [AdminProductController::class, 'destroy']);
 
-    // Product tag management (also used for food tags)
+    // Product tag management
     Route::get('/product-tags', [AdminProductTagController::class, 'index']);
     Route::post('/product-tags', [AdminProductTagController::class, 'store']);
     Route::put('/product-tags/{id}', [AdminProductTagController::class, 'update']);
     Route::delete('/product-tags/{id}', [AdminProductTagController::class, 'destroy']);
-
-    // Food management
-    Route::get('/foods', [AdminFoodController::class, 'index']);
-    Route::get('/foods/{id}', [AdminFoodController::class, 'show']);
-    Route::post('/foods', [AdminFoodController::class, 'store']);
-    Route::match(['put', 'post'], '/foods/{id}', [AdminFoodController::class, 'update']);
-    Route::delete('/foods/{id}', [AdminFoodController::class, 'destroy']);
 
     // Map POIs
     Route::get('/map/pois', [AdminMapController::class, 'pois']);

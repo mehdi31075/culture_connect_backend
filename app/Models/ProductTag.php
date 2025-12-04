@@ -9,7 +9,7 @@ class ProductTag extends Model
 {
     use HasFactory;
 
-    protected $table = 'food_tags';
+    protected $table = 'product_tags';
 
     protected $fillable = [
         'name',
@@ -23,6 +23,6 @@ class ProductTag extends Model
 
     public function products()
     {
-        return $this->belongsToMany(Product::class, 'product_tags', 'tag_id', 'product_id');
+        return $this->belongsToMany(Product::class, 'product_tag_maps', 'tag_id', 'product_id');
     }
 }

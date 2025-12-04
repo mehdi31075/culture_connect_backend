@@ -49,7 +49,7 @@ class AdminProductTagController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:160|unique:food_tags,name',
+            'name' => 'required|string|max:160|unique:product_tags,name',
         ]);
 
         if ($validator->fails()) {
@@ -93,7 +93,7 @@ class AdminProductTagController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:160|unique:food_tags,name,' . $tag->id,
+            'name' => 'required|string|max:160|unique:product_tags,name,' . $tag->id,
         ]);
 
         if ($validator->fails()) {

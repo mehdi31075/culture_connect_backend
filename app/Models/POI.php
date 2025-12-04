@@ -13,7 +13,6 @@ class POI extends Model
 
     const TYPE_PAVILION = 'pavilion';
     const TYPE_STAGE = 'stage';
-    const TYPE_FOOD_TRUCK = 'food_truck';
     const TYPE_PHOTO_SPOT = 'photo_spot';
     const TYPE_RESTROOM = 'restroom';
     const TYPE_OTHER = 'other';
@@ -57,7 +56,6 @@ class POI extends Model
         return [
             self::TYPE_PAVILION => 'Pavilion',
             self::TYPE_STAGE => 'Stage',
-            self::TYPE_FOOD_TRUCK => 'Food Truck',
             self::TYPE_PHOTO_SPOT => 'Photo Spot',
             self::TYPE_RESTROOM => 'Restroom',
             self::TYPE_OTHER => 'Other',

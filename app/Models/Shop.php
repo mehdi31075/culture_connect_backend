@@ -10,8 +10,6 @@ class Shop extends Model
     use HasFactory;
 
     const TYPE_SHOP = 'shop';
-    const TYPE_FOOD_TRUCK = 'food_truck';
-    const TYPE_RESTAURANT = 'restaurant';
 
     protected $fillable = [
         'pavilion_id',
@@ -66,8 +64,6 @@ class Shop extends Model
     {
         return [
             self::TYPE_SHOP => 'Shop',
-            self::TYPE_FOOD_TRUCK => 'Food Truck',
-            self::TYPE_RESTAURANT => 'Restaurant',
         ];
     }
 }

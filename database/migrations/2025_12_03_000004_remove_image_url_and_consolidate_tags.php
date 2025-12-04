@@ -46,16 +46,7 @@ return new class extends Migration
             });
         }
 
-        // Re-create food_tag_maps table (but we can't restore the data)
-        if (!Schema::hasTable('food_tag_maps')) {
-            Schema::create('food_tag_maps', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('food_id')->constrained('products')->onDelete('cascade');
-                $table->foreignId('tag_id')->constrained('food_tags')->onDelete('cascade');
-                $table->timestamps();
-                $table->unique(['food_id', 'tag_id']);
-            });
-        }
+        // Note: food_tag_maps table is not recreated as it's been permanently removed
     }
 };
 
