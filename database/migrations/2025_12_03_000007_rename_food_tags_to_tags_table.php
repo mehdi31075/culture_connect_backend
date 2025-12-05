@@ -12,8 +12,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Rename the table if it exists
-        if (Schema::hasTable('food_tags') && !Schema::hasTable('tags')) {
+        // Skip this migration - we'll rename directly to product_tags in the next migration
+        // This migration is kept for backward compatibility if it was already run
+        // If food_tags exists and tags doesn't, rename to tags (intermediate step)
+        if (Schema::hasTable('food_tags') && !Schema::hasTable('tags') && !Schema::hasTable('product_tags')) {
             Schema::rename('food_tags', 'tags');
         }
 
@@ -31,8 +33,12 @@ return new class extends Migration
                 }
             }
 
-            // Re-add foreign key pointing to the renamed table (tags)
-            if (Schema::hasTable('tags')) {
+            // Re-add foreign key pointing to the renamed table (tags or product_tags)
+            if (Schema::hasTable('product_tags')) {
+                Schema::table('product_tag_maps', function (Blueprint $table) {
+                    $table->foreign('tag_id')->references('id')->on('product_tags')->onDelete('cascade');
+                });
+            } elseif (Schema::hasTable('tags')) {
                 Schema::table('product_tag_maps', function (Blueprint $table) {
                     $table->foreign('tag_id')->references('id')->on('tags')->onDelete('cascade');
                 });

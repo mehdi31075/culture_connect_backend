@@ -12,8 +12,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Step 1: Rename tags table to product_tags (if tags exists and product_tags doesn't)
-        if (Schema::hasTable('tags') && !Schema::hasTable('product_tags')) {
+        // Step 1: Rename food_tags or tags table directly to product_tags
+        // Handle both cases: food_tags -> product_tags OR tags -> product_tags
+        if (Schema::hasTable('food_tags') && !Schema::hasTable('product_tags')) {
+            // Direct rename from food_tags to product_tags
+            Schema::rename('food_tags', 'product_tags');
+        } elseif (Schema::hasTable('tags') && !Schema::hasTable('product_tags')) {
+            // Rename from intermediate tags to product_tags
             Schema::rename('tags', 'product_tags');
         }
 
