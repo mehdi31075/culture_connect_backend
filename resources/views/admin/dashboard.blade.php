@@ -2523,9 +2523,12 @@
 
                 try {
                     const url = productId ? `/admin/products/${productId}` : '/admin/products';
-                    const method = productId ? 'POST' : 'POST'; // Use POST for FormData (route accepts both PUT and POST)
+                    // For updates, use POST with method spoofing (Laravel doesn't handle PUT with FormData well)
+                    if (productId) {
+                        formData.append('_method', 'PUT');
+                    }
                     const response = await apiCall(url, {
-                        method: method,
+                        method: 'POST',
                         body: formData
                     });
                     if (response && response.success) {
