@@ -14,8 +14,9 @@ return new class extends Migration
         Schema::create('product_tag_maps', function (Blueprint $table) {
             $table->id();
             $table->foreignId('product_id')->constrained()->onDelete('cascade');
-            // Note: Initially references 'food_tags', will be updated by later migration to 'product_tags'
-            $table->foreignId('tag_id')->constrained('food_tags')->onDelete('cascade');
+            // References 'product_tags' - if table doesn't exist yet, it will be created/renamed by migrations
+            // The foreign key will be updated by migration 2025_12_03_000011 if needed
+            $table->foreignId('tag_id')->nullable()->constrained('product_tags')->onDelete('cascade');
             $table->timestamps();
             $table->unique(['product_id', 'tag_id']);
         });
