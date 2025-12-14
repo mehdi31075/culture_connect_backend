@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\ProductTag;
 use App\Models\Shop;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -340,6 +341,50 @@ class ProductController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve product',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/product-tags",
+     *     summary="Get all product tags",
+     *     description="Retrieve all available product tags",
+     *     operationId="getProductTags",
+     *     tags={"Product"},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Product tags retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Product tags retrieved successfully"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="name", type="string", example="Food")
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function getTags(): JsonResponse
+    {
+        try {
+            $tags = ProductTag::orderBy('name')->get();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Product tags retrieved successfully',
+                'data' => $tags,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve product tags',
                 'error' => $e->getMessage(),
             ], 500);
         }

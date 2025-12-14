@@ -123,6 +123,7 @@ Route::get('pavilions/{pavilion}/shops', [ShopController::class, 'pavilionShops'
 Route::get('products', [ProductController::class, 'index']);
 Route::get('products/{id}', [ProductController::class, 'show']);
 Route::get('shops/{shop}/products', [ProductController::class, 'shopProducts']);
+Route::get('product-tags', [ProductController::class, 'getTags']);
 
 // Home/Stats routes
 Route::get('stats', [HomeController::class, 'stats']);
