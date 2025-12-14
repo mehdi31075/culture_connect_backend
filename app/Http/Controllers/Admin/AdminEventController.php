@@ -80,6 +80,9 @@ class AdminEventController extends Controller
                 'start_time' => 'required|date',
                 'end_time' => 'required|date|after:start_time',
                 'capacity' => 'nullable|integer|min:0',
+                'lat' => 'nullable|numeric|between:-90,90',
+                'lng' => 'nullable|numeric|between:-180,180',
+                'location' => 'nullable|string|max:160',
                 'tags' => 'nullable|array',
                 'tags.*' => 'integer|exists:event_tags,id',
                 'new_tags' => 'nullable|array',
@@ -106,6 +109,9 @@ class AdminEventController extends Controller
                 'end_time' => Carbon::parse($request->end_time),
                 'capacity' => $request->capacity,
                 'banners' => $request->banners ?? [],
+                'lat' => $request->lat,
+                'lng' => $request->lng,
+                'location' => $request->location,
             ]);
 
             // Sync tags if provided
@@ -194,6 +200,9 @@ class AdminEventController extends Controller
                 'start_time' => 'sometimes|required|date',
                 'end_time' => 'sometimes|required|date|after:start_time',
                 'capacity' => 'nullable|integer|min:0',
+                'lat' => 'nullable|numeric|between:-90,90',
+                'lng' => 'nullable|numeric|between:-180,180',
+                'location' => 'nullable|string|max:160',
                 'tags' => 'nullable|array',
                 'tags.*' => 'integer|exists:event_tags,id',
                 'new_tags' => 'nullable|array',
@@ -211,7 +220,7 @@ class AdminEventController extends Controller
             }
 
             $updateData = [];
-            foreach (['pavilion_id', 'title', 'description', 'stage', 'price', 'capacity'] as $field) {
+            foreach (['pavilion_id', 'title', 'description', 'stage', 'price', 'capacity', 'lat', 'lng', 'location'] as $field) {
                 if ($request->has($field)) {
                     $updateData[$field] = $request->$field;
                 }

@@ -19,6 +19,9 @@ class Event extends Model
         'end_time',
         'capacity',
         'banners',
+        'lat',
+        'lng',
+        'location',
     ];
 
     protected $casts = [
@@ -26,6 +29,8 @@ class Event extends Model
         'end_time' => 'datetime',
         'price' => 'decimal:2',
         'banners' => 'array',
+        'lat' => 'decimal:6',
+        'lng' => 'decimal:6',
     ];
 
     public function pavilion()
@@ -74,5 +79,16 @@ class Event extends Model
     public function getPriceAttribute($value)
     {
         return $value !== null ? (float) $value : -1.00;
+    }
+
+    // Ensure numeric serialization for lat and lng
+    public function getLatAttribute($value)
+    {
+        return $value === null ? null : (float) $value;
+    }
+
+    public function getLngAttribute($value)
+    {
+        return $value === null ? null : (float) $value;
     }
 }

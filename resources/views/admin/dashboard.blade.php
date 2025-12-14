@@ -1088,6 +1088,20 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">Stage</label>
                             <input type="text" name="stage" id="event-stage" class="w-full border rounded px-3 py-2">
                         </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                            <input type="text" name="location" id="event-location" class="w-full border rounded px-3 py-2" placeholder="Event location">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Latitude</label>
+                                <input type="number" name="lat" id="event-lat" step="0.000001" class="w-full border rounded px-3 py-2" placeholder="e.g., 25.2048">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Longitude</label>
+                                <input type="number" name="lng" id="event-lng" step="0.000001" class="w-full border rounded px-3 py-2" placeholder="e.g., 55.2708">
+                            </div>
+                        </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Start Time *</label>
@@ -4267,6 +4281,9 @@
                 document.getElementById('event-title').value = event.title || '';
                 document.getElementById('event-description').value = event.description || '';
                 document.getElementById('event-stage').value = event.stage || '';
+                document.getElementById('event-location').value = event.location || '';
+                document.getElementById('event-lat').value = event.lat || '';
+                document.getElementById('event-lng').value = event.lng || '';
                 document.getElementById('event-price').value = event.price !== null && event.price !== undefined ? parseFloat(event.price).toFixed(2) : '-1.00';
                 document.getElementById('event-start-time').value = event.start_time ? new Date(event.start_time).toISOString().slice(0, 16) : '';
                 document.getElementById('event-end-time').value = event.end_time ? new Date(event.end_time).toISOString().slice(0, 16) : '';

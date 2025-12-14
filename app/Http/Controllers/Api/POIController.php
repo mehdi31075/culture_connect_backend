@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\POI;
+use App\Models\Pavilion;
+use App\Models\Shop;
+use App\Models\Event;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Carbon\Carbon;
 
 /**
  * @OA\Tag(
@@ -19,13 +22,13 @@ class POIController extends Controller
      * @OA\Get(
      *     path="/api/pois",
      *     summary="Get all POIs",
-     *     description="Retrieve a list of all Points of Interest with optional filtering",
+     *     description="Retrieve a list of all Points of Interest (pavilions, shops, and events) with lat, long, and location",
      *     operationId="getPOIs",
      *     tags={"POI"},
      *     @OA\Parameter(
      *         name="search",
      *         in="query",
-     *         description="Search term for name",
+     *         description="Search term for name or title",
      *         required=false,
      *         @OA\Schema(type="string")
      *     ),
@@ -34,7 +37,7 @@ class POIController extends Controller
      *         in="query",
      *         description="Filter by POI type",
      *         required=false,
-     *         @OA\Schema(type="string", enum={"pavilion", "stage", "photo_spot", "restroom", "other"})
+     *         @OA\Schema(type="string", enum={"pavilion", "shop", "event"})
      *     ),
      *     @OA\Parameter(
      *         name="pavilion_id",
@@ -42,34 +45,6 @@ class POIController extends Controller
      *         description="Filter by pavilion ID",
      *         required=false,
      *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Parameter(
-     *         name="shop_id",
-     *         in="query",
-     *         description="Filter by shop ID",
-     *         required=false,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Parameter(
-     *         name="lat",
-     *         in="query",
-     *         description="Latitude for location-based filtering",
-     *         required=false,
-     *         @OA\Schema(type="number", format="float")
-     *     ),
-     *     @OA\Parameter(
-     *         name="lng",
-     *         in="query",
-     *         description="Longitude for location-based filtering",
-     *         required=false,
-     *         @OA\Schema(type="number", format="float")
-     *     ),
-     *     @OA\Parameter(
-     *         name="radius",
-     *         in="query",
-     *         description="Radius in kilometers for location-based filtering",
-     *         required=false,
-     *         @OA\Schema(type="number", format="float", minimum=0.1, maximum=100)
      *     ),
      *     @OA\Response(
      *         response=200,
@@ -79,20 +54,14 @@ class POIController extends Controller
      *             @OA\Property(property="message", type="string", example="POIs retrieved successfully"),
      *             @OA\Property(
      *                 property="data",
-     *                 type="object",
      *                 type="array",
      *                 @OA\Items(
      *                     @OA\Property(property="id", type="integer", example=1),
-     *                     @OA\Property(property="type", type="string", example="photo_spot"),
-     *                     @OA\Property(property="name", type="string", example="Main Photo Spot"),
+     *                     @OA\Property(property="type", type="string", example="pavilion", enum={"pavilion", "shop", "event"}),
+     *                     @OA\Property(property="name", type="string", example="Main Pavilion"),
      *                     @OA\Property(property="lat", type="number", format="float", example=25.2048),
-     *                     @OA\Property(property="lng", type="number", format="float", example=55.2708),
-     *                     @OA\Property(property="shop_id", type="integer", nullable=true, example=null),
-     *                     @OA\Property(property="pavilion_id", type="integer", nullable=true, example=1),
-     *                     @OA\Property(property="pavilion", type="object", nullable=true),
-     *                     @OA\Property(property="shop", type="object", nullable=true),
-     *                     @OA\Property(property="created_at", type="string", format="date-time"),
-     *                     @OA\Property(property="updated_at", type="string", format="date-time")
+     *                     @OA\Property(property="long", type="number", format="float", example=55.2708),
+     *                     @OA\Property(property="location", type="string", example="Main Pavilion")
      *                 )
      *             )
      *         )
@@ -113,58 +82,117 @@ class POIController extends Controller
             $search = $request->get('search');
             $type = $request->get('type');
             $pavilionId = $request->get('pavilion_id');
-            $shopId = $request->get('shop_id');
-            $lat = $request->get('lat');
-            $lng = $request->get('lng');
-            $radius = $request->get('radius', 10); // Default 10km radius
 
-            $query = POI::with(['pavilion', 'shop']);
+            $pois = collect();
 
-            // Search filter
-            if ($search) {
-                $query->where('name', 'like', "%{$search}%");
+            // Get Pavilions
+            if (!$type || $type === 'pavilion') {
+                $pavilionsQuery = Pavilion::query();
+
+                if ($search) {
+                    $pavilionsQuery->where('name', 'like', "%{$search}%");
+                }
+
+                if ($pavilionId) {
+                    $pavilionsQuery->where('id', $pavilionId);
+                }
+
+                $pavilions = $pavilionsQuery->get();
+
+                $pavilions->each(function ($pavilion) use ($pois) {
+                    $pois->push([
+                        'id' => $pavilion->id,
+                        'type' => 'pavilion',
+                        'name' => $pavilion->name,
+                        'lat' => $pavilion->lat !== null ? (float) $pavilion->lat : null,
+                        'long' => $pavilion->lng !== null ? (float) $pavilion->lng : null,
+                        'location' => $pavilion->name,
+                    ]);
+                });
             }
 
-            // Type filter
-            if ($type) {
-                $query->where('type', $type);
+            // Get Shops
+            if (!$type || $type === 'shop') {
+                $shopsQuery = Shop::query();
+
+                if ($search) {
+                    $shopsQuery->where('name', 'like', "%{$search}%");
+                }
+
+                if ($pavilionId) {
+                    $shopsQuery->where('pavilion_id', $pavilionId);
+                }
+
+                $shops = $shopsQuery->get();
+
+                $shops->each(function ($shop) use ($pois) {
+                    $pois->push([
+                        'id' => $shop->id,
+                        'type' => 'shop',
+                        'name' => $shop->name,
+                        'lat' => $shop->lat !== null ? (float) $shop->lat : null,
+                        'long' => $shop->lng !== null ? (float) $shop->lng : null,
+                        'location' => $shop->location_name ?? $shop->name,
+                    ]);
+                });
             }
 
-            // Pavilion filter
-            if ($pavilionId) {
-                $query->where('pavilion_id', $pavilionId);
+            // Get Events (upcoming and ongoing only)
+            if (!$type || $type === 'event') {
+                $now = Carbon::now();
+                $eventsQuery = Event::where(function ($q) use ($now) {
+                    $q->where('start_time', '>=', $now)
+                      ->orWhere(function ($subQ) use ($now) {
+                          $subQ->where('start_time', '<=', $now)
+                               ->where('end_time', '>=', $now);
+                      });
+                })->with('pavilion');
+
+                if ($search) {
+                    $eventsQuery->where('title', 'like', "%{$search}%");
+                }
+
+                if ($pavilionId) {
+                    $eventsQuery->where('pavilion_id', $pavilionId);
+                }
+
+                $events = $eventsQuery->orderBy('start_time', 'asc')->get();
+
+                $events->each(function ($event) use ($pois) {
+                    // Use event's own lat/lng/location if available, otherwise fallback to pavilion
+                    $lat = $event->lat !== null ? (float) $event->lat : null;
+                    $long = $event->lng !== null ? (float) $event->lng : null;
+                    $location = $event->location;
+
+                    // Fallback to pavilion if event doesn't have location data
+                    if (($lat === null || $long === null || !$location) && $event->pavilion) {
+                        $pavilion = $event->pavilion;
+                        if ($lat === null) {
+                            $lat = $pavilion->lat !== null ? (float) $pavilion->lat : null;
+                        }
+                        if ($long === null) {
+                            $long = $pavilion->lng !== null ? (float) $pavilion->lng : null;
+                        }
+                        if (!$location) {
+                            $location = $event->stage ?? $pavilion->name;
+                        }
+                    } elseif (!$location) {
+                        $location = $event->stage;
+                    }
+
+                    $pois->push([
+                        'id' => $event->id,
+                        'type' => 'event',
+                        'name' => $event->title,
+                        'lat' => $lat,
+                        'long' => $long,
+                        'location' => $location,
+                    ]);
+                });
             }
 
-            // Shop filter
-            if ($shopId) {
-                $query->where('shop_id', $shopId);
-            }
-
-            // Location-based filtering (if lat, lng, and radius are provided)
-            if ($lat && $lng) {
-                $radius = $radius ?? 10; // Default 10km radius
-
-                // Calculate distance using Haversine formula
-                $query->selectRaw("*,
-                    (6371 * acos(cos(radians(?))
-                    * cos(radians(lat))
-                    * cos(radians(lng) - radians(?))
-                    + sin(radians(?))
-                    * sin(radians(lat)))) AS distance", [$lat, $lng, $lat])
-                    ->having('distance', '<=', $radius)
-                    ->orderBy('distance');
-            } else {
-                $query->orderBy('name', 'asc');
-            }
-
-            $pois = $query->get();
-
-            // Ensure lat and lng are returned as floats
-            $pois->transform(function ($poi) {
-                $poi->lat = $poi->lat !== null ? (float) $poi->lat : null;
-                $poi->lng = $poi->lng !== null ? (float) $poi->lng : null;
-                return $poi;
-            });
+            // Sort by name
+            $pois = $pois->sortBy('name')->values();
 
             return response()->json([
                 'success' => true,
@@ -184,7 +212,7 @@ class POIController extends Controller
      * @OA\Get(
      *     path="/api/pois/{id}",
      *     summary="Get POI by ID",
-     *     description="Retrieve a specific Point of Interest by its ID",
+     *     description="Retrieve a specific Point of Interest by its ID and type. Type should be specified as query parameter: pavilion, shop, or event",
      *     operationId="getPOIById",
      *     tags={"POI"},
      *     @OA\Parameter(
@@ -193,6 +221,13 @@ class POIController extends Controller
      *         description="POI ID",
      *         required=true,
      *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Parameter(
+     *         name="type",
+     *         in="query",
+     *         description="Type of POI",
+     *         required=true,
+     *         @OA\Schema(type="string", enum={"pavilion", "shop", "event"})
      *     ),
      *     @OA\Response(
      *         response=200,
@@ -204,16 +239,11 @@ class POIController extends Controller
      *                 property="data",
      *                 type="object",
      *                 @OA\Property(property="id", type="integer", example=1),
-     *                 @OA\Property(property="type", type="string", example="photo_spot"),
-     *                 @OA\Property(property="name", type="string", example="Main Photo Spot"),
+     *                 @OA\Property(property="type", type="string", example="pavilion", enum={"pavilion", "shop", "event"}),
+     *                 @OA\Property(property="name", type="string", example="Main Pavilion"),
      *                 @OA\Property(property="lat", type="number", format="float", example=25.2048),
-     *                 @OA\Property(property="lng", type="number", format="float", example=55.2708),
-     *                 @OA\Property(property="shop_id", type="integer", nullable=true, example=null),
-     *                 @OA\Property(property="pavilion_id", type="integer", nullable=true, example=1),
-     *                 @OA\Property(property="pavilion", type="object", nullable=true),
-     *                 @OA\Property(property="shop", type="object", nullable=true),
-     *                 @OA\Property(property="created_at", type="string", format="date-time"),
-     *                 @OA\Property(property="updated_at", type="string", format="date-time")
+     *                 @OA\Property(property="long", type="number", format="float", example=55.2708),
+     *                 @OA\Property(property="location", type="string", example="Main Pavilion")
      *             )
      *         )
      *     ),
@@ -235,10 +265,78 @@ class POIController extends Controller
      *     )
      * )
      */
-    public function show(int $id): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
         try {
-            $poi = POI::with(['pavilion', 'shop'])->find($id);
+            $type = $request->get('type');
+
+            if (!$type || !in_array($type, ['pavilion', 'shop', 'event'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Type parameter is required and must be one of: pavilion, shop, event',
+                ], 400);
+            }
+
+            $poi = null;
+
+            if ($type === 'pavilion') {
+                $pavilion = Pavilion::find($id);
+                if ($pavilion) {
+                    $poi = [
+                        'id' => $pavilion->id,
+                        'type' => 'pavilion',
+                        'name' => $pavilion->name,
+                        'lat' => $pavilion->lat !== null ? (float) $pavilion->lat : null,
+                        'long' => $pavilion->lng !== null ? (float) $pavilion->lng : null,
+                        'location' => $pavilion->name,
+                    ];
+                }
+            } elseif ($type === 'shop') {
+                $shop = Shop::find($id);
+                if ($shop) {
+                    $poi = [
+                        'id' => $shop->id,
+                        'type' => 'shop',
+                        'name' => $shop->name,
+                        'lat' => $shop->lat !== null ? (float) $shop->lat : null,
+                        'long' => $shop->lng !== null ? (float) $shop->lng : null,
+                        'location' => $shop->location_name ?? $shop->name,
+                    ];
+                }
+            } elseif ($type === 'event') {
+                $event = Event::with('pavilion')->find($id);
+                if ($event) {
+                    // Use event's own lat/lng/location if available, otherwise fallback to pavilion
+                    $lat = $event->lat !== null ? (float) $event->lat : null;
+                    $long = $event->lng !== null ? (float) $event->lng : null;
+                    $location = $event->location;
+
+                    // Fallback to pavilion if event doesn't have location data
+                    if (($lat === null || $long === null || !$location) && $event->pavilion) {
+                        $pavilion = $event->pavilion;
+                        if ($lat === null) {
+                            $lat = $pavilion->lat !== null ? (float) $pavilion->lat : null;
+                        }
+                        if ($long === null) {
+                            $long = $pavilion->lng !== null ? (float) $pavilion->lng : null;
+                        }
+                        if (!$location) {
+                            $location = $event->stage ?? $pavilion->name;
+                        }
+                    } elseif (!$location) {
+                        $location = $event->stage;
+                    }
+
+                    $poi = [
+                        'id' => $event->id,
+                        'type' => 'event',
+                        'name' => $event->title,
+                        'lat' => $lat,
+                        'long' => $long,
+                        'location' => $location,
+                    ];
+                }
+            }
 
             if (!$poi) {
                 return response()->json([
@@ -246,10 +344,6 @@ class POIController extends Controller
                     'message' => 'POI not found',
                 ], 404);
             }
-
-            // Ensure lat and lng are returned as floats
-            $poi->lat = $poi->lat !== null ? (float) $poi->lat : null;
-            $poi->lng = $poi->lng !== null ? (float) $poi->lng : null;
 
             return response()->json([
                 'success' => true,
