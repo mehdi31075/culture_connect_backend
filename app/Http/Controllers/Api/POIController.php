@@ -82,12 +82,17 @@ class POIController extends Controller
             $search = $request->get('search');
             $type = $request->get('type');
             $pavilionId = $request->get('pavilion_id');
+            $topLeftLat = $request->get('topLeftLat');
+            $topLeftLng = $request->get('topLeftLng');
+            $bottomRightLat = $request->get('bottomRightLat');
+            $bottomRightLng = $request->get('bottomRightLng');
 
             $pois = collect();
 
             // Get Pavilions
             if (!$type || $type === 'pavilion') {
-                $pavilionsQuery = Pavilion::query();
+                $pavilionsQuery = Pavilion::whereNotNull('lat')
+                    ->whereNotNull('lng');
 
                 if ($search) {
                     $pavilionsQuery->where('name', 'like', "%{$search}%");
@@ -95,6 +100,16 @@ class POIController extends Controller
 
                 if ($pavilionId) {
                     $pavilionsQuery->where('id', $pavilionId);
+                }
+
+                // Apply bounding box filter if provided
+                if ($topLeftLat !== null && $topLeftLng !== null && $bottomRightLat !== null && $bottomRightLng !== null) {
+                    $minLat = min((float) $topLeftLat, (float) $bottomRightLat);
+                    $maxLat = max((float) $topLeftLat, (float) $bottomRightLat);
+                    $minLng = min((float) $topLeftLng, (float) $bottomRightLng);
+                    $maxLng = max((float) $topLeftLng, (float) $bottomRightLng);
+                    $pavilionsQuery->whereBetween('lat', [$minLat, $maxLat])
+                                  ->whereBetween('lng', [$minLng, $maxLng]);
                 }
 
                 $pavilions = $pavilionsQuery->get();
@@ -113,7 +128,8 @@ class POIController extends Controller
 
             // Get Shops
             if (!$type || $type === 'shop') {
-                $shopsQuery = Shop::query();
+                $shopsQuery = Shop::whereNotNull('lat')
+                    ->whereNotNull('lng');
 
                 if ($search) {
                     $shopsQuery->where('name', 'like', "%{$search}%");
@@ -121,6 +137,16 @@ class POIController extends Controller
 
                 if ($pavilionId) {
                     $shopsQuery->where('pavilion_id', $pavilionId);
+                }
+
+                // Apply bounding box filter if provided
+                if ($topLeftLat !== null && $topLeftLng !== null && $bottomRightLat !== null && $bottomRightLng !== null) {
+                    $minLat = min((float) $topLeftLat, (float) $bottomRightLat);
+                    $maxLat = max((float) $topLeftLat, (float) $bottomRightLat);
+                    $minLng = min((float) $topLeftLng, (float) $bottomRightLng);
+                    $maxLng = max((float) $topLeftLng, (float) $bottomRightLng);
+                    $shopsQuery->whereBetween('lat', [$minLat, $maxLat])
+                              ->whereBetween('lng', [$minLng, $maxLng]);
                 }
 
                 $shops = $shopsQuery->get();
@@ -146,7 +172,19 @@ class POIController extends Controller
                           $subQ->where('start_time', '<=', $now)
                                ->where('end_time', '>=', $now);
                       });
-                })->with('pavilion');
+                })
+                ->where(function ($query) {
+                    // Event has its own coordinates OR event's pavilion has coordinates
+                    $query->where(function ($q) {
+                        $q->whereNotNull('lat')
+                          ->whereNotNull('lng');
+                    })
+                    ->orWhereHas('pavilion', function ($q) {
+                        $q->whereNotNull('lat')
+                          ->whereNotNull('lng');
+                    });
+                })
+                ->with('pavilion');
 
                 if ($search) {
                     $eventsQuery->where('title', 'like', "%{$search}%");
@@ -154,6 +192,30 @@ class POIController extends Controller
 
                 if ($pavilionId) {
                     $eventsQuery->where('pavilion_id', $pavilionId);
+                }
+
+                // Apply bounding box filter if provided
+                if ($topLeftLat !== null && $topLeftLng !== null && $bottomRightLat !== null && $bottomRightLng !== null) {
+                    $minLat = min((float) $topLeftLat, (float) $bottomRightLat);
+                    $maxLat = max((float) $topLeftLat, (float) $bottomRightLat);
+                    $minLng = min((float) $topLeftLng, (float) $bottomRightLng);
+                    $maxLng = max((float) $topLeftLng, (float) $bottomRightLng);
+                    $eventsQuery->where(function ($query) use ($minLat, $maxLat, $minLng, $maxLng) {
+                        // Events with their own coordinates
+                        $query->where(function ($q) use ($minLat, $maxLat, $minLng, $maxLng) {
+                            $q->whereNotNull('lat')
+                              ->whereNotNull('lng')
+                              ->whereBetween('lat', [$minLat, $maxLat])
+                              ->whereBetween('lng', [$minLng, $maxLng]);
+                        })
+                        // OR events through pavilion coordinates
+                        ->orWhereHas('pavilion', function ($q) use ($minLat, $maxLat, $minLng, $maxLng) {
+                            $q->whereNotNull('lat')
+                              ->whereNotNull('lng')
+                              ->whereBetween('lat', [$minLat, $maxLat])
+                              ->whereBetween('lng', [$minLng, $maxLng]);
+                        });
+                    });
                 }
 
                 $events = $eventsQuery->orderBy('start_time', 'asc')->get();

@@ -1102,6 +1102,13 @@
                                 <input type="number" name="lng" id="event-lng" step="0.000001" class="w-full border rounded px-3 py-2" placeholder="e.g., 55.2708">
                             </div>
                         </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Pick on Map (Optional)</label>
+                            <div class="relative">
+                                <div id="event-map" class="w-full h-64 rounded border"></div>
+                                <p class="text-xs text-gray-500 mt-1">Click on the map to set latitude and longitude.</p>
+                            </div>
+                        </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Start Time *</label>
@@ -2234,6 +2241,65 @@
                 shopMarker.setLatLng([lat, lng]);
             }
             if (!skipCenter && shopMap) shopMap.setView([lat, lng], shopMap.getZoom());
+        }
+
+        // Leaflet map for Event location picker
+        let eventMap = null;
+        let eventMarker = null;
+
+        function initEventMap() {
+            const mapEl = document.getElementById('event-map');
+            if (!mapEl) return;
+            // Avoid re-initializing
+            if (eventMap) {
+                setTimeout(() => { eventMap.invalidateSize(); }, 200);
+                return;
+            }
+
+            eventMap = L.map('event-map').setView([25.2048, 55.2708], 11); // Default: Dubai
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(eventMap);
+
+            eventMap.on('click', function (e) {
+                setEventLatLng(e.latlng.lat, e.latlng.lng);
+            });
+
+            // If form has existing values, show marker
+            const latInput = document.getElementById('event-lat');
+            const lngInput = document.getElementById('event-lng');
+            if (latInput && lngInput) {
+                const lat = parseFloat(latInput.value);
+                const lng = parseFloat(lngInput.value);
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    setEventLatLng(lat, lng, true);
+                    eventMap.setView([lat, lng], 13);
+                }
+            }
+
+            setTimeout(() => { eventMap.invalidateSize(); }, 200);
+        }
+
+        function setEventLatLng(lat, lng, skipCenter) {
+            const latInput = document.getElementById('event-lat');
+            const lngInput = document.getElementById('event-lng');
+            if (latInput && lngInput) {
+                latInput.value = lat.toFixed(6);
+                lngInput.value = lng.toFixed(6);
+            }
+            if (!eventMarker) {
+                eventMarker = L.marker([lat, lng], { draggable: true }).addTo(eventMap);
+                eventMarker.on('dragend', function(e) {
+                    const pos = e.target.getLatLng();
+                    if (latInput && lngInput) {
+                        latInput.value = pos.lat.toFixed(6);
+                        lngInput.value = pos.lng.toFixed(6);
+                    }
+                });
+            } else {
+                eventMarker.setLatLng([lat, lng]);
+            }
+            if (!skipCenter && eventMap) eventMap.setView([lat, lng], eventMap.getZoom());
         }
 
         async function addShop(event) {
@@ -4173,6 +4239,11 @@
             document.getElementById('add-event-form').reset();
             document.getElementById('event-id').value = '';
             document.getElementById('add-event-modal').classList.remove('hidden');
+
+            // Initialize event map after modal is shown
+            setTimeout(() => {
+                initEventMap();
+            }, 200);
         }
 
         function closeAddEventModal() {
@@ -4187,6 +4258,12 @@
             renderSelectedEventTags();
             renderSelectedEventFeatures();
             renderEventBanners();
+            // Clean up event map
+            if (eventMap) {
+                eventMap.remove();
+                eventMap = null;
+                eventMarker = null;
+            }
         }
 
         async function addEvent(event) {
@@ -4289,6 +4366,11 @@
                 document.getElementById('event-end-time').value = event.end_time ? new Date(event.end_time).toISOString().slice(0, 16) : '';
                 document.getElementById('event-capacity').value = event.capacity || '';
                 document.getElementById('add-event-modal').classList.remove('hidden');
+
+                // Initialize event map after modal is shown
+                setTimeout(() => {
+                    initEventMap();
+                }, 200);
             } catch (error) {
                 console.error('Error loading event:', error);
                 alert('Error loading event');
@@ -4464,6 +4546,14 @@
 
                 // Fix map size after initialization
                 setTimeout(() => { adminMap.invalidateSize(); }, 200);
+
+                // Refresh map when view changes (move or zoom)
+                adminMap.on('moveend', function() {
+                    refreshMap();
+                });
+                adminMap.on('zoomend', function() {
+                    refreshMap();
+                });
             }
             await refreshMap();
         }
@@ -4475,7 +4565,14 @@
             }
 
             try {
-                const data = await apiCall('/admin/map/pois');
+                // Get map bounds for filtering
+                const bounds = adminMap.getBounds();
+                const topLeft = bounds.getNorthWest(); // top-left corner
+                const bottomRight = bounds.getSouthEast(); // bottom-right corner
+
+                // Build URL with bounds parameters
+                const url = `/admin/map/pois?topLeftLat=${topLeft.lat}&topLeftLng=${topLeft.lng}&bottomRightLat=${bottomRight.lat}&bottomRightLng=${bottomRight.lng}`;
+                const data = await apiCall(url);
                 if (data && data.success) {
                     // Clear existing markers
                     mapMarkers.forEach(marker => marker.remove());
@@ -4554,10 +4651,12 @@
                             const startTime = event.start_time ? new Date(event.start_time).toLocaleString() : 'N/A';
                             const endTime = event.end_time ? new Date(event.end_time).toLocaleString() : 'N/A';
                             const stageInfo = event.stage ? `<p style="margin: 4px 0; font-size: 12px; color: #999;">Stage: ${event.stage}</p>` : '';
+                            const locationInfo = event.location ? `<p style="margin: 4px 0; color: #666;">📍 ${event.location}</p>` : '';
 
                             marker.bindPopup(`
                                 <div style="min-width: 200px;">
                                     <h3 style="font-weight: bold; margin-bottom: 8px; color: #EF4444;">🎭 ${event.name}</h3>
+                                    ${locationInfo}
                                     <p style="margin: 4px 0; color: #666;">${event.description || 'No description'}</p>
                                     ${stageInfo}
                                     <p style="margin: 4px 0; font-size: 12px; color: #999;">Start: ${startTime}</p>
