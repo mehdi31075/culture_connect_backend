@@ -46,6 +46,34 @@ class POIController extends Controller
      *         required=false,
      *         @OA\Schema(type="integer")
      *     ),
+     *     @OA\Parameter(
+     *         name="topLeftLat",
+     *         in="query",
+     *         description="Latitude of the top-left corner of the bounding box",
+     *         required=false,
+     *         @OA\Schema(type="number", format="float", example=25.3)
+     *     ),
+     *     @OA\Parameter(
+     *         name="topLeftLng",
+     *         in="query",
+     *         description="Longitude of the top-left corner of the bounding box",
+     *         required=false,
+     *         @OA\Schema(type="number", format="float", example=55.2)
+     *     ),
+     *     @OA\Parameter(
+     *         name="bottomRightLat",
+     *         in="query",
+     *         description="Latitude of the bottom-right corner of the bounding box",
+     *         required=false,
+     *         @OA\Schema(type="number", format="float", example=25.1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="bottomRightLng",
+     *         in="query",
+     *         description="Longitude of the bottom-right corner of the bounding box",
+     *         required=false,
+     *         @OA\Schema(type="number", format="float", example=55.4)
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="POIs retrieved successfully",
