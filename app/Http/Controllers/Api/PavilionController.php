@@ -40,30 +40,9 @@ class PavilionController extends Controller
      *     @OA\Parameter(
      *         name="search",
      *         in="query",
-     *         description="Search term for name or description",
+     *         description="Search term for pavilion name or description",
      *         required=false,
      *         @OA\Schema(type="string")
-     *     ),
-     *     @OA\Parameter(
-     *         name="lat",
-     *         in="query",
-     *         description="Latitude for location-based filtering",
-     *         required=false,
-     *         @OA\Schema(type="number", format="float")
-     *     ),
-     *     @OA\Parameter(
-     *         name="lng",
-     *         in="query",
-     *         description="Longitude for location-based filtering",
-     *         required=false,
-     *         @OA\Schema(type="number", format="float")
-     *     ),
-     *     @OA\Parameter(
-     *         name="radius",
-     *         in="query",
-     *         description="Radius in kilometers for location-based filtering",
-     *         required=false,
-     *         @OA\Schema(type="number", format="float", minimum=0.1, maximum=100)
      *     ),
      *     @OA\Response(
      *         response=200,
@@ -154,9 +133,6 @@ class PavilionController extends Controller
                 'page' => 'integer|min:1',
                 'per_page' => 'integer|min:1|max:100',
                 'search' => 'string|max:255',
-                'lat' => 'numeric|between:-90,90',
-                'lng' => 'numeric|between:-180,180',
-                'radius' => 'numeric|min:0.1|max:100',
             ]);
 
             if ($validator->fails()) {
@@ -174,30 +150,13 @@ class PavilionController extends Controller
             // Start building query
             $query = Pavilion::query();
 
-            // Apply search filter
+            // Apply search filter (searches by pavilion name and description)
             if ($request->has('search') && !empty($request->search)) {
                 $searchTerm = $request->search;
                 $query->where(function ($q) use ($searchTerm) {
                     $q->where('name', 'LIKE', "%{$searchTerm}%")
                       ->orWhere('description', 'LIKE', "%{$searchTerm}%");
                 });
-            }
-
-            // Apply location-based filtering
-            if ($request->has('lat') && $request->has('lng')) {
-                $lat = $request->lat;
-                $lng = $request->lng;
-                $radius = $request->get('radius', 10); // Default 10km radius
-
-                // Calculate distance using Haversine formula
-                $query->selectRaw("*,
-                    (6371 * acos(cos(radians(?))
-                    * cos(radians(lat))
-                    * cos(radians(lng) - radians(?))
-                    + sin(radians(?))
-                    * sin(radians(lat)))) AS distance", [$lat, $lng, $lat])
-                    ->having('distance', '<=', $radius)
-                    ->orderBy('distance');
             }
 
             // Get paginated results
