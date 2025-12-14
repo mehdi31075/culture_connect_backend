@@ -150,13 +150,13 @@ class PavilionController extends Controller
             // Start building query
             $query = Pavilion::query();
 
-            // Apply search filter (searches by pavilion name, description, and country)
+            // Apply search filter (searches by pavilion name, description, and country - case insensitive)
             if ($request->has('search') && !empty($request->search)) {
                 $searchTerm = $request->search;
                 $query->where(function ($q) use ($searchTerm) {
-                    $q->where('name', 'LIKE', "%{$searchTerm}%")
-                      ->orWhere('description', 'LIKE', "%{$searchTerm}%")
-                      ->orWhere('country', 'LIKE', "%{$searchTerm}%");
+                    $q->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($searchTerm) . '%'])
+                      ->orWhereRaw('LOWER(description) LIKE ?', ['%' . strtolower($searchTerm) . '%'])
+                      ->orWhereRaw('LOWER(country) LIKE ?', ['%' . strtolower($searchTerm) . '%']);
                 });
             }
 
