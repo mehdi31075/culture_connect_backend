@@ -609,5 +609,149 @@ class EventController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * @OA\Get(
+     *     path="/api/events/{id}",
+     *     summary="Get event by ID",
+     *     description="Retrieve a specific event by its ID. If authenticated, includes personalized fields (is_going, is_interested, has_reminder).",
+     *     operationId="getEventById",
+     *     tags={"Event"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="Event ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Event retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Event retrieved successfully"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="title", type="string", example="Cultural Festival"),
+     *                 @OA\Property(property="description", type="string", nullable=true, example="A celebration of cultural diversity"),
+     *                 @OA\Property(property="stage", type="string", nullable=true, example="Main Stage"),
+     *                 @OA\Property(property="price", type="number", format="float", example=-1.00, description="Event price in decimal format (-1.00 indicates free event)"),
+     *                 @OA\Property(property="start_time", type="string", format="date-time", example="2025-12-01T18:00:00Z"),
+     *                 @OA\Property(property="end_time", type="string", format="date-time", example="2025-12-01T22:00:00Z"),
+     *                 @OA\Property(property="capacity", type="integer", nullable=true, example=500),
+     *                 @OA\Property(property="lat", type="number", format="float", nullable=true, example=25.2048),
+     *                 @OA\Property(property="lng", type="number", format="float", nullable=true, example=55.2708),
+     *                 @OA\Property(property="location", type="string", nullable=true, example="Main Stage"),
+     *                 @OA\Property(property="confirmed_attendees_count", type="integer", example=391),
+     *                 @OA\Property(property="is_going", type="boolean", example=false, description="Whether the authenticated user marked as going (only if authenticated)"),
+     *                 @OA\Property(property="is_interested", type="boolean", example=false, description="Whether the authenticated user marked as interested (only if authenticated)"),
+     *                 @OA\Property(property="has_reminder", type="boolean", example=false, description="Whether the authenticated user set a reminder (only if authenticated)"),
+     *                 @OA\Property(
+     *                     property="pavilion",
+     *                     type="object",
+     *                     nullable=true,
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="name", type="string", example="Main Pavilion")
+     *                 ),
+     *                 @OA\Property(
+     *                     property="tags",
+     *                     type="array",
+     *                     @OA\Items(
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="name", type="string", example="Cultural")
+     *                     )
+     *                 ),
+     *                 @OA\Property(
+     *                     property="features",
+     *                     type="array",
+     *                     @OA\Items(
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="name", type="string", example="Live Music")
+     *                     )
+     *                 ),
+     *                 @OA\Property(
+     *                     property="banners",
+     *                     type="array",
+     *                     description="List of banner image URLs for this event",
+     *                     @OA\Items(type="string", example="https://example.com/storage/events/banner1.jpg")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Event not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Event not found")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Failed to retrieve event")
+     *         )
+     *     )
+     * )
+     */
+    public function show(int $id): JsonResponse
+    {
+        try {
+            $event = Event::with(['pavilion', 'tags', 'features'])->find($id);
+
+            if (!$event) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Event not found',
+                ], 404);
+            }
+
+            // Get authenticated user (optional - endpoint doesn't require auth)
+            $user = auth('api')->user();
+
+            // Add confirmed attendees count
+            $event->confirmed_attendees_count = $event->confirmed_attendees_count;
+
+            // Add user status flags if authenticated
+            if ($user) {
+                $attendance = EventAttendance::where('user_id', $user->id)
+                    ->where('event_id', $event->id)
+                    ->first();
+
+                if ($attendance && $attendance->status !== null) {
+                    $status = (string)$attendance->status;
+                    $event->is_going = $status === (string)EventAttendance::STATUS_GOING;
+                    $event->is_interested = $status === (string)EventAttendance::STATUS_GOING
+                        || $status === (string)EventAttendance::STATUS_INTERESTED;
+                    $event->has_reminder = $attendance->reminder_at !== null && $attendance->reminder_at !== '';
+                } else {
+                    $event->is_going = false;
+                    $event->is_interested = false;
+                    $event->has_reminder = $attendance && $attendance->reminder_at !== null && $attendance->reminder_at !== '';
+                }
+            } else {
+                // Not authenticated - don't include personalized fields
+                $event->is_going = null;
+                $event->is_interested = null;
+                $event->has_reminder = null;
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Event retrieved successfully',
+                'data' => $event,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve event',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }
 

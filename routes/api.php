@@ -117,6 +117,7 @@ Route::middleware('auth:api')->group(function () {
 Route::get('pavilions', [PavilionController::class, 'index']);
 Route::get('pavilions/{id}', [PavilionController::class, 'show']);
 // Shop routes
+Route::get('shops/{id}', [ShopController::class, 'show']);
 Route::get('pavilions/{pavilion}/shops', [ShopController::class, 'pavilionShops']);
 
 // Product routes
@@ -138,6 +139,7 @@ Route::get('pois/{id}', [POIController::class, 'show']);
 
 // Event routes
 Route::get('event-tags', [EventController::class, 'getTags']);
+Route::get('events/{id}', [EventController::class, 'show']);
 Route::middleware('auth:api')->group(function () {
     Route::get('events', [EventController::class, 'index']);
     Route::post('events/{event}/mark-going', [EventController::class, 'markGoing']);
