@@ -40,7 +40,7 @@ class PavilionController extends Controller
      *     @OA\Parameter(
      *         name="search",
      *         in="query",
-     *         description="Search term for pavilion name or description",
+     *         description="Search term for pavilion name, description, or country",
      *         required=false,
      *         @OA\Schema(type="string")
      *     ),
@@ -150,12 +150,13 @@ class PavilionController extends Controller
             // Start building query
             $query = Pavilion::query();
 
-            // Apply search filter (searches by pavilion name and description)
+            // Apply search filter (searches by pavilion name, description, and country)
             if ($request->has('search') && !empty($request->search)) {
                 $searchTerm = $request->search;
                 $query->where(function ($q) use ($searchTerm) {
                     $q->where('name', 'LIKE', "%{$searchTerm}%")
-                      ->orWhere('description', 'LIKE', "%{$searchTerm}%");
+                      ->orWhere('description', 'LIKE', "%{$searchTerm}%")
+                      ->orWhere('country', 'LIKE', "%{$searchTerm}%");
                 });
             }
 
